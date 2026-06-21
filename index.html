@@ -20,8 +20,52 @@
     <script src="./lib/rom-patcher-js/modules/RomPatcher.format.pmsr.js"></script>
     <script src="./lib/rom-patcher-js/modules/RomPatcher.format.vcdiff.js"></script>
     <script src="./lib/rom-patcher-js/RomPatcher.js"></script>
+    <script>
+        // ── EmulatorJS-only boot (no sm64.wasm / no AI) ──────
+        window._bootEmulatorJS = function() {
+            var req = indexedDB.open('sm64emu', 1);
+            req.onupgradeneeded = function() { req.result.createObjectStore('roms'); };
+            req.onsuccess = function() {
+                var tx = req.result.transaction('roms', 'readonly');
+                var getReq = tx.objectStore('roms').get('current');
+                getReq.onsuccess = function() {
+                    var blob = getReq.result;
+                    if (!blob) { document.getElementById('emu-loading').textContent = 'No ROM found. Go back and try again.'; return; }
+                    window.EJS_player = '#emu-only';
+                    window.EJS_core = 'n64';
+                    window.EJS_gameUrl = URL.createObjectURL(blob);
+                    window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+                    window.EJS_startOnLoaded = true;
+                    window.EJS_SHADERS = false;
+                    window.EJS_GL = 'webgl2';
+                    var s = document.createElement('script');
+                    s.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+                    document.head.appendChild(s);
+                };
+            };
+        };
+        window._storeRomForEmu = function(blob) {
+            return new Promise(function(resolve, reject) {
+                var req = indexedDB.open('sm64emu', 1);
+                req.onupgradeneeded = function() { req.result.createObjectStore('roms'); };
+                req.onsuccess = function() {
+                    var tx = req.result.transaction('roms', 'readwrite');
+                    tx.objectStore('roms').put(blob, 'current');
+                    tx.oncomplete = resolve;
+                    tx.onerror = reject;
+                };
+                req.onerror = reject;
+            });
+        };
+    </script>
 </head>
 <body>
+    <!-- ── EmulatorJS-only overlay (no sm64.wasm, no AI) ── -->
+    <div id="emu-only" style="display:none;position:fixed;inset:0;background:#000;z-index:9999;">
+        <div id="emu-loading" style="color:#ccc;padding:40px;text-align:center;position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);font-size:16px;">⏳ Loading N64 emulator from CDN…<br><small style="color:#888;">This may take 10–30 seconds</small></div>
+        <button id="emu-back-btn" style="position:fixed;top:10px;right:10px;z-index:10000;background:#333;color:#fff;border:1px solid #555;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px;">← Back to original</button>
+    </div>
+
     <div id="app">
 
         <!-- Loading screen -->
@@ -399,29 +443,46 @@
     </div><!-- #app -->
 
     <script>
-      window.Module = window.Module || {};
-      Module.canvas = document.getElementById('canvas');
-      Module.locateFile = (path) => (path.endsWith('.wasm') ? './sm64.wasm' : path);
-      Module.preRun  = Module.preRun  || [];
-      Module.postRun = Module.postRun || [];
+      // ── Check if we should boot into EmulatorJS-only mode ──
+      if (sessionStorage.getItem('sm64_emu_mode')) {
+          sessionStorage.removeItem('sm64_emu_mode');
+          document.getElementById('app').style.display = 'none';
+          document.getElementById('emu-only').style.display = 'block';
+          var ls = document.getElementById('loading-screen');
+          if (ls) ls.style.display = 'none';
+          document.getElementById('emu-back-btn').addEventListener('click', function() {
+              sessionStorage.removeItem('sm64_emu_mode');
+              var req = indexedDB.deleteDatabase('sm64emu');
+              req.onsuccess = function() { location.reload(); };
+          });
+          window._bootEmulatorJS();
+      } else {
+          // ── Original boot path: load sm64.wasm + main.js ──
+          window.Module = window.Module || {};
+          Module.canvas = document.getElementById('canvas');
+          Module.locateFile = (path) => (path.endsWith('.wasm') ? './sm64.wasm' : path);
+          Module.preRun  = Module.preRun  || [];
+          Module.postRun = Module.postRun || [];
 
-      Module.setStatus = function(text) {
-          const msg = document.getElementById('loading-msg');
-          const bar = document.getElementById('loading-bar');
-          if (!msg) return;
-          if (text) {
-              msg.textContent = text;
-              const m = text.match(/(\d+)\/(\d+)/);
-              if (m) bar.style.width = Math.round(parseInt(m[1]) / parseInt(m[2]) * 100) + '%';
-          } else {
-              const ls = document.getElementById('loading-screen');
-              if (ls) { ls.style.opacity = '0'; setTimeout(() => ls.remove(), 600); }
-          }
-      };
-      Module.print    = (t) => console.log(t);
-      Module.printErr = (t) => console.warn(t);
+          Module.setStatus = function(text) {
+              const msg = document.getElementById('loading-msg');
+              const bar = document.getElementById('loading-bar');
+              if (!msg) return;
+              if (text) {
+                  msg.textContent = text;
+                  const m = text.match(/(\d+)\/(\d+)/);
+                  if (m) bar.style.width = Math.round(parseInt(m[1]) / parseInt(m[2]) * 100) + '%';
+              } else {
+                  const ls = document.getElementById('loading-screen');
+                  if (ls) { ls.style.opacity = '0'; setTimeout(() => ls.remove(), 600); }
+              }
+          };
+          Module.print    = (t) => console.log(t);
+          Module.printErr = (t) => console.warn(t);
+
+          document.write('<script src="./sm64.js"><\/script>');
+          document.write('<script type="module" src="./main.js"><\/script>');
+      }
     </script>
-    <script src="./sm64.js"></script>
-    <script type="module" src="./main.js"></script>
 </body>
 </html>

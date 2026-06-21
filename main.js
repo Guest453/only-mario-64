@@ -764,48 +764,13 @@ document.addEventListener('click', () => {
 // ── EmulatorJS + BPS patcher integration ────────────────────
 function switchToEmulatorJS(romBlob) {
     stopAIPlayer();
-    // Freeze the original decomp core so it doesn't burn CPU in the background
-    try { Module && Module._emscripten_pause_main_loop && Module._emscripten_pause_main_loop(); } catch {}
-    gameSpeed = 0.001; // effectively frozen
-    _activeCore = 'emulatorjs';
-    document.getElementById('original-game-container').style.display = 'none';
-    _emulatorjsContainer.style.display = 'block';
-    MEMORY_ENABLED = false;
-    _marioBase = -1;
-    if (_canvasStream) { try { _canvasStream.getTracks().forEach(t => t.stop()); } catch {} _canvasStream = null; }
-    if (aiStream) { try { aiStream.getTracks().forEach(t => t.stop()); } catch {} aiStream = null; }
-    _emulatorjsContainer.innerHTML = '<div style="color:#ccc;padding:40px;text-align:center;font-size:16px;">⏳ Loading N64 emulator from CDN…<br><small>This may take 10–30 seconds</small></div>';
-    window.EJS_player = '#emulatorjs-container';
-    window.EJS_core = 'n64';
-    window.EJS_gameUrl = URL.createObjectURL(romBlob);
-    window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-    window.EJS_startOnLoaded = true;
-    window.EJS_SHADERS = false;
-    window.EJS_GL = 'webgl2';
-    const existing = document.getElementById('emulatorjs-script');
-    if (existing) existing.remove();
-    const script = document.createElement('script');
-    script.id = 'emulatorjs-script';
-    script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
-    script.onerror = () => { updateAIStatus('❌ Failed to load EmulatorJS from CDN'); };
-    document.body.appendChild(script);
-    updateAIStatus('🎮 Loading patched ROM via EmulatorJS…');
-}
-function restoreOriginalCore() {
-    stopAIPlayer();
-    _activeCore = 'original';
-    document.getElementById('original-game-container').style.display = 'block';
-    _emulatorjsContainer.style.display = 'none';
-    _emulatorjsContainer.innerHTML = '';
-    const existing = document.getElementById('emulatorjs-script');
-    if (existing) existing.remove();
-    gameSpeed = 1;
-    MEMORY_ENABLED = true;
-    try { Module && Module._emscripten_resume_main_loop && Module._emscripten_resume_main_loop(); } catch {}
-    if (_canvasStream) { try { _canvasStream.getTracks().forEach(t => t.stop()); } catch {} _canvasStream = null; }
-    if (aiStream) { try { aiStream.getTracks().forEach(t => t.stop()); } catch {} aiStream = null; }
-    _originalCanvas.focus();
-    updateAIStatus('🍄 Restored original core — click Start to run AI');
+    updateAIStatus('📦 Storing patched ROM — reloading into emulator-only mode…');
+    window._storeRomForEmu(romBlob).then(function() {
+        sessionStorage.setItem('sm64_emu_mode', '1');
+        location.reload();
+    }).catch(function(err) {
+        updateAIStatus('❌ Failed to store ROM: ' + err.message);
+    });
 }
 
 // Patch UI wiring
