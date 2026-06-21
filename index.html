@@ -9,15 +9,15 @@
     <!-- Rom Patcher JS stubs: define empty objects for format modules not loaded,
          so RomPatcher.js doesn't throw ReferenceError when it references them. -->
     <script>
-        if (typeof IPS === 'undefined') window.IPS = { MAGIC: '' };
-        if (typeof UPS === 'undefined') window.UPS = { MAGIC: '' };
-        if (typeof APS === 'undefined') window.APS = { MAGIC: '' };
-        if (typeof APSGBA === 'undefined') window.APSGBA = { MAGIC: '' };
-        if (typeof RUP === 'undefined') window.RUP = { MAGIC: '' };
-        if (typeof PPF === 'undefined') window.PPF = { MAGIC: '' };
-        if (typeof BDF === 'undefined') window.BDF = { MAGIC: '' };
-        if (typeof PMSR === 'undefined') window.PMSR = { MAGIC: '' };
-        if (typeof VCDIFF === 'undefined') window.VCDIFF = { MAGIC: '' };
+        if (typeof IPS === 'undefined') window.IPS = { MAGIC: 'STUB', fromFile: function(){} };
+        if (typeof UPS === 'undefined') window.UPS = { MAGIC: 'STUB', fromFile: function(){} };
+        if (typeof APS === 'undefined') window.APS = { MAGIC: 'STUB', fromFile: function(){} };
+        if (typeof APSGBA === 'undefined') window.APSGBA = { MAGIC: 'STUB', fromFile: function(){} };
+        if (typeof RUP === 'undefined') window.RUP = { MAGIC: 'STUB', fromFile: function(){} };
+        if (typeof PPF === 'undefined') window.PPF = { MAGIC: 'STUB', fromFile: function(){} };
+        if (typeof BDF === 'undefined') window.BDF = { MAGIC: 'STUB', fromFile: function(){} };
+        if (typeof PMSR === 'undefined') window.PMSR = { MAGIC: 'STUB', fromFile: function(){} };
+        if (typeof VCDIFF === 'undefined') window.VCDIFF = { MAGIC: 'STUB', fromFile: function(){} };
     </script>
     <!-- Rom Patcher JS (BPS/IPS/etc support) -->
     <script src="./lib/rom-patcher-js/modules/HashCalculator.js"></script>
