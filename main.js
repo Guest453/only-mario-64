@@ -594,7 +594,7 @@ function _applyGameSpeed(s) {
     const sl = document.getElementById('speed-slider'); if (sl) sl.value = s;
     const lb = document.getElementById('speed-label');  if (lb) lb.textContent = `${s}×`;
     if (aiInterval) { clearInterval(aiInterval); aiInterval = null; }
-    if (aiPlayerActive && aiMode === 'auto' && !_rapidFireActive) scheduleAILoop();
+    if (aiPlayerActive && aiMode === 'auto' && !_rapidFireActive && (_playMode === 'ai' || _playMode === 'ai-teach')) scheduleAILoop();
 }
 
 // Per-model tool support (Pollinations models vary). null = unknown — we
@@ -1729,58 +1729,125 @@ let _rlRealtime = (() => { try { const v = localStorage.getItem('sm64_rl_realtim
 function setRlRealtime(on) { _rlRealtime = !!on; try { localStorage.setItem('sm64_rl_realtime', _rlRealtime ? '1' : '0'); } catch {} }
 let _qTable = {};            // stateKey -> { actionCat: { n, mean } }
 
-// ── TD(0) / TD(λ) reinforcement learning parameters ─────────────────────
-// gamma: discount factor — how much future rewards matter (0.9 = cares about
-//   rewards ~10 steps ahead; 0.95+ would care further but slower convergence)
-// alpha: learning rate — fixed (not 1/n) so the model stays plastic in
-//   non-stationary environments (Mario dies, restarts, enters new areas)
-// lambda: eligibility trace decay — 0.7 gives multi-step credit while
-//   preventing stale assignments from ancient actions
-const _RL_GAMMA  = 0.88;
-const _RL_ALPHA  = 0.25;
-const _RL_LAMBDA = 0.65;
+// ── HARDWARE-AWARE RL TIER SYSTEM ──────────────────────────────────────
+// Auto-detects CPU power and selects the best RL configuration. Three tiers:
+//
+//   basic    — 2-4 cores (i3, low-end): lightweight, low memory, less replay
+//   standard — 4-8 cores (i5, mid-range): balanced, our previous defaults
+//   advanced — 8+ cores (i7, high-end): aggressive learning, double Q,
+//              large replay buffer, n-step returns.
+//
+// Auto-selection runs once at boot. Manual override via localStorage.
+// ────────────────────────────────────────────────────────────────────────
+
+// Quick CPU benchmark: count iterations in ~80ms to estimate single-thread speed
+function _benchCPU() {
+    const t0 = performance.now();
+    let n = 0;
+    while (performance.now() - t0 < 80) { n++; }
+    return n;
+}
+function _detectRLTier() {
+    const cores = navigator.hardwareConcurrency || 4;
+    const bench = _benchCPU();
+    // Combine core count + single-thread benchmark for tiering
+    let tier;
+    if (cores >= 8 && bench > 400000)       tier = 'advanced';
+    else if (cores >= 4 && bench > 150000)  tier = 'standard';
+    else                                     tier = 'basic';
+    // Manual override from localStorage
+    try {
+        const ov = localStorage.getItem('sm64_rl_tier');
+        if (ov === 'basic' || ov === 'standard' || ov === 'advanced') tier = ov;
+    } catch {}
+    return tier;
+}
+const _RL_TIER = _detectRLTier();
+
+// Tier-specific RL hyperparameters
+const _RL_TIERS = {
+    basic:    { gamma: 0.85, alpha: 0.20, lambda: 0.50, replayCap: 200, replayBatch: 4, replayEvery: 12, plTickMs: 210, ucbC: 0.4, doubleQ: false, nstep: 1 },
+    standard: { gamma: 0.88, alpha: 0.25, lambda: 0.65, replayCap: 300, replayBatch: 6, replayEvery: 8,  plTickMs: 150, ucbC: 0.5, doubleQ: false, nstep: 1 },
+    advanced: { gamma: 0.92, alpha: 0.30, lambda: 0.75, replayCap: 600, replayBatch: 10, replayEvery: 5, plTickMs: 100, ucbC: 0.6, doubleQ: true,  nstep: 3 },
+};
+const _RL_CFG = _RL_TIERS[_RL_TIER];
+
+// Readable tier params (these are what the rest of the code uses)
+let _RL_GAMMA  = _RL_CFG.gamma;
+let _RL_ALPHA  = _RL_CFG.alpha;
+let _RL_LAMBDA = _RL_CFG.lambda;
+let _REPLAY_CAPACITY = _RL_CFG.replayCap;
+let _REPLAY_BATCH    = _RL_CFG.replayBatch;
+let _REPLAY_EVERY    = _RL_CFG.replayEvery;
+let _PL_TICK_MS      = _RL_CFG.plTickMs;
+const _RL_UCB_C      = _RL_CFG.ucbC;
+const _RL_DOUBLE_Q   = _RL_CFG.doubleQ;
+const _RL_NSTEP      = _RL_CFG.nstep;
 
 // ── Experience replay buffer (prioritized) ──────────────────────────────
-// Stores transitions as (state, action, reward, nextState, done) so the
-// agent can learn from past experiences multiple times. Prioritized by
-// |TD error| so surprising outcomes get replayed more often.
 let _replayBuffer = [];
-const _REPLAY_CAPACITY = 300;
-const _REPLAY_BATCH = 6;
-const _REPLAY_EVERY = 8;     // replay every N learning steps
+
+// ── Double Q-learning (advanced tier only) ──────────────────────────────
+// Maintains a separate TARGET Q-table updated periodically from the main
+// Q-table, so max_a' Q(s',a') uses the target network → reduces
+// overestimation bias (the core insight of Double DQN, applied to tabular).
+let _qTarget = {};
+let _targetSyncCounter = 0;
+const _TARGET_SYNC_EVERY = 20;   // sync target table every N updates
+
+function _syncTargetQ() {
+    if (!_RL_DOUBLE_Q) return;
+    _qTarget = {};
+    for (const [sk, acts] of Object.entries(_qTable)) {
+        const t = {};
+        for (const [a, v] of Object.entries(acts)) t[a] = { n: v.n, mean: v.mean };
+        _qTarget[sk] = t;
+    }
+    _targetSyncCounter = 0;
+}
+
+// Get max Q from the right table (target for double-Q, main for single)
+function _maxNextQ(stateKey) {
+    const table = _RL_DOUBLE_Q ? _qTarget : _qTable;
+    const ns = table[stateKey] || {};
+    let best = 0.1;
+    for (const act of _RL_ACTIONS) {
+        const v = ns[act];
+        if (v && v.mean > best) best = v.mean;
+    }
+    return best;
+}
 
 // ── Trust history for smoother parent↔child trust updates ───────────────
 let _trustHistory = [];       // rolling window of recent rewards
 const _TRUST_WINDOW = 20;
 
-// Mini-batch replay trigger: batch-update Q-table from past experiences,
-// weighted by TD-error priority so surprising outcomes replay more.
+// Mini-batch replay trigger: batch-update Q-table from past experiences.
+// On advanced tier, uses the TARGET network for max_a' Q(s',a') (double Q).
 function _replayBatch() {
     if (_replayBuffer.length < _REPLAY_BATCH) return;
-    // Sort by |TD error| (priority), pick top batch
     const pool = [..._replayBuffer].sort((a, b) => Math.abs(b.tdErr || 0) - Math.abs(a.tdErr || 0));
     const batch = pool.slice(0, Math.min(_REPLAY_BATCH, pool.length));
     for (const t of batch) {
-        const ns = t.nextStateKey ? (_qTable[t.nextStateKey] || {}) : {};
-        let maxNext = 0;
-        for (const a of _RL_ACTIONS) {
-            const v = ns[a];
-            if (v && v.mean > maxNext) maxNext = v.mean;
-        }
+        const maxNext = t.nextStateKey ? _maxNextQ(t.nextStateKey) : 0;
         const target = t.reward + (t.done ? 0 : _RL_GAMMA * maxNext);
         const s = _qTable[t.stateKey] || (_qTable[t.stateKey] = {});
         const a = s[t.actionCat] || (s[t.actionCat] = { n: 0, mean: 0.1 });
         a.n++;
         a.mean += _RL_ALPHA * (target - a.mean);
-        // Decay TD error after replay so it isn't replayed forever
         t.tdErr = (t.tdErr || 0) * 0.7;
+    }
+    // Sync target network on advanced tier
+    if (_RL_DOUBLE_Q) {
+        _targetSyncCounter += batch.length;
+        if (_targetSyncCounter >= _TARGET_SYNC_EVERY) _syncTargetQ();
     }
     _lsSet('sm64_qtable', JSON.stringify(_qTable));
 }
 
 // Push a transition into the replay buffer
 function _pushReplay(stateKey, actionCat, reward, nextStateKey, done) {
-    const tdErr = Math.abs(reward);   // initial priority = reward magnitude
+    const tdErr = Math.abs(reward);
     _replayBuffer.push({ stateKey, actionCat, reward, nextStateKey, done, tdErr });
     while (_replayBuffer.length > _REPLAY_CAPACITY) _replayBuffer.shift();
 }
@@ -1788,11 +1855,52 @@ function _pushReplay(stateKey, actionCat, reward, nextStateKey, done) {
 // Count-based exploration bonus: reward trying rarely-visited (state, action) pairs
 function _countBonus(stateKey, actionCat) {
     const s = _qTable[stateKey];
-    if (!s) return 0.15;  // bonus for completely new state
+    if (!s) return 0.15;
     const a = s[actionCat];
-    if (!a || a.n === 0) return 0.12;  // bonus for untried action in known state
-    return 0.06 / Math.sqrt(a.n + 1);  // diminishing bonus as count grows
+    if (!a || a.n === 0) return 0.12;
+    return 0.06 / Math.sqrt(a.n + 1);
 }
+
+// N-step return accumulator (advanced tier): collect rewards across N steps
+// then retroactively credit the first action with the discounted sum.
+let _nstepBuffer = [];
+function _maybeNStepUpdate() {
+    if (_RL_NSTEP <= 1 || _nstepBuffer.length < _RL_NSTEP) return;
+    const n = _RL_NSTEP;
+    const buf = _nstepBuffer;
+    // For the oldest entry, compute n-step return
+    const oldest = buf[0];
+    let G = 0;
+    for (let i = 1; i <= n && i < buf.length; i++) {
+        G += Math.pow(_RL_GAMMA, i - 1) * buf[i].reward;
+    }
+    // Add bootstrapped value from the state after n steps
+    const lastState = buf[Math.min(n, buf.length - 1)].stateKey;
+    G += Math.pow(_RL_GAMMA, n) * _maxNextQ(lastState);
+    // Update with n-step target
+    const s = _qTable[oldest.stateKey] || (_qTable[oldest.stateKey] = {});
+    const a = s[oldest.actionCat] || (s[oldest.actionCat] = { n: 0, mean: 0.1 });
+    a.n++;
+    a.mean += _RL_ALPHA * (G - a.mean);
+    // Shift
+    _nstepBuffer.shift();
+}
+
+// Window for n-step: push (state, action, reward) then flush oldest
+function _pushNStep(stateKey, actionCat, reward) {
+    if (_RL_NSTEP <= 1) return;
+    _nstepBuffer.push({ stateKey, actionCat, reward });
+    _maybeNStepUpdate();
+}
+
+// Console + window API: check/override RL tier
+window.sm64RLTier = (t) => {
+    if (t) {
+        try { localStorage.setItem('sm64_rl_tier', t); } catch {}
+        return `RL tier set to "${t}" — reload the page to apply`;
+    }
+    return `Current RL tier: "${_RL_TIER}" (cores: ${navigator.hardwareConcurrency || '?'}, bench: —). Override: sm64RLTier("basic"|"standard"|"advanced")`;
+};
 // PERSISTENCE (experimental, OFF by default): a persisted Q-table is a real saved
 // "model" in your browser. When off, learning lives only for the session. When on,
 // it survives reloads and can be exported/imported to share a trained child.
@@ -1892,22 +2000,23 @@ function _actionCat(actions) {
 function _qUpdate(stateKey, actionCat, reward, nextStateKey = null, done = false) {
     const s = _qTable[stateKey] || (_qTable[stateKey] = {});
     const a = s[actionCat] || (s[actionCat] = { n: 0, mean: 0.1 });
-    // Compute TD(0) target: reward + discounted best future value
+    // Compute TD(0) target: reward + gamma * max_a' Q(s',a')
+    // On advanced tier: uses TARGET network for max → double Q-learning
     let target = reward;
     if (!done && nextStateKey) {
-        const ns = _qTable[nextStateKey] || {};
-        let maxNext = 0.1;
-        for (const act of _RL_ACTIONS) {
-            const v = ns[act];
-            if (v && v.mean > maxNext) maxNext = v.mean;
-        }
-        target += _RL_GAMMA * maxNext;
+        target += _RL_GAMMA * _maxNextQ(nextStateKey);
     }
-    // TD error (for prioritized replay)
     const tdErr = Math.abs(target - a.mean);
     a.n++;
     a.mean += _RL_ALPHA * (target - a.mean);
     _lsSet('sm64_qtable', JSON.stringify(_qTable));
+    // Sync target network periodically (double Q)
+    if (_RL_DOUBLE_Q) {
+        _targetSyncCounter++;
+        if (_targetSyncCounter >= _TARGET_SYNC_EVERY) _syncTargetQ();
+    }
+    // N-step accumulators (advanced tier)
+    if (_RL_NSTEP > 1) _pushNStep(stateKey, actionCat, reward);
     return tdErr;
 }
 // Reward (or PUNISH) the PREVIOUS action using the outcome we can now measure.
@@ -2031,7 +2140,7 @@ function loadQTable() {
     try { _humanPolicy = JSON.parse(localStorage.getItem('sm64_human_policy')) || {}; } catch { _humanPolicy = {}; }
 }
 function clearQTable() {
-    _qTable = {}; _humanPolicy = {}; _eligTrace = []; _replayBuffer = []; _trustHistory = [];
+    _qTable = {}; _qTarget = {}; _humanPolicy = {}; _eligTrace = []; _replayBuffer = []; _trustHistory = []; _nstepBuffer = [];
     ['sm64_qtable', 'sm64_human_policy'].forEach(k => { try { localStorage.removeItem(k); } catch {} });
     _trainStats = { episodes: 0, turns: 0, overrides: 0, overrideGood: 0, overrideBad: 0, taught: 0, graded: 0, rated: 0, bestRegionRank: 0 }; _saveTrainStats();
     if (typeof _setChildTrust === 'function') _setChildTrust(0.15);   // back to a fresh, untrusted child
@@ -2202,7 +2311,6 @@ window.sm64Mode = (m) => { if (m) setPlayMode(m); return _playMode; };
 // No AI middle-man. Teaches both Q-table AND behavioral cloning simultaneously.
 let _plLoop = null, _plPrevFrame = null, _plBusy = false;
 let _plFeedback = [];   // floating +1/-1 bubbles currently on screen
-const _PL_TICK_MS = 150;
 
 // Smart reward for player-learn: visual change (0..0.6) + action diversity
 // bonus + stuck penalty. Designed to give clean, high-frequency teaching.
@@ -2262,7 +2370,7 @@ function _showPlayerLearnBanner(on) {
             b.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:9998;background:#1a3020;color:#c5f0d0;border:1px solid #4fd16e;padding:6px 14px;border-radius:20px;font:600 13px system-ui;box-shadow:0 2px 12px rgba(0,0,0,.4)';
             document.body.appendChild(b);
         }
-        b.innerHTML = '🎮 <b>Player Learn</b> — play the game; the RL learns from every move you make (no AI, pure local). <button id="pl-showoff" style="margin-left:8px;cursor:pointer;border:0;background:#4fd16e;color:#042;border-radius:12px;padding:3px 9px;font-weight:700">🎬 Let RL show off</button>';
+        b.innerHTML = `🎮 <b>Player Learn</b> [${_RL_TIER}${_RL_DOUBLE_Q ? ' 2Q' : ''}] — play the game; the RL learns from every move you make (no AI, pure local). <button id="pl-showoff" style="margin-left:8px;cursor:pointer;border:0;background:#4fd16e;color:#042;border-radius:12px;padding:3px 9px;font-weight:700">🎬 Let RL show off</button>`;
         b.style.display = 'block';
         const sb = b.querySelector('#pl-showoff'); if (sb) sb.onclick = () => rlShowoff(5);
     } else if (b) { b.style.display = 'none'; }
@@ -2376,7 +2484,7 @@ function _rlPickAction(stateKey) {
     let best = 'forward', bestSc = -1e9;
     for (const a of _RL_ACTIONS) {
         const v = s[a]; const mean = v ? v.mean : 0.1; const n = v ? v.n : 0;
-        const ucb  = 0.5 * Math.sqrt(Math.log(total + 1) / (n + 1));   // try under-sampled actions
+        const ucb  = _RL_UCB_C * Math.sqrt(Math.log(total + 1) / (n + 1));   // try under-sampled actions
         const imit = 0.6 * _humanPref(stateKey, a);                    // imitate how YOU play here
         const sc = mean + ucb + imit + (n === 0 ? 0.05 : 0);
         if (sc > bestSc) { bestSc = sc; best = a; }
@@ -2745,7 +2853,8 @@ function updateDebugHUD() {
         ? `<div>child: ${Object.keys(_qTable).length} states · ${_replayBuffer.length} replay · lastR: ${_lastReward == null ? '—' : _lastReward.toFixed(2)} (${_brainBias})</div>` +
           `<div>trust: ${Math.round(_childTrust * 100)}% · steps ✓${_og}/✗${_ob} · best:${_rankName}</div>` +
           `<div>mode: ${_playMode} · taught:${_trainStats.taught || 0} · graded:${_trainStats.graded || 0} · rated:${_trainStats.rated || 0}</div>` +
-          `<div>trained: ${_trainStats.episodes}ep · ${_trainStats.turns}turns · γ=${_RL_GAMMA} α=${_RL_ALPHA} λ=${_RL_LAMBDA}</div>`
+          `<div>trained: ${_trainStats.episodes}ep · ${_trainStats.turns}turns · tier:${_RL_TIER} ${_RL_DOUBLE_Q ? '2Q' : ''}</div>` +
+          `<div>γ=${_RL_GAMMA} α=${_RL_ALPHA} λ=${_RL_LAMBDA} · rep:${_REPLAY_CAPACITY}/${_REPLAY_BATCH}/${_REPLAY_EVERY} · pl:${_PL_TICK_MS}ms</div>`
         : '';
     el.innerHTML =
         `<b>🐞 SM64-AI debug</b>` +
@@ -2890,6 +2999,7 @@ function saveTurboState() {
 
 function startTurboLoop() {
     if (_turboLoop) return;
+    if (_playMode !== 'ai' && _playMode !== 'ai-teach') return;
     const floor = _turboCfg.advanced ? 60 : 200;   // Advanced = absolute max rate
     _turboLoop = setInterval(() => {
         if (!aiPlayerActive || !_turboMode || _isThinking || _rapidFireActive) return;
@@ -2909,7 +3019,7 @@ function setTurboMode(on) {
     } else {
         stopTurboLoop();
         stopLiveLoop();
-        if (aiPlayerActive && aiMode === 'auto' && !_rapidFireActive) scheduleAILoop();
+        if (aiPlayerActive && aiMode === 'auto' && !_rapidFireActive && (_playMode === 'ai' || _playMode === 'ai-teach')) scheduleAILoop();
         tts.interrupt('Consistent rapid fire off.');
     }
 }
@@ -3028,7 +3138,7 @@ speedSlider.addEventListener('input', (e) => {
     gameSpeed = parseFloat(e.target.value);
     speedLabel.textContent = `${gameSpeed}×`;
     if (aiInterval) { clearInterval(aiInterval); aiInterval = null; }
-    if (aiPlayerActive && aiMode === 'auto') scheduleAILoop();
+    if (aiPlayerActive && aiMode === 'auto' && (_playMode === 'ai' || _playMode === 'ai-teach')) scheduleAILoop();
 });
 
 // Mute
@@ -4029,6 +4139,7 @@ async function _runActionQueue(fast, watch, initialWatchFrame) {
 let _busyCycle = false;   // prevents a new think starting while still executing
 async function aiThinkAndAct() {
     if (!aiPlayerActive || _busyCycle) return;
+    if (_playMode !== 'ai' && _playMode !== 'ai-teach') return;   // only LLM modes
     _busyCycle = true;
     try {
         const resp = await aiThink();
@@ -4084,12 +4195,13 @@ function exitRapidFire() {
     if (ind) ind.classList.remove('active');
 
     // Resume normal loop if AI player is still active
-    if (aiPlayerActive && aiMode === 'auto') scheduleAILoop();
+    if (aiPlayerActive && aiMode === 'auto' && (_playMode === 'ai' || _playMode === 'ai-teach')) scheduleAILoop();
     tts.speak('Rapid fire mode ended. Back to normal pace.');
     updateAIStatus('✅ Rapid fire ended — resuming normal loop');
 }
 
 function scheduleAILoop() {
+    if (_playMode !== 'ai' && _playMode !== 'ai-teach') return;
     if (_turboMode) { startTurboLoop(); return; }   // turbo replaces the normal loop
     const cycle = Math.max(MIN_THINK_INTERVAL_MS, 8000 / gameSpeed);
     aiInterval  = setInterval(async () => {
@@ -4181,7 +4293,7 @@ function _startSelectedMode() {
     aiBtn.textContent = '⏹ Stop';
     if (_playMode === 'rl') {
         if (!_adaptiveBrain) setAdaptiveBrain(true);   // RL Play IS the learner — it must be on to learn
-        updateAIStatus('🧒 RL Player — the child plays on its own (no LLM: free, fast, reactive)');
+        updateAIStatus(`🧒 RL Player [${_RL_TIER} tier${_RL_DOUBLE_Q ? ' 2Q' : ''}] — the child plays on its own (no LLM: free, fast, reactive)`);
         tts.speak('R L player active. The child is playing on its own.');
         _showRatingWidget(true);                 // rate its run any time
         updateDebugHUD(); scheduleRLLoop(); rlThinkAndAct();
@@ -4202,7 +4314,7 @@ function _startSelectedMode() {
     if (_playMode === 'player-learn') {
         if (_agentOnly) setAgentOnly(false);
         if (!_adaptiveBrain) setAdaptiveBrain(true);
-        updateAIStatus('🎮 Player Learn — play the game; the RL learns from every key-press. Pure local, no AI. Click the game!');
+        updateAIStatus(`🎮 Player Learn [${_RL_TIER} tier${_RL_DOUBLE_Q ? ' 2Q' : ''}] — play the game; the RL learns from every key-press. Pure local, no AI. Click the game!`);
         tts.speak('Player learn mode. Play the game. The R L will learn from your inputs.');
         _showPlayerLearnBanner(true);
         startPlayerLearn();
