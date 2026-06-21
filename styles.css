@@ -176,8 +176,10 @@ body {
 .hud-btn.orange { background: var(--orange); }
 .hud-btn.cyan   { background: var(--cyan); }
 .hud-btn.purple { background: var(--purple); }
+.hud-btn.blue   { background: var(--blue); }
 .hud-btn.active.green  { background: #e53935; }
 .hud-btn.active.orange { background: var(--green); }
+.hud-btn.active.blue   { background: #1565c0; box-shadow: 0 0 10px rgba(30,136,229,0.45); }
 
 /* Play-mode dropdown — needs its own readable styling (the .hud-btn class has
    white text with no background, which renders a <select> white-on-white). */

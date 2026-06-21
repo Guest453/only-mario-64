@@ -3024,6 +3024,35 @@ function savePreplanState() {
     } catch {}
 }
 
+// ── DEEP THINK MODE ─────────────────────────────────────────────────────
+// When ON, the AI gets more tokens, longer reasoning instructions, and a
+// slower cadence — producing smarter but slower decisions. Great for tough
+// sections. When OFF, it's fast and reactive. Persisted across reloads.
+let _deepThink = (() => { try { return localStorage.getItem('sm64_deep_think') === '1'; } catch { return false; } })();
+function setDeepThink(on) {
+    _deepThink = !!on;
+    try { localStorage.setItem('sm64_deep_think', _deepThink ? '1' : '0'); } catch {}
+    updateDeepThinkUI();
+    // Restart the think loop with new interval if AI is active
+    if (aiPlayerActive && aiMode === 'auto' && (_playMode === 'ai' || _playMode === 'ai-teach') && !_turboMode) {
+        if (aiInterval) { clearInterval(aiInterval); aiInterval = null; }
+        scheduleAILoop();
+    }
+    updateAIStatus(_deepThink ? '💭 Deep Think ON — AI reasons harder, moves slower (2× tokens, deeper analysis)'
+                              : 'Deep Think off — AI plays at normal speed');
+}
+function updateDeepThinkUI() {
+    const b = document.getElementById('deep-think-btn');
+    if (b) {
+        b.classList.toggle('active', _deepThink);
+        b.textContent = _deepThink ? '💭 Thinking Deep' : '💭 Think Harder';
+        b.title = _deepThink ? 'Deep reasoning ON — slower but smarter. Click to disable.'
+                             : 'Deeper reasoning — slower but smarter AI decisions';
+    }
+    const sb = document.getElementById('so-deep-think-btn');
+    if (sb) { sb.classList.toggle('active', _deepThink); sb.textContent = _deepThink ? '💭 Deep ON' : '💭 Deep Think'; }
+}
+
 // Constant frame updates: continuously capture the live game so the AI's view
 // is always current, and the "what the AI sees" panel shows live gameplay
 // (not just the frozen request frame).
@@ -3476,6 +3505,9 @@ async function aiThink() {
         const teachCtx = _playMode === 'ai-teach'
             ? `\n\n👨‍🏫 AI-TEACH MODE: You are demonstrating for a child learner. After every action, briefly explain WHY you chose it in "thought" — what you saw, what you aimed for, and what you expect to happen. The child learns from your reasoning, not just your inputs. Be explicit: "I turned left because the door is in the L cell" or "I long-jumped because there's a gap ahead". This is a TEACHING session — show your work.`
             : '';
+        const deepThinkCtx = _deepThink
+            ? `\n\n💭 DEEP THINK MODE IS ON. You have EXTRA time and tokens — use them. Before choosing actions:\n 1. DESCRIBE the scene in spatial detail (what cells contain what objects/enemies/doors)\n 2. IDENTIFY hazards (pits, water, enemies, walls) and safe paths\n 3. PREDICT what each candidate action will accomplish ("if I jump forward I'll cross the gap; if I turn left I'll face the door")\n 4. CHOOSE the best multi-step plan with explicit hold durations\n 5. Explain WHY in your "thought" field.\n Take your time. Longer, more thorough reasoning is BETTER here.`
+            : '';
         const notesCtx    = aiNotes.length > 0
             ? `\n\nYOUR PRE-GAME STUDY NOTES:\n${aiNotes.join('\n')}`
             : '';
@@ -3609,7 +3641,7 @@ RULES:
 - ${memOn
     ? 'You may use tools (get_game_state, set_game_speed for tricky jumps, save_move/play_move for reusable sequences) when helpful, but don\'t call tools every turn.'
     : 'There is no reliable game memory — judge everything from the image. You may use set_game_speed, is_stuck/is_trapped, or save_move/play_move when helpful, but don\'t call tools every turn.'}
-${brainmapCtx}${cameraCtx}${brainCtx}${trustCtx}${rewardCtx}${depthCtx}${movementCtx}${planCtx}${lastActCtx}${preplanCtx}${memStateCtx}${motionCtx}${memoryCtx}${notesCtx}${rewardMemCtx}${instrCtx}${teachCtx}
+${brainmapCtx}${cameraCtx}${brainCtx}${trustCtx}${rewardCtx}${depthCtx}${movementCtx}${planCtx}${lastActCtx}${preplanCtx}${memStateCtx}${motionCtx}${memoryCtx}${notesCtx}${rewardMemCtx}${instrCtx}${teachCtx}${deepThinkCtx}
 
 ${_cmdFormat === 'simple'
 ? `Reply in this SIMPLE LINE FORMAT (one field per line, NO JSON, NO markdown):
@@ -3670,9 +3702,10 @@ Valid keys (THESE ARE THE ONLY ONES — there is no camera key): ArrowUp(forward
         };
 
         // Pre-plan scripts can be long — give the model room for the whole sequence.
+        // Deep Think: 3× normal tokens for thorough spatial reasoning.
         const maxTokens = _preplanMode
-            ? Math.min(2000, 500 + (_preplanCap > 0 ? _preplanCap : 40) * 25)
-            : 400;
+            ? Math.min(3000, 500 + (_preplanCap > 0 ? _preplanCap : 40) * 25)
+            : (_deepThink ? 1200 : 400);
         const rawContent = await callChatWithTools([
             { role: 'system', content: systemPrompt },
             userMessage,
@@ -4257,7 +4290,8 @@ function exitRapidFire() {
 function scheduleAILoop() {
     if (_playMode !== 'ai' && _playMode !== 'ai-teach') return;
     if (_turboMode) { startTurboLoop(); return; }   // turbo replaces the normal loop
-    const cycle = Math.max(MIN_THINK_INTERVAL_MS, 8000 / gameSpeed);
+    const baseInterval = Math.max(MIN_THINK_INTERVAL_MS, 8000 / gameSpeed);
+    const cycle = _deepThink ? baseInterval * 2.2 : baseInterval;   // deep think: ~11s between turns
     aiInterval  = setInterval(async () => {
         if (!aiPlayerActive || _isThinking || _rapidFireActive) return;
         await aiThinkAndAct();
@@ -5108,6 +5142,11 @@ document.getElementById('preplan-save-btn')?.addEventListener('click', () => {
 });
 document.getElementById('so-preplan-btn')?.addEventListener('click', () => setPreplanMode(!_preplanMode));
 updatePreplanUI();
+
+// Deep Think button — toggles deeper reasoning (more tokens, slower cadence)
+document.getElementById('deep-think-btn')?.addEventListener('click', () => setDeepThink(!_deepThink));
+document.getElementById('so-deep-think-btn')?.addEventListener('click', () => setDeepThink(!_deepThink));
+updateDeepThinkUI();
 
 // Big honesty warning, shown on every page load
 (function showSuckWarning() {
