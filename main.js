@@ -1116,6 +1116,31 @@ function buildProviderPanel() {
     persChk.addEventListener('change', () => setRlPersist(persChk.checked));
     persRow.appendChild(persChk); panel.appendChild(persRow);
 
+    // RL tier — auto-detected from hardware, can be overridden at runtime
+    const tierRow = document.createElement('div');
+    tierRow.className = 'provider-row';
+    const tierLabel = document.createElement('label');
+    tierLabel.className = 'provider-label'; tierLabel.textContent = '🧠 RL engine power';
+    const tierSel = document.createElement('select');
+    tierSel.className = 'provider-select';
+    const tierOpts = ['basic', 'standard', 'advanced'];
+    const tierNames = { basic: '🟢 Basic (i3 / 2-4 cores)', standard: '🟡 Standard (i5 / 4-8 cores)', advanced: '🔴 Advanced (i7 / 8+ cores, double-Q + n-step)' };
+    tierSel.innerHTML = `<option value="auto">🤖 Auto-detect (currently: ${_RL_TIER})</option>` +
+        tierOpts.map(t => `<option value="${t}">${tierNames[t]}</option>`).join('');
+    tierSel.value = (() => { try { return localStorage.getItem('sm64_rl_tier') || 'auto'; } catch { return 'auto'; } })();
+    tierSel.addEventListener('change', () => {
+        const v = tierSel.value;
+        if (v === 'auto') {
+            try { localStorage.removeItem('sm64_rl_tier'); } catch {}
+            tierSel.value = 'auto';
+            return;  // takes effect on next page load
+        }
+        const msg = setRLTier(v);
+        updateAIStatus(`⚙ ${msg}`);
+    });
+    tierRow.appendChild(tierLabel); tierRow.appendChild(tierSel);
+    panel.appendChild(tierRow);
+
     // Export / import the trained model
     const ioRow = document.createElement('div'); ioRow.className = 'provider-row'; ioRow.style.gap = '8px';
     const expBtn = document.createElement('button');
@@ -1780,9 +1805,9 @@ let _REPLAY_CAPACITY = _RL_CFG.replayCap;
 let _REPLAY_BATCH    = _RL_CFG.replayBatch;
 let _REPLAY_EVERY    = _RL_CFG.replayEvery;
 let _PL_TICK_MS      = _RL_CFG.plTickMs;
-const _RL_UCB_C      = _RL_CFG.ucbC;
-const _RL_DOUBLE_Q   = _RL_CFG.doubleQ;
-const _RL_NSTEP      = _RL_CFG.nstep;
+let _RL_UCB_C      = _RL_CFG.ucbC;
+let _RL_DOUBLE_Q   = _RL_CFG.doubleQ;
+let _RL_NSTEP      = _RL_CFG.nstep;
 
 // ── Experience replay buffer (prioritized) ──────────────────────────────
 let _replayBuffer = [];
@@ -1893,14 +1918,43 @@ function _pushNStep(stateKey, actionCat, reward) {
     _maybeNStepUpdate();
 }
 
-// Console + window API: check/override RL tier
-window.sm64RLTier = (t) => {
-    if (t) {
-        try { localStorage.setItem('sm64_rl_tier', t); } catch {}
-        return `RL tier set to "${t}" — reload the page to apply`;
+// Console + UI API: change RL tier at runtime (or reload for full reset)
+function setRLTier(tier) {
+    if (!_RL_TIERS[tier]) return `Unknown tier "${tier}". Use: basic, standard, or advanced.`;
+    try { localStorage.setItem('sm64_rl_tier', tier); } catch {}
+    const cfg = _RL_TIERS[tier];
+    _RL_GAMMA  = cfg.gamma;
+    _RL_ALPHA  = cfg.alpha;
+    _RL_LAMBDA = cfg.lambda;
+    _REPLAY_CAPACITY = cfg.replayCap;
+    _REPLAY_BATCH    = cfg.replayBatch;
+    _REPLAY_EVERY    = cfg.replayEvery;
+    _PL_TICK_MS      = cfg.plTickMs;
+    _RL_UCB_C  = cfg.ucbC;
+    _RL_DOUBLE_Q = cfg.doubleQ;
+    _RL_NSTEP    = cfg.nstep;
+    // If switching to double-Q, init the target table
+    if (_RL_DOUBLE_Q && Object.keys(_qTarget).length === 0) _syncTargetQ();
+    // If switching away from double-Q, clear the target table
+    if (!_RL_DOUBLE_Q) _qTarget = {};
+    // If nstep disabled, clear the nstep buffer
+    if (_RL_NSTEP <= 1) _nstepBuffer = [];
+    // Restart player-learn loop if active with new tick rate
+    if (_plLoop && _playMode === 'player-learn') {
+        stopPlayerLearn();
+        startPlayerLearn();
     }
-    return `Current RL tier: "${_RL_TIER}" (cores: ${navigator.hardwareConcurrency || '?'}, bench: —). Override: sm64RLTier("basic"|"standard"|"advanced")`;
-};
+    // Trim replay buffer to new capacity
+    while (_replayBuffer.length > _REPLAY_CAPACITY) _replayBuffer.shift();
+    updateDebugHUD();
+    const banner = document.getElementById('pl-banner');
+    if (banner && banner.style.display !== 'none') {
+        banner.innerHTML = `🎮 <b>Player Learn</b> [${tier}${_RL_DOUBLE_Q ? ' 2Q' : ''}] — play the game; the RL learns from every move you make (no AI, pure local). <button id="pl-showoff" style="margin-left:8px;cursor:pointer;border:0;background:#4fd16e;color:#042;border-radius:12px;padding:3px 9px;font-weight:700">🎬 Let RL show off</button>`;
+        const sb = banner.querySelector('#pl-showoff'); if (sb) sb.onclick = () => rlShowoff(5);
+    }
+    return `RL tier changed to "${tier}" (γ=${_RL_GAMMA} α=${_RL_ALPHA} λ=${_RL_LAMBDA} ${_RL_DOUBLE_Q ? '2Q' : ''}${_RL_NSTEP > 1 ? ' nstep'+_RL_NSTEP : ''})`;
+}
+window.sm64RLTier = (t) => t ? setRLTier(t) : `Current RL tier: "${_RL_TIER}" (cores: ${navigator.hardwareConcurrency || '?'}). Override: sm64RLTier("basic"|"standard"|"advanced")`;
 // PERSISTENCE (experimental, OFF by default): a persisted Q-table is a real saved
 // "model" in your browser. When off, learning lives only for the session. When on,
 // it survives reloads and can be exported/imported to share a trained child.
