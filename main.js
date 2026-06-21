@@ -2177,14 +2177,17 @@ let _lastGradeTime = 0;
 //   player-teach — YOU play; the parent LLM auto-grades YOUR moves so the child
 //                  learns what you do right/wrong. (Manual rating is NOT for your
 //                  play — it's for when the RL shows off, below.)
+//   player-learn — YOU play; pure local teaching at high frequency (150ms).
+//                  NO AI/LLM at all — the RL watches your every input and
+//                  learns directly from visual feedback. No auth required.
 //   ai-teach     — the parent LLM plays and teaches the child; it never takes over
 //                  (clean demonstration signal).
 let _playMode = (() => { try { return localStorage.getItem('sm64_play_mode') || 'ai'; } catch { return 'ai'; } })();
 function _playModeLabel(m) {
-    return { ai: '🤖 AI Play', rl: '🧒 RL Play', 'player-teach': '🧓 Player Teach', 'ai-teach': '👨‍🏫 AI Teach' }[m] || '🤖 AI Play';
+    return { ai: '🤖 AI Play', rl: '🧒 RL Play', 'player-teach': '🧓 Player Teach', 'player-learn': '🎮 Player Learn', 'ai-teach': '👨‍🏫 AI Teach' }[m] || '🤖 AI Play';
 }
 function setPlayMode(m) {
-    if (!['ai', 'rl', 'player-teach', 'ai-teach'].includes(m)) m = 'ai';
+    if (!['ai', 'rl', 'player-teach', 'player-learn', 'ai-teach'].includes(m)) m = 'ai';
     _playMode = m;
     try { localStorage.setItem('sm64_play_mode', m); } catch {}
     const sel = document.getElementById('play-mode'); if (sel) sel.value = m;
@@ -2192,6 +2195,150 @@ function setPlayMode(m) {
     updateAIStatus(`Mode: ${_playModeLabel(m)} — press the play button to start`);
 }
 window.sm64Mode = (m) => { if (m) setPlayMode(m); return _playMode; };
+
+// ── PLAYER-LEARN MODE — pure local teaching, zero LLM ───────────────────
+// High-frequency (150ms) loop: capture frame → detect your inputs → reward
+// the RL child with visual-change feedback + action bonuses + stuck penalties.
+// No AI middle-man. Teaches both Q-table AND behavioral cloning simultaneously.
+let _plLoop = null, _plPrevFrame = null, _plBusy = false;
+let _plFeedback = [];   // floating +1/-1 bubbles currently on screen
+const _PL_TICK_MS = 150;
+
+// Smart reward for player-learn: visual change (0..0.6) + action diversity
+// bonus + stuck penalty. Designed to give clean, high-frequency teaching.
+function _plReward(visualPct, cat, prevCat, stuckCount) {
+    let r = 0;
+    // Visual change reward (0 to 0.55)
+    if (visualPct != null) {
+        r += Math.min(0.55, visualPct / 100);
+    }
+    // Action diversity bonus: switching moves = exploring, good
+    if (cat && prevCat && cat !== prevCat) r += 0.08;
+    // Complex actions get a tiny bonus (jumping, diving = valuable skills)
+    if (cat === 'jump-forward' || cat === 'jump' || cat === 'action' || cat === 'dive') r += 0.06;
+    if (_RL_COMBOS.includes(cat)) r += 0.1;
+    // Movement keys held = good (player is actively navigating)
+    if (cat === 'forward' || cat === 'forward-left' || cat === 'forward-right') r += 0.04;
+    // Standing still or waiting with no visual change = mildly negative
+    if (cat === 'wait' && visualPct != null && visualPct < 4) r -= 0.15;
+    // Stuck penalty
+    if (stuckCount >= 3 && cat !== 'wait') {
+        r -= 0.45;
+        if (cat === prevCat) r -= 0.2;
+    }
+    return Math.max(-1.2, Math.min(1.5, r));
+}
+
+// Floating "+0.8" / "-0.5" bubble that fades up and disappears
+function _plShowFeedback(reward, cat) {
+    const b = document.createElement('div');
+    const good = reward >= 0.1;
+    b.textContent = `${good ? '+' : ''}${reward.toFixed(1)} ${cat}`;
+    b.style.cssText = `position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:9999;
+        font:bold 14px system-ui;color:${good ? '#19c37d' : '#e3556e'};
+        background:#0f1219cc;border:1px solid ${good ? '#19c37d44' : '#e3556e44'};
+        padding:3px 10px;border-radius:14px;pointer-events:none;
+        animation:plFeedback 1.2s ease-out forwards;`;
+    document.body.appendChild(b);
+    _plFeedback.push(b);
+    setTimeout(() => { b.remove(); _plFeedback = _plFeedback.filter(x => x !== b); }, 1300);
+}
+
+// Inject the floating-feedback keyframe animation once
+function _plEnsureFeedbackStyle() {
+    if (document.getElementById('pl-feedback-style')) return;
+    const s = document.createElement('style');
+    s.id = 'pl-feedback-style';
+    s.textContent = `@keyframes plFeedback{0%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-48px)}}`;
+    document.head.appendChild(s);
+}
+
+// Banner for player-learn mode
+function _showPlayerLearnBanner(on) {
+    let b = document.getElementById('pl-banner');
+    if (on) {
+        if (!b) {
+            b = document.createElement('div'); b.id = 'pl-banner';
+            b.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:9998;background:#1a3020;color:#c5f0d0;border:1px solid #4fd16e;padding:6px 14px;border-radius:20px;font:600 13px system-ui;box-shadow:0 2px 12px rgba(0,0,0,.4)';
+            document.body.appendChild(b);
+        }
+        b.innerHTML = '🎮 <b>Player Learn</b> — play the game; the RL learns from every move you make (no AI, pure local). <button id="pl-showoff" style="margin-left:8px;cursor:pointer;border:0;background:#4fd16e;color:#042;border-radius:12px;padding:3px 9px;font-weight:700">🎬 Let RL show off</button>';
+        b.style.display = 'block';
+        const sb = b.querySelector('#pl-showoff'); if (sb) sb.onclick = () => rlShowoff(5);
+    } else if (b) { b.style.display = 'none'; }
+}
+
+// Core player-learn tick: capture screen, detect inputs, reward RL
+async function _plTick() {
+    if (!aiPlayerActive || _playMode !== 'player-learn' || _showoffRunning || _plBusy) return;
+    _plBusy = true;
+    try {
+        const ss = await captureScreen(aiStream).catch(() => null);
+        if (!ss) return;
+        // Detect if player is pressing movement keys
+        const cat = playerMovementDetected ? _categorizeCodes([...playerInputs]) : null;
+
+        if (cat && _plPrevFrame) {
+            const vm = await _frameDiffScore(_plPrevFrame, ss);
+            if (vm != null) {
+                const visPct = Math.round(vm * 100);
+                _lastVisualPct = visPct;
+                if (vm < 0.04) _stuckCount++; else _stuckCount = 0;
+                const prevCat = _lastBrainActionCat;
+                const reward = _plReward(visPct, cat, prevCat, _stuckCount);
+                // TD(0) update with current state as next state
+                const stateKey = _brainState();
+                _qUpdate(stateKey, cat, reward, stateKey, false);
+                _pushReplay(stateKey, cat, reward, stateKey, false);
+                // Eligibility trace credit
+                if (Math.abs(reward) >= 0.2 && _eligTrace.length) {
+                    let decay = _RL_LAMBDA;
+                    for (let i = _eligTrace.length - 1; i >= 0 && i >= _eligTrace.length - 3; i--) {
+                        _qUpdate(_eligTrace[i].stateKey, _eligTrace[i].cat, reward * decay, stateKey, false);
+                        decay *= _RL_GAMMA * _RL_LAMBDA;
+                    }
+                }
+                _eligTrace.push({ stateKey, cat });
+                while (_eligTrace.length > 6) _eligTrace.shift();
+                _lastReward = reward;
+                _lastBrainActionCat = cat;
+                _trainStats.taught = (_trainStats.taught || 0) + 1;
+                _trainStats.turns++;
+                // Periodic replay
+                if (_trainStats.turns % _REPLAY_EVERY === 0) _replayBatch();
+                _saveTrainStats();
+                // Trust from performance
+                _trustHistory.push(reward);
+                while (_trustHistory.length > _TRUST_WINDOW) _trustHistory.shift();
+                const avg = _trustHistory.reduce((a, b) => a + b, 0) / _trustHistory.length;
+                const t = 1 / (1 + Math.exp(-6 * (avg - 0.1)));
+                _setChildTrust(_childTrust * 0.85 + t * 0.15);
+                // Floating feedback
+                if (Math.abs(reward) >= 0.15) _plShowFeedback(reward, cat);
+                updateAIStatus(`🎮 Teaching: ${cat} → ${reward.toFixed(2)} · trust ${Math.round(_childTrust * 100)}% · taught ${_trainStats.taught || 0} moves`);
+            }
+        }
+        // Always clone behavior: the RL learns what YOU do per state
+        if (cat) {
+            _humanPolicyAdd(_brainState(), cat);
+        }
+        _plPrevFrame = ss;
+        updateDebugHUD();
+    } finally { _plBusy = false; }
+}
+
+function startPlayerLearn() {
+    _plEnsureFeedbackStyle();
+    if (_plLoop) return;
+    _plPrevFrame = null;
+    _plLoop = setInterval(() => _plTick(), _PL_TICK_MS);
+}
+
+function stopPlayerLearn() {
+    if (_plLoop) { clearInterval(_plLoop); _plLoop = null; }
+    _plPrevFrame = null;
+    _showPlayerLearnBanner(false);
+}
 
 // ── RL SOLO CONTROL — the child plays with no LLM, off its learned Q-table ──
 // State generalizes across regions (it borrows stats from same stuck|vis context),
@@ -2398,7 +2545,7 @@ function _ensureRatingWidget() {
     }
     return w;
 }
-function _afterRate() { _showRatingWidget(_playMode === 'rl'); if (_playMode === 'player-teach') _showElderBanner(true); }
+function _afterRate() { _showRatingWidget(_playMode === 'rl'); if (_playMode === 'player-teach') _showElderBanner(true); if (_playMode === 'player-learn') _showPlayerLearnBanner(true); }
 function _showRatingWidget(on) {
     const w = _ensureRatingWidget();
     const lbl = w.querySelector('#rl-rate-label');
@@ -3959,14 +4106,14 @@ async function toggleAIPlayer() {
         // Source of truth for the mode is the dropdown's CURRENT value at press time
         // (don't rely only on the change event having fired).
         const _modeSel = document.getElementById('play-mode');
-        if (_modeSel && ['ai', 'rl', 'player-teach', 'ai-teach'].includes(_modeSel.value)) {
+        if (_modeSel && ['ai', 'rl', 'player-teach', 'player-learn', 'ai-teach'].includes(_modeSel.value)) {
             _playMode = _modeSel.value;
             try { localStorage.setItem('sm64_play_mode', _playMode); } catch {}
         }
     }
 
-    // Every mode EXCEPT pure RL Play needs the Pollinations LLM (parent/grading).
-    if (_playMode !== 'rl' && !getActiveKey()) {
+    // Every mode EXCEPT RL Play and Player Learn needs Pollinations LLM
+    if (_playMode !== 'rl' && _playMode !== 'player-learn' && !getActiveKey()) {
         document.getElementById('auth-overlay').classList.remove('hidden');
         return;
     }
@@ -4014,9 +4161,9 @@ async function toggleAIPlayer() {
         clearChatlog();
         aiStream.getVideoTracks()[0].addEventListener('ended', stopAIPlayer);
 
-        // Auto-study the guide before playing (once), in the background. RL Play uses
-        // no LLM, so it skips this.
-        if (_playMode !== 'rl' && aiNotes.length === 0 && getActiveKey()) {
+        // Auto-study the guide before playing (once), in the background. RL Play and
+        // Player Learn use no LLM, so they skip this.
+        if (_playMode !== 'rl' && _playMode !== 'player-learn' && aiNotes.length === 0 && getActiveKey()) {
             updateAIStatus('📚 Studying the guide before playing…');
             runStudy({ silent: true }).catch(() => {});
         }
@@ -4051,6 +4198,16 @@ function _startSelectedMode() {
         _showElderBanner(true);
         updateDebugHUD();
         return;                                  // no LLM play loop — elder watch + grading do the work
+    }
+    if (_playMode === 'player-learn') {
+        if (_agentOnly) setAgentOnly(false);
+        if (!_adaptiveBrain) setAdaptiveBrain(true);
+        updateAIStatus('🎮 Player Learn — play the game; the RL learns from every key-press. Pure local, no AI. Click the game!');
+        tts.speak('Player learn mode. Play the game. The R L will learn from your inputs.');
+        _showPlayerLearnBanner(true);
+        startPlayerLearn();
+        updateDebugHUD();
+        return;                                  // no LLM — high-frequency local learning loop
     }
     // 'ai' or 'ai-teach' → the parent LLM plays
     if (_playMode === 'ai' && aiMode === 'manual') {
@@ -4117,9 +4274,10 @@ function stopAIPlayer() {
     stopTurboLoop();
     stopLiveLoop();
     stopElderWatch();
+    stopPlayerLearn();
     stopRealtimeRL();
     _showoffRunning = false; _showoffBuffer = [];
-    _showElderBanner(false); _showRatingWidget(false);
+    _showElderBanner(false); _showRatingWidget(false); _showPlayerLearnBanner(false);
     if (_captureVideo) { _captureVideo.srcObject = null; }
     // Free frame buffers so a long session doesn't pile up base64 strings
     _frameHistory = [];
