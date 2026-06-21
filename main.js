@@ -157,6 +157,7 @@ function _yawToCompass(yaw) {
 }
 
 function readGameState() {
+    if (window.SM64JS_MODE) return _sm64jsReadGameState();
     if (!MEMORY_ENABLED) return null;   // off by default — see note above
     if (!Module.HEAPU8) return null;
     if (_marioBase === -1 || !_looksLikeMario(_marioBase)) {
@@ -735,14 +736,63 @@ const _originalCanvas = document.getElementById('canvas');
 const _emulatorjsContainer = document.getElementById('emulatorjs-container');
 
 function getGameCanvas() {
+    if (window.SM64JS_MODE) {
+        try { return _sm64jsCanvas(); } catch { return _originalCanvas; }
+    }
     if (_activeCore === 'emulatorjs') {
         return _emulatorjsContainer.querySelector('canvas') || _emulatorjsContainer;
     }
     return _originalCanvas;
 }
+function _sm64jsCanvas() {
+    var iframe = document.getElementById('sm64js-iframe');
+    if (iframe && iframe.contentDocument) {
+        return iframe.contentDocument.getElementById('fullCanvas');
+    }
+    return null;
+}
+function _sm64jsKeyTarget() {
+    var iframe = document.getElementById('sm64js-iframe');
+    return (iframe && iframe.contentDocument) ? iframe.contentDocument : window;
+}
+function _sm64jsReadGameState() {
+    try {
+        var iframe = document.getElementById('sm64js-iframe');
+        if (!iframe || !iframe.contentWindow) return null;
+        var w = iframe.contentWindow;
+        if (!w.gLinker || !w.gLinker.LevelUpdate) return null;
+        var m = w.gLinker.LevelUpdate.gMarioState;
+        var pos = m.pos || [0,0,0];
+        var face = m.faceAngle || [0,0,0];
+        var yaw = face[0] || 0;
+        return {
+            x: Math.round(pos[0]), y: Math.round(pos[1]), z: Math.round(pos[2]),
+            speed: Math.round((m.forwardVel || 0) * 10) / 10,
+            coins: m.numCoins || 0, stars: m.numStars || 0, lives: m.numLives || 4,
+            health: ((m.health || 0x880) >> 8) & 0xFF,
+            capTimer: m.capTimer || 0,
+            yaw: yaw, yawDeg: Math.round(((yaw & 0xFFFF) / 65536) * 360),
+            facing: 'N',
+            actionId: m.action || 0, actionName: 'moving',
+            inWater: false,
+            levelId: 0, area: 0, levelName: 'In game',
+        };
+    } catch { return null; }
+}
 
 _originalCanvas.style.touchAction = 'none';
 _originalCanvas.addEventListener('mousedown', () => _originalCanvas.focus());
+
+// ── sm64js mode init ──────────────────────────────────────
+if (window.SM64JS_MODE) {
+    MEMORY_ENABLED = true;
+    // Hide the original game container since the game runs in the iframe
+    var ogc = document.getElementById('original-game-container');
+    if (ogc) ogc.style.display = 'none';
+    // Remove loading screen
+    var ls = document.getElementById('loading-screen');
+    if (ls) { ls.style.opacity = '0'; setTimeout(function() { ls.remove(); }, 200); }
+}
 
 Object.assign(window.Module, {
     canvas: _originalCanvas,
@@ -1477,7 +1527,9 @@ function getCanvasStream(fps = 5) {
     if (_canvasStream && _canvasStream.active) return _canvasStream;
     try {
         const c = getGameCanvas();
-        if (!c || typeof c.captureStream !== 'function') return null;
+        if (!c) return null;
+        if (window.SM64JS_MODE && !c.isConnected) { _canvasStream = null; return null; }
+        if (typeof c.captureStream !== 'function') return null;
         _canvasStream = c.captureStream(fps);
         return _canvasStream;
     } catch (err) {
@@ -2070,7 +2122,8 @@ function scheduleRLLoop() {
 let _rtLoop = null, _rtPrevFrame = null, _rlHeld = new Set();
 function _rlKeyEv(type, code) {
     const o = { code, key: code, bubbles: true, cancelable: true };
-    getGameCanvas().dispatchEvent(new KeyboardEvent(type, o));
+    var target = window.SM64JS_MODE ? _sm64jsKeyTarget() : getGameCanvas();
+    if (target) target.dispatchEvent(new KeyboardEvent(type, o));
     document.dispatchEvent(new KeyboardEvent(type, o));
 }
 function _rlSetHeld(desiredCodes) {
@@ -2723,10 +2776,11 @@ const delay = ms => new Promise(r => setTimeout(r, ms));
 
 function simulateKeyPress(key, duration = 100) {
     const opts = { code: key, key, bubbles: true, cancelable: true };
-    getGameCanvas().dispatchEvent(new KeyboardEvent('keydown', opts));
+    var target = window.SM64JS_MODE ? _sm64jsKeyTarget() : getGameCanvas();
+    if (target) target.dispatchEvent(new KeyboardEvent('keydown', opts));
     document.dispatchEvent(new KeyboardEvent('keydown', opts));
     setTimeout(() => {
-        getGameCanvas().dispatchEvent(new KeyboardEvent('keyup', opts));
+        if (target) target.dispatchEvent(new KeyboardEvent('keyup', opts));
         document.dispatchEvent(new KeyboardEvent('keyup', opts));
     }, Math.max(50, duration));
 }

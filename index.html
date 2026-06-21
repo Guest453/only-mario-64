@@ -61,7 +61,7 @@
 </head>
 <body>
     <!-- ── EmulatorJS-only overlay (no sm64.wasm, no AI) ── -->
-    <div id="emu-only" style="display:none;position:fixed;inset:0;background:#000;z-index:9999;">
+    <div id="emu-only" style="display:none;position:fixed;top:var(--hud-h,40px);left:0;right:0;bottom:0;background:#000;z-index:99;">
         <div id="emu-loading" style="color:#ccc;padding:40px;text-align:center;position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);font-size:16px;">⏳ Loading N64 emulator from CDN…<br><small style="color:#888;">This may take 10–30 seconds</small></div>
         <button id="emu-back-btn" style="position:fixed;top:10px;right:10px;z-index:10000;background:#333;color:#fff;border:1px solid #555;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px;">← Back to original</button>
     </div>
@@ -443,19 +443,29 @@
     </div><!-- #app -->
 
     <script>
-      // ── Check if we should boot into EmulatorJS-only mode ──
+      // ── Check if we should boot into sm64js mode ──
       if (sessionStorage.getItem('sm64_emu_mode')) {
           sessionStorage.removeItem('sm64_emu_mode');
-          document.getElementById('app').style.display = 'none';
+          window.SM64JS_MODE = true;
           document.getElementById('emu-only').style.display = 'block';
-          var ls = document.getElementById('loading-screen');
-          if (ls) ls.style.display = 'none';
           document.getElementById('emu-back-btn').addEventListener('click', function() {
               sessionStorage.removeItem('sm64_emu_mode');
               var req = indexedDB.deleteDatabase('sm64emu');
               req.onsuccess = function() { location.reload(); };
           });
-          window._bootEmulatorJS();
+          // Replace the emu-only loading message with sm64js iframe
+          var emuDiv = document.getElementById('emu-only');
+          emuDiv.innerHTML = '<div style="position:absolute;top:0;left:0;right:0;bottom:0;border:0;" id="sm64js-iframe-container">' +
+              '<iframe id="sm64js-iframe" src="./sm64js-game/index.html?autostart=1" style="width:100%;height:100%;border:0;" allow="autoplay"></iframe>' +
+              '</div>' +
+              '<button id="emu-back-btn-inner" style="position:fixed;top:10px;right:10px;z-index:10000;background:#333;color:#fff;border:1px solid #555;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px;">← Back to original</button>';
+          document.getElementById('emu-back-btn-inner').addEventListener('click', function() {
+              sessionStorage.removeItem('sm64_emu_mode');
+              var req = indexedDB.deleteDatabase('sm64emu');
+              req.onsuccess = function() { location.reload(); };
+          });
+          // Still load the AI framework so it can control the iframe
+          document.write('<script type="module" src="./main.js"><\/script>');
       } else {
           // ── Original boot path: load sm64.wasm + main.js ──
           window.Module = window.Module || {};
