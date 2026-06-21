@@ -447,25 +447,30 @@
       if (sessionStorage.getItem('sm64_emu_mode')) {
           sessionStorage.removeItem('sm64_emu_mode');
           window.SM64JS_MODE = true;
-          document.getElementById('emu-only').style.display = 'block';
+          // Hide original game canvas (keep HUD bar + auth flow alive)
+          var ogc = document.getElementById('original-game-container');
+          if (ogc) ogc.style.display = 'none';
+          // Show sm64js iframe
+          var emuDiv = document.getElementById('emu-only');
+          emuDiv.style.display = 'block';
+          emuDiv.innerHTML = '<div style="position:absolute;top:0;left:0;right:0;bottom:0;border:0;" id="sm64js-iframe-container">' +
+              '<iframe id="sm64js-iframe" src="./sm64js-game/index.html?autostart=1" style="width:100%;height:100%;border:0;" allow="autoplay"></iframe>' +
+              '</div>' +
+              '<button id="emu-back-btn" style="position:fixed;top:10px;right:10px;z-index:10000;background:#333;color:#fff;border:1px solid #555;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px;">← Back to original</button>';
           document.getElementById('emu-back-btn').addEventListener('click', function() {
               sessionStorage.removeItem('sm64_emu_mode');
               var req = indexedDB.deleteDatabase('sm64emu');
               req.onsuccess = function() { location.reload(); };
           });
-          // Replace the emu-only loading message with sm64js iframe
-          var emuDiv = document.getElementById('emu-only');
-          emuDiv.innerHTML = '<div style="position:absolute;top:0;left:0;right:0;bottom:0;border:0;" id="sm64js-iframe-container">' +
-              '<iframe id="sm64js-iframe" src="./sm64js-game/index.html?autostart=1" style="width:100%;height:100%;border:0;" allow="autoplay"></iframe>' +
-              '</div>' +
-              '<button id="emu-back-btn-inner" style="position:fixed;top:10px;right:10px;z-index:10000;background:#333;color:#fff;border:1px solid #555;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px;">← Back to original</button>';
-          document.getElementById('emu-back-btn-inner').addEventListener('click', function() {
-              sessionStorage.removeItem('sm64_emu_mode');
-              var req = indexedDB.deleteDatabase('sm64emu');
-              req.onsuccess = function() { location.reload(); };
-          });
-          // Still load the AI framework so it can control the iframe
-          document.write('<script type="module" src="./main.js"><\/script>');
+          var ls = document.getElementById('loading-screen');
+          if (ls) { ls.style.opacity = '0'; ls.addEventListener('transitionend', function() { ls.remove(); }); }
+          var sw = document.getElementById('suck-warning');
+          if (sw) sw.style.display = 'none';
+          // Dynamically load main.js for AI features
+          var s = document.createElement('script');
+          s.type = 'module';
+          s.src = './main.js';
+          document.head.appendChild(s);
       } else {
           // ── Original boot path: load sm64.wasm + main.js ──
           window.Module = window.Module || {};
