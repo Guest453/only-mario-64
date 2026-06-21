@@ -63,8 +63,8 @@ body {
 #loading-msg { font-size: 13px; color: rgba(255,255,255,0.40); }
 @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
 
-/* ── Canvas ─────────────────────────────────────────────── */
-#canvas {
+/* ── Canvas / EmulatorJS ────────────────────────────────── */
+#canvas, #emulatorjs-container {
     position: fixed;
     top: var(--hud-h); left: 0;
     width: 100vw;
@@ -73,6 +73,8 @@ body {
     display: block; z-index: 1;
     touch-action: none;
 }
+#emulatorjs-container { z-index: 2; }
+#original-game-container { position: fixed; top: var(--hud-h); left: 0; width: 100vw; height: calc(100vh - var(--hud-h)); z-index: 1; }
 
 /* ── HUD bar ─────────────────────────────────────────────── */
 #hud-bar {
@@ -1223,3 +1225,15 @@ body {
 .bm-ago { color: #5a647c; font-size: 10px; float: right; }
 /* keep the debug HUD out of broadcasts */
 #app.streamer-mode #debug-hud { display: none !important; }
+
+/* ── Patch ROM modal ────────────────────────────────────── */
+#patch-modal { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; }
+#patch-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
+#patch-modal-content { position: relative; background: var(--panel-bg); border: 1px solid var(--hud-border); border-radius: 12px; padding: 20px; width: 420px; max-width: 90vw; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+#patch-modal-content h2 { margin: 0 0 10px; font-size: 18px; }
+.patch-row { margin: 12px 0; display: flex; flex-direction: column; gap: 6px; }
+.patch-row label { font-size: 13px; color: var(--muted); }
+.patch-row input[type="file"] { color: var(--text); }
+.patch-actions { display: flex; gap: 10px; margin-top: 16px; }
+#patch-status { min-height: 20px; font-size: 13px; color: #ff6b6b; }
+.patch-note { margin-top: 12px; color: var(--muted); }

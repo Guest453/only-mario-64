@@ -728,28 +728,123 @@ function initAuth() {
 }
 
 // ────────────────────────────────────────────────────────────
-// 5. CANVAS / GAME SETUP
+// 5. CANVAS / GAME SETUP + CORE SWITCHING
 // ────────────────────────────────────────────────────────────
-const canvas = document.getElementById('canvas');
-canvas.style.touchAction = 'none';
-canvas.addEventListener('mousedown', () => canvas.focus());
+let _activeCore = 'original'; // 'original' | 'emulatorjs'
+const _originalCanvas = document.getElementById('canvas');
+const _emulatorjsContainer = document.getElementById('emulatorjs-container');
+
+function getGameCanvas() {
+    if (_activeCore === 'emulatorjs') {
+        return _emulatorjsContainer.querySelector('canvas') || _emulatorjsContainer;
+    }
+    return _originalCanvas;
+}
+
+_originalCanvas.style.touchAction = 'none';
+_originalCanvas.addEventListener('mousedown', () => _originalCanvas.focus());
 
 Object.assign(window.Module, {
-    canvas,
+    canvas: _originalCanvas,
     locateFile: (path) => (path.endsWith('.wasm') ? './sm64.wasm' : path),
 });
 
-canvas.focus();
+_originalCanvas.focus();
 
 document.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') { e.stopPropagation(); return; }
     if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
-    if (e.code === 'Enter') canvas.focus();
+    if (e.code === 'Enter') getGameCanvas().focus();
 }, { passive: false });
 
 document.addEventListener('click', () => {
     try { if (Module?.SDL2?.audioContext?.state === 'suspended') Module.SDL2.audioContext.resume(); } catch {}
 });
+
+// ── EmulatorJS + BPS patcher integration ────────────────────
+function switchToEmulatorJS(romBlob) {
+    stopAIPlayer();
+    _activeCore = 'emulatorjs';
+    document.getElementById('original-game-container').style.display = 'none';
+    _emulatorjsContainer.style.display = 'block';
+    MEMORY_ENABLED = false;
+    _marioBase = -1;
+    if (_canvasStream) { try { _canvasStream.getTracks().forEach(t => t.stop()); } catch {} _canvasStream = null; }
+    if (aiStream) { try { aiStream.getTracks().forEach(t => t.stop()); } catch {} aiStream = null; }
+    _emulatorjsContainer.innerHTML = '';
+    window.EJS_player = '#emulatorjs-container';
+    window.EJS_core = 'n64';
+    window.EJS_gameUrl = URL.createObjectURL(romBlob);
+    window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+    window.EJS_startOnLoaded = true;
+    const existing = document.getElementById('emulatorjs-script');
+    if (existing) existing.remove();
+    const script = document.createElement('script');
+    script.id = 'emulatorjs-script';
+    script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+    document.body.appendChild(script);
+    updateAIStatus('🎮 Loaded patched ROM into EmulatorJS — click Start to run AI');
+}
+function restoreOriginalCore() {
+    stopAIPlayer();
+    _activeCore = 'original';
+    document.getElementById('original-game-container').style.display = 'block';
+    _emulatorjsContainer.style.display = 'none';
+    _emulatorjsContainer.innerHTML = '';
+    const existing = document.getElementById('emulatorjs-script');
+    if (existing) existing.remove();
+    MEMORY_ENABLED = true;
+    if (_canvasStream) { try { _canvasStream.getTracks().forEach(t => t.stop()); } catch {} _canvasStream = null; }
+    if (aiStream) { try { aiStream.getTracks().forEach(t => t.stop()); } catch {} aiStream = null; }
+    _originalCanvas.focus();
+    updateAIStatus('🍄 Restored original core — click Start to run AI');
+}
+
+// Patch UI wiring
+(function setupPatchUI() {
+    const modal = document.getElementById('patch-modal');
+    const btn = document.getElementById('patch-rom-btn');
+    const closeBtn = document.getElementById('patch-close-btn');
+    const applyBtn = document.getElementById('patch-apply-btn');
+    const romInput = document.getElementById('patch-rom-input');
+    const bpsInput = document.getElementById('patch-bps-input');
+    const status = document.getElementById('patch-status');
+    if (!modal || !btn) return;
+    btn.addEventListener('click', () => { modal.style.display = 'flex'; status.textContent = ''; });
+    closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    modal.querySelector('#patch-modal-backdrop').addEventListener('click', () => { modal.style.display = 'none'; });
+    applyBtn.addEventListener('click', async () => {
+        status.style.color = '#ff6b6b';
+        const romFile = romInput.files[0];
+        const patchFile = bpsInput.files[0];
+        if (!romFile) { status.textContent = 'Select a base ROM first.'; return; }
+        try {
+            status.style.color = 'var(--text)';
+            status.textContent = 'Reading ROM…';
+            const romArray = new Uint8Array(await romFile.arrayBuffer());
+            const romBin = new BinFile(romArray);
+            romBin.fileName = romFile.name;
+            let patchedBin = romBin;
+            if (patchFile) {
+                status.textContent = 'Applying patch…';
+                const patchArray = new Uint8Array(await patchFile.arrayBuffer());
+                const patchBin = new BinFile(patchArray);
+                patchBin.fileName = patchFile.name;
+                const patch = RomPatcher.parsePatchFile(patchBin);
+                if (!patch) { status.textContent = 'Unknown or unsupported patch format.'; return; }
+                patchedBin = RomPatcher.applyPatch(romBin, patch, { requireValidation: false, outputSuffix: false });
+            }
+            const patchedBlob = new Blob([patchedBin._u8array], { type: 'application/octet-stream' });
+            status.textContent = 'Loading into emulator…';
+            modal.style.display = 'none';
+            switchToEmulatorJS(patchedBlob);
+        } catch (err) {
+            console.error(err);
+            status.style.color = '#ff6b6b';
+            status.textContent = 'Error: ' + err.message;
+        }
+    });
+})();
 
 // ────────────────────────────────────────────────────────────
 // 6. LIVE MODEL FETCHING (Pollinations)
@@ -1408,8 +1503,9 @@ function setVisionSource(src) {
 function getCanvasStream(fps = 5) {
     if (_canvasStream && _canvasStream.active) return _canvasStream;
     try {
-        if (typeof canvas.captureStream !== 'function') return null;
-        _canvasStream = canvas.captureStream(fps);
+        const c = getGameCanvas();
+        if (!c || typeof c.captureStream !== 'function') return null;
+        _canvasStream = c.captureStream(fps);
         return _canvasStream;
     } catch (err) {
         console.warn('[Vision] canvas.captureStream failed:', err);
@@ -1493,6 +1589,7 @@ let _stuckCount      = 0;       // consecutive near-zero-movement decisions
 let _sceneCutCount   = 0;       // consecutive whole-screen changes (demo/cutscene tell)
 let _demoConfidence  = 0;       // 0-3: how sure we are this is a demo (requires multiple signals)
 let _lastDemoTime    = 0;       // timestamp of last demo warning (prevents spam)
+let _lastBootstrapTime = 0;     // timestamp of last auto-start bootstrap (prevents loops)
 let _aiGoal          = '';      // persistent multi-turn plan (navigation continuity)
 let _aiGoalAge       = 0;       // turns the current goal has been pursued
 
@@ -1999,7 +2096,7 @@ function scheduleRLLoop() {
 let _rtLoop = null, _rtPrevFrame = null, _rlHeld = new Set();
 function _rlKeyEv(type, code) {
     const o = { code, key: code, bubbles: true, cancelable: true };
-    canvas.dispatchEvent(new KeyboardEvent(type, o));
+    getGameCanvas().dispatchEvent(new KeyboardEvent(type, o));
     document.dispatchEvent(new KeyboardEvent(type, o));
 }
 function _rlSetHeld(desiredCodes) {
@@ -2652,10 +2749,10 @@ const delay = ms => new Promise(r => setTimeout(r, ms));
 
 function simulateKeyPress(key, duration = 100) {
     const opts = { code: key, key, bubbles: true, cancelable: true };
-    canvas.dispatchEvent(new KeyboardEvent('keydown', opts));
+    getGameCanvas().dispatchEvent(new KeyboardEvent('keydown', opts));
     document.dispatchEvent(new KeyboardEvent('keydown', opts));
     setTimeout(() => {
-        canvas.dispatchEvent(new KeyboardEvent('keyup', opts));
+        getGameCanvas().dispatchEvent(new KeyboardEvent('keyup', opts));
         document.dispatchEvent(new KeyboardEvent('keyup', opts));
     }, Math.max(50, duration));
 }
@@ -2722,6 +2819,13 @@ async function aiThink() {
         // Movement since the previous decision — gives the model a sense of motion,
         // and catches the "stuck repeating the same wrong move" failure mode.
         let motionCtx = '';
+        // Compute a single visual-diff score once for both memory and vision paths.
+        let visualDiff = null;
+        if (_prevScreenshot && screenshot && _prevScreenshot !== screenshot) {
+            visualDiff = await _frameDiffScore(_prevScreenshot, screenshot);
+            if (visualDiff != null) _lastVisualPct = Math.round(visualDiff * 100);
+        }
+
         if (_prevGameState && gameState) {
             const dx = gameState.x - _prevGameState.x;
             const dy = gameState.y - _prevGameState.y;
@@ -2733,44 +2837,55 @@ async function aiThink() {
                 motionCtx += `\n⚠ YOU APPEAR STUCK — your position has barely changed for ${_stuckCount} turns, so your last move is NOT working. Do something DIFFERENT: turn to face a new direction, back up, jump over the obstacle, or pick another path. Do not repeat the previous action.`;
             }
             if (_prevGameState.stars < gameState.stars) motionCtx += `\n🌟 You just collected a STAR — nice! Keep progressing.`;
-            // Huge instantaneous jumps usually mean a warp, painting entry, OR an
-            // attract-mode DEMO cutting between scenes (a menu is playing demos).
-            if (dist > 4000) motionCtx += `\n📍 Mario's position jumped ${dist} units suddenly — you likely warped, entered a painting, OR this is a title-screen DEMO cutting scenes. Re-check the SCREEN type before acting.`;
-        } else if (_prevScreenshot && screenshot && _prevScreenshot !== screenshot) {
-            // No reliable memory — derive an OBJECTIVE motion signal from the pixels
-            // so stuck-detection and "did my move work?" still function on vision alone.
-            const vm = await _frameDiffScore(_prevScreenshot, screenshot);
-            if (vm != null) {
-                const pct = Math.round(vm * 100);
-                _lastVisualPct = pct;
+            // Huge instantaneous jumps usually mean a warp, painting entry, or a
+            // respawn — keep this warning neutral and do NOT auto-label it a demo.
+            if (dist > 4000) motionCtx += `\n📍 Mario's position jumped ${dist} units suddenly — you likely warped, entered a painting, or respawned. Re-check the SCREEN type, but do NOT assume demo unless you also see demo tells.`;
+        }
+
+        // Scene-cut / demo detector. We run this whenever we have a previous frame,
+        // regardless of whether memory is enabled. Normal gameplay (fast camera
+        // turns, falling, enemies, warps) can flip large parts of the screen, so we
+        // require multiple drastic cuts in a short window AND that Mario is barely
+        // moving before we call it a demo.
+        if (visualDiff != null) {
+            const vm = visualDiff;
+            const pct = Math.round(vm * 100);
+            const memoryMoved = gameState && _prevGameState && Math.hypot(gameState.x - _prevGameState.x, gameState.z - _prevGameState.z) > 2000;
+
+            // Vision-only stuck detection when memory readout is unavailable.
+            if (!(_prevGameState && gameState)) {
                 if (vm < 0.05) _stuckCount++; else _stuckCount = 0;
                 motionCtx = `\n\nVISUAL CHANGE since your last action: ${pct}% (objective screen-pixel difference). Under ~8% means you BARELY MOVED — you probably faced a wall or pressed the wrong key, so change direction. A large value means the view changed a lot.`;
                 if (_stuckCount >= 2) {
                     motionCtx += `\n⚠ STUCK — the screen has barely changed for ${_stuckCount} turns, so your last move is NOT working. Do something DIFFERENT: turn to face a new direction (Left/Right), back up, jump over the obstacle, or pick another path. Do NOT repeat the previous action.`;
                 }
-                // Scene-cut detector: a HUGE change you didn't cause = a demo/cutscene.
-                // A small input can't flip the whole screen; entering a door/painting can,
-                // but so does the title-screen ATTRACT DEMO jumping between levels.
-                // DEMO DETECTION — conservative multi-signal approach
-                if (vm > 0.55) {
-                    _sceneCutCount++;
-                    // Require at least 2 scene cuts within 15s OR 1 cut + no player movement
-                    const timeSinceLast = Date.now() - _lastDemoTime;
-                    if (_sceneCutCount >= 2 || (timeSinceLast < 15000 && _stuckCount >= 1)) {
-                        _demoConfidence = Math.min(3, _demoConfidence + 1);
-                    }
-                    if (_demoConfidence >= 2 || _sceneCutCount >= 2) {
-                        _lastDemoTime = Date.now();
-                        motionCtx += `\n🎬 DEMO CONFIRMED (${_sceneCutCount} scene cuts, confidence ${_demoConfidence}/3). You are watching an ATTRACT-MODE DEMO, not playing. The game is showing pre-recorded gameplay. DO NOT try to platform or navigate. Press start (Enter) ONCE to exit the demo, then press start AGAIN on the title screen to actually begin the game.`;
-                    } else {
-                        motionCtx += `\n🎬 The WHOLE scene just changed (${pct}%). This might be a demo/cutscene OR a legitimate warp/door entry. DO NOT assume you're playing yet. If you did NOT intentionally enter a door/painting, this is likely a DEMO. Wait one more frame to confirm before acting.`;
-                    }
+            }
+
+            const SCENE_CUT_THRESHOLD = 0.72;   // whole-screen change
+            const SCENE_CUT_RESET     = 0.35;   // hysteresis so brief flickers don't reset count
+            if (vm > SCENE_CUT_THRESHOLD && !memoryMoved) {
+                _sceneCutCount++;
+                const timeSinceLast = Date.now() - _lastDemoTime;
+                // Need 3 rapid cuts, or 2 cuts while we are stuck/not moving
+                if (_sceneCutCount >= 3 || (_sceneCutCount >= 2 && _stuckCount >= 2 && timeSinceLast < 15000)) {
+                    _demoConfidence = Math.min(3, _demoConfidence + 1);
+                }
+                if (_demoConfidence >= 3 || _sceneCutCount >= 3) {
+                    _lastDemoTime = Date.now();
+                    motionCtx += `\n🎬 DEMO CONFIRMED (${_sceneCutCount} scene cuts, confidence ${_demoConfidence}/3). You are watching an ATTRACT-MODE DEMO, not playing. The game is showing pre-recorded gameplay. DO NOT try to platform or navigate. Press start (Enter) ONCE to exit the demo, then press start AGAIN on the title screen to actually begin the game.`;
+                } else if (_sceneCutCount >= 2) {
+                    motionCtx += `\n🎬 The scene changed drastically again (${pct}%). If you did NOT just warp/enter a door, this is likely a demo — wait one more frame or press start (Enter) if you also see demo tells.`;
                 } else {
-                    _sceneCutCount = 0;
-                    // Decay demo confidence when scenes stop cutting
-                    if (Date.now() - _lastDemoTime > 8000) {
-                        _demoConfidence = Math.max(0, _demoConfidence - 1);
-                    }
+                    motionCtx += `\n🎬 Big scene change (${pct}%). This may be a warp, door, painting, or demo. Wait one more frame before calling it a demo.`;
+                }
+            } else if (memoryMoved) {
+                motionCtx += `\n📍 Screen changed a lot because of a warp/painting/respawn (moved ${Math.round(Math.hypot(gameState.x - _prevGameState.x, gameState.z - _prevGameState.z))} units). This is gameplay, NOT a demo.`;
+                _sceneCutCount = 0;
+            } else if (vm < SCENE_CUT_RESET) {
+                _sceneCutCount = 0;
+                // Decay demo confidence slowly once scenes stop cutting
+                if (Date.now() - _lastDemoTime > 12000) {
+                    _demoConfidence = Math.max(0, _demoConfidence - 1);
                 }
             }
         }
@@ -2862,11 +2977,11 @@ ${hierarchyNote}
 FIRST, IDENTIFY THE SCREEN — this is critical:
 - TITLE SCREEN ("Press Start", the big rotating Mario face/logo): press start (Enter) to begin.
 - FILE SELECT (a menu of Mario-head save files A/B/C/D, or Peach/coins icons): press jump (X) to pick a file and enter the game.
-- ATTRACT-MODE DEMO — the game plays ITSELF when left idle on the title. ⚠ This is the #1 thing you confuse with real play. DEMO TELLS: (a) Mario moves/jumps/fights on his OWN without you pressing anything; (b) the camera pans cinematically by itself; (c) the scene CUTS between different levels (a 🎬 note below flags this); (d) you often see "PRESS START", the © Nintendo logo, or a level you never chose. If ANY of these, you are NOT in control.
+- ATTRACT-MODE DEMO — the game plays ITSELF when left idle on the title. DEMO TELLS: (a) Mario moves/jumps/fights on his OWN without you pressing anything; (b) the camera pans cinematically by itself; (c) the scene CUTS between different levels (a 🎬 note below flags this ONLY when confidence is high); (d) you often see "PRESS START", the © Nintendo logo, or a level you never chose. If ANY of these, you are NOT in control.
 - DEMO PROTOCOL: When you see 🎬 DEMO CONFIRMED, your ONLY action is: press start (Enter) to exit. Do NOT run, jump, swim, or do ANYTHING else. Just press start. Then on the title screen, press start AGAIN to actually begin. Treat demos like a video playing on a screen — your inputs do nothing until you break out of it.
 - DIALOG BOX (a white text box / sign / character speaking): press jump (X) to advance/close it.
 - ACTUAL GAMEPLAY: you are in control ONLY if your inputs visibly move Mario the way you intended AND the scene is NOT cutting around on its own. Confirm control before you trust it.
-TEST FOR CONTROL: if you're unsure whether it's a demo, the brainmap region is "unknown", or the scene keeps cutting — assume DEMO/menu and press start (Enter). Do NOT platform, swim, or run "stuck" logic on a menu/demo.
+TEST FOR CONTROL: do NOT call normal gameplay a demo just because the camera turned fast, Mario fell, or you warped into a level. Only treat it as a demo/menu if you see actual demo tells above. If you are genuinely unsure, press start (Enter) once — but if gameplay resumes, you were NOT in a demo.
 At session start you are almost always on the TITLE or a DEMO, not in gameplay — get to FILE SELECT → gameplay first.
 
 WHERE AM I? — figure this out EVERY turn and put it in "region". You keep mixing these up:
@@ -2894,6 +3009,12 @@ You almost always begin on the TITLE SCREEN or in an ATTRACT DEMO — NOT in gam
 8. You are now IN A LEVEL. Set region = in-level:bob-omb-battlefield.
 9. Look for the star objective (usually up/forward) and head toward it.
 DO NOT skip steps. Do NOT try to run around before entering the castle. Do NOT jump into a painting before going through the front doors.
+
+KING BOB-OMB (Big Bob-omb on the Summit) — when you reach the top of Bob-omb Battlefield:
+- The giant crowned Bob-omb is the FIRST BOSS. Do NOT run straight into his front — he will grab and throw Mario.
+- Strategy: get close, then LOOP/CIRCLE around him (hold ArrowLeft or ArrowRight, with a little ArrowUp) until you are BEHIND his back, then immediately press action (B/C) to GRAB him fast. Toss him on the ground; repeat 3 times.
+- Do NOT throw him off the mountain — he'll jump back up and reset the fight.
+- Use the macro "king_bobomb" to execute: approach → circle left → grab.
 
 CONTROLS — the COMPLETE, exact control set. There are ONLY these. LEARN them:
 - ArrowUp = move FORWARD (the way Mario's back faces / away from camera).
@@ -2995,7 +3116,7 @@ SAY: heading into my first level!`
   "rapid_fire": false
 }`}
 
-A "step"/group is {"keys":[...simultaneous...], "hold_ms": N} OR a macro word ("run_jump","enter_painting","long_jump","dive","triple_jump","ground_pound","wall_kick","back_up","turn_around","swim_up","backflip","wait","observe"). The "wait"/"observe" macro presses NOTHING — use it to hold still and watch a moving platform/lift before committing. Hold guide: FORWARD/BACKWARD 1200–2500ms; TURN 250–500ms (short!); jump/dialog 150–350ms. ${_preplanMode ? `PRE-PLAN: give a full ${capTxt}-step script.` : 'Normally 1–5 steps (more only if preplan:true).'}
+A "step"/group is {"keys":[...simultaneous...], "hold_ms": N} OR a macro word ("run_jump","enter_painting","long_jump","dive","triple_jump","ground_pound","wall_kick","back_up","turn_around","swim_up","backflip","wait","observe","king_bobomb"). The "wait"/"observe" macro presses NOTHING — use it to hold still and watch a moving platform/lift before committing. Hold guide: FORWARD/BACKWARD 1200–2500ms; TURN 250–500ms (short!); jump/dialog 150–350ms. ${_preplanMode ? `PRE-PLAN: give a full ${capTxt}-step script.` : 'Normally 1–5 steps (more only if preplan:true).'}
 Valid keys (THESE ARE THE ONLY ONES — there is no camera key): ArrowUp(forward), ArrowDown(BACKWARD — opposite of forward, USE IT), ArrowLeft(turn left), ArrowRight(turn right), jump(=A), action(=B: dive/punch/grab), crouch(=Z: ground-pound in air / long-jump), start(pause/confirm only). Combine arrows for diagonals.`;
 
         // Single-frame perception: the AI acts on ONE current frame, annotated
@@ -3292,6 +3413,8 @@ const _MACROS = {
     swim_up:        [{ keys: ['ArrowDown', 'jump'], hold_ms: 220 }, { keys: ['ArrowDown', 'jump'], hold_ms: 220 }, { keys: ['ArrowDown', 'jump'], hold_ms: 220 }],
     // SMART RECOVERY: when the ai is stuck, auto-run this sequence
     recover:        [{ keys: ['ArrowDown'], hold_ms: 600 }, { keys: ['ArrowLeft'], hold_ms: 400 }, { keys: ['ArrowUp'], hold_ms: 1200 }],
+    // KING BOB-OMB: approach, loop around behind him, then grab fast.
+    king_bobomb:    [{ keys: ['ArrowUp'], hold_ms: 350 }, { keys: ['ArrowLeft'], hold_ms: 700 }, { keys: ['ArrowUp', 'action'], hold_ms: 300 }],
     // START GAME: full bootstrap from title screen to first level
     start_game:     [{ keys: ['start'], hold_ms: 200 }, { keys: ['_wait'], hold_ms: 800 }, { keys: ['start'], hold_ms: 200 }, { keys: ['_wait'], hold_ms: 800 }, { keys: ['jump'], hold_ms: 200 }, { keys: ['_wait'], hold_ms: 1200 }, { keys: ['ArrowUp'], hold_ms: 2500 }, { keys: ['ArrowUp'], hold_ms: 1500 }, { keys: ['enter_painting'], hold_ms: 1400 }],
 };
@@ -3431,26 +3554,27 @@ async function aiExecute(response) {
 
     // ── AUTO-START-GAME: detect title/demo screen and run the full bootstrap ──
     // This helps the AI get past the title screen reliably without hallucinating.
-    const lastScene = _sceneHistory[_sceneHistory.length - 1];
-    const isTitleOrDemo = lastScene && (lastScene.scene === 'title' || lastScene.scene === 'demo' || lastScene.scene === 'file_select');
-    if (isTitleOrDemo && !preplan && _sceneHistory.length >= 2) {
-        // Check if we've been stuck on title/demo for multiple turns
-        const titleStuck = _sceneHistory.filter(s => s.scene === 'title' || s.scene === 'demo').length >= 3;
-        if (titleStuck) {
-            updateAIStatus('🎮 Auto-start: detected title/demo — running full bootstrap');
-            const startGroups = _expandGroups(['start_game']);
-            for (const sg of startGroups) {
-                const { keys, ms, wait } = _normalizeGroup(sg, fast);
-                if (!wait && !keys.length) continue;
-                for (const action of keys) {
-                    const keyCode = keyMap[action];
-                    if (keyCode) simulateKeyPress(keyCode, Math.max(70, ms * 0.92));
-                }
-                await delay(ms);
+    // We are VERY conservative: a single false "demo" classification during gameplay
+    // would press Start and pause/ruin the run, so require near-unanimous evidence.
+    const GAMEPLAY_REGION = /outside-castle|castle-foyer|in-level/;
+    const recent = _sceneHistory.slice(-5);
+    const allTitleOrDemo = recent.length >= 4 && recent.every(s => s.scene === 'title' || s.scene === 'demo' || s.scene === 'file_select');
+    const noRecentGameplay = !_sceneHistory.some(s => GAMEPLAY_REGION.test(s.region) && Date.now() - s.time < 12000);
+    if (allTitleOrDemo && noRecentGameplay && !preplan && Date.now() - _lastBootstrapTime > 10000) {
+        _lastBootstrapTime = Date.now();
+        updateAIStatus('🎮 Auto-start: detected title/demo — running full bootstrap');
+        const startGroups = _expandGroups(['start_game']);
+        for (const sg of startGroups) {
+            const { keys, ms, wait } = _normalizeGroup(sg, fast);
+            if (!wait && !keys.length) continue;
+            for (const action of keys) {
+                const keyCode = keyMap[action];
+                if (keyCode) simulateKeyPress(keyCode, Math.max(70, ms * 0.92));
             }
-            updateAIStatus('✅ Bootstrap done — should be in gameplay now');
-            return;
+            await delay(ms);
         }
+        updateAIStatus('✅ Bootstrap done — should be in gameplay now');
+        return;
     }
 
     // Scene-change watchdog: in pre-plan (outside turbo) we snapshot between steps
@@ -3639,6 +3763,7 @@ async function toggleAIPlayer() {
         _stuckCount     = 0;
         _demoConfidence = 0;
         _sceneCutCount  = 0;
+        _lastBootstrapTime = 0;
         _sceneHistory   = [];
         _goalAbandonCount = 0;
         _aiGoal         = '';

@@ -50,7 +50,8 @@ SEE on screen. Play legitimately — no glitch abuse, no input playback.
    mountain scene). Jump INTO the painting to enter the level.
 6. **First star ("Big Bob-omb on the Summit").** Climb the mountain path to the
    top and reach the Big Bob-omb (King Bob-omb). Stay on the path, use the
-   bridges, avoid the rolling balls and small bob-ombs.
+   bridges, avoid the rolling balls and small bob-ombs. Fight: circle behind him,
+   grab with B, and throw. Repeat three times. Do NOT throw him off the mountain.
 
 ## Level-goal mindset (general)
 - Each level has 6 main stars + 100-coin star. Early game you only need a few

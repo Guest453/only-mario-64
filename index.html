@@ -6,6 +6,11 @@
     <title>SM64 AI Player</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./styles.css">
+    <!-- Rom Patcher JS (BPS/IPS/etc support) -->
+    <script src="./lib/rom-patcher-js/modules/HashCalculator.js"></script>
+    <script src="./lib/rom-patcher-js/modules/BinFile.js"></script>
+    <script src="./lib/rom-patcher-js/modules/RomPatcher.format.bps.js"></script>
+    <script src="./lib/rom-patcher-js/RomPatcher.js"></script>
 </head>
 <body>
     <div id="app">
@@ -27,8 +32,12 @@
             <button id="suck-warning-close" aria-label="Dismiss">✕</button>
         </div>
 
-        <!-- Game canvas -->
-        <canvas id="canvas" tabindex="0" aria-label="Super Mario 64 canvas"></canvas>
+        <!-- Game canvas (original baked-in decomp core) -->
+        <div id="original-game-container">
+            <canvas id="canvas" tabindex="0" aria-label="Super Mario 64 canvas"></canvas>
+        </div>
+        <!-- EmulatorJS container (runtime ROM-loading core) -->
+        <div id="emulatorjs-container" style="display:none;"></div>
 
         <!-- ── Top HUD bar ─────────────────────────────── -->
         <div id="hud-bar">
@@ -50,6 +59,7 @@
                 <button id="agent-only-btn"      class="hud-icon-btn" title="Agent-Only mode: disable manual control + enable the instruction box">🤖</button>
                 <button id="brainmap-btn"        class="hud-icon-btn" title="Brainmap visualizer (watch the AI's sense of place build)">🗺️</button>
                 <button id="debug-btn"           class="hud-icon-btn" title="Debug HUD (live AI state)">🐞</button>
+                <button id="patch-rom-btn"       class="hud-icon-btn" title="Load a custom ROM or apply a BPS patch">🩹 Patch</button>
                 <button id="disconnect-btn"      class="hud-icon-btn danger" title="Disconnect account" style="display:none">🔌</button>
             </div>
 
@@ -345,6 +355,31 @@
 
         <!-- Watermark — also the exit-streamer-mode button -->
         <button id="streamer-watermark" title="Exit streamer mode">Made by Endoxidev/MetaMysteries8</button>
+
+        <!-- Patch ROM modal -->
+        <div id="patch-modal" style="display:none;">
+            <div id="patch-modal-backdrop"></div>
+            <div id="patch-modal-content">
+                <h2>Load Custom ROM / Apply Patch</h2>
+                <p>Select your base SM64 ROM and an optional <code>.bps</code> patch.</p>
+                <div class="patch-row">
+                    <label>Base ROM (.z64, .n64, .v64)</label>
+                    <input type="file" id="patch-rom-input" accept=".z64,.n64,.v64,.rom">
+                </div>
+                <div class="patch-row">
+                    <label>Patch (.bps)</label>
+                    <input type="file" id="patch-bps-input" accept=".bps">
+                </div>
+                <div id="patch-status"></div>
+                <div class="patch-actions">
+                    <button id="patch-apply-btn" class="hud-btn green">Apply & Load</button>
+                    <button id="patch-close-btn" class="hud-btn">Cancel</button>
+                </div>
+                <div class="patch-note">
+                    <small>This loads the ROM into EmulatorJS (N64 core). Memory reading is disabled in emulator mode — the AI uses vision only.</small>
+                </div>
+            </div>
+        </div>
 
     </div><!-- #app -->
 
