@@ -1,0 +1,2171 @@
+                                  __   __  __      ___
+          ===============  |   | |  | |   |  |    |     | |
+         |                 |   | |__| |__ |__|    |___  | |
+         |                 |   | |    |   | \     |   | |_|_
+         |                  \_/  |    |__ |  \    |___|   |
+         |                         ___   ___   _____   _____
+          ===============  |    | |   | |   |    |    /     \
+                         | |\  /| |   | |   |    |   |       |
+                         | | \/ | |___| |___|    |   |       |
+                         | |    | |   | |  \     |   |       |
+                         | |    | |   | |   \    |   |       |
+          ===============  |    | |   | |    \ __|__  \_____/
+=============================================================================
+           S U P E R  M A R I O  64   F A Q / W A L K T H R O U G H
+=============================================================================
+Created by: BJ 
+E-Mail Address: bjknows@hotmail.com
+Genre: Nintendo 64      
+Version: 1.1 (08/09/00)
+FAQ#: 2
+
+Super Mario 64 © 1996 Nintendo.  All rights reserved.
+This FAQ is afficiated with Nintendo or any other producers with this game.
+
+This FAQ is copyrighted.  More details on section "Copyright Information".  
+Also, please read the section "E-Mail Note" before e-mailing me.
+
+-----------------------------------------------------------------------
+CONTENTS
+1 > welcome
+2 > copyright information
+3 > revision of versions
+4 > game information
+5 > the story
+6 > controller config
+7 > menu options
+8 > cast of characters
+9 > items and caps 
+10 > mario's moves
+11 > mario's enemies
+12 > review
+13 > walkthrough
+14 > bonus courses / secret stars
+15 > 100 coin collecting
+16 > frequently asked questions
+17 > e-mail note
+18 > credits
+-----------------------------------------------------------------------
+
+Welcome
+=======
+Welcome to my 2nd FAQ.  It is my Super Mario 64 FAQ.  I haven't found any 
+that tells you about all the courses and gives you full info.  I will try to 
+give you that.  If you still haven't found your "question", please e-mail me 
+and then I'll be sure to give the answer.  Trust me, I won't let you down if 
+you need help!  Well anyway, hopefully you will enjoy.  This will be long, so 
+make sure to print out the stuff you want by highlighting the stuff that you 
+want and printing it out.  I'm thinking that this will be in the 100 KB to 
+150 KB.  This maybe my longest FAQ that I'll write!
+
+
+Copyright Information
+=====================
+Copyright © 1999-2000 Beejay.  All rights reserved.
+This FAQ is the property of me.  Do not steal or copy it off of here and put 
+it on your page.  If I found out that this FAQ is on your page, I will e-mail 
+you and give you a very strict warning.  If you take it off in the next five 
+(5) days, I will be very strict and can delete your page off the internet 
+and/or sue you.  The only thing I want you to do to this is to just print it 
+off.  If you only want the walkthrough or a specific other thing, just 
+highlight the part that you want, right click on the highlighted part, select 
+"Print", click on "Selection", and then click on OK.  Please don't copy and 
+paste this either.  You can only do that by e-mailing me and then I'll give 
+you the signal to do that.  Please e-mail me BEFORE doing that.  Thanks.
+
+Note: My FAQs should ONLY be found at GameFAQs (www.gamefaqs.com), my site 
+called the Nintendo Dome (www.geocities.com/nintendodome), Tim's Vault 
+(www.timsvault.com), and VG Strategies (www.about.com).  If you find this FAQ 
+anywhere else, please contact me.
+
+
+Revision of Versions
+====================
+Version 1.1   08/08/00   Revised this FAQ
+                         Made new section: "Bonus Courses"
+                         Made new section: "Cheats and Hints"
+                         Made new section: "Credits"
+                         Made new section: "Controller Config"
+                         Made new section: "Menu Options"
+                         Made new section: "Review"
+                         Made new section: "100 Coin Collecting"
+                         Revised this section: "Walkthrough"
+                         Revised this section: "Frequently Asked Questions"
+Version 1.0   05/31/99   Started this FAQ
+                         Finished this FAQ
+
+*Deadline for submitting me things for Version 1.2 is 08/13/00!
+
+
+Game Information
+================
+TITLE            Super Mario 64
+CONSOLE(S)       Nintendo 64
+ESRB             Everyone 6+ (No descriptors)
+PLAYERS          1 Player
+ACCESSORIES      ---
+COMPANIES        Nintendo
+                 EAD
+GENRE            3rd Person - Adventure
+PLAYER'S CHOICE  Yes
+
+
+The Story
+=========
+(my version)
+
+It all started with a cake (it ends with a cake too).  Princess 
+Toadstool wrote an invatation to Mario to come to the castle party.  
+Mario cheerfully examines the invitation from the princess, and he 
+proudly yells, "Yipee!" as he gets changed properly to meet Peach.  He 
+leaves the Pipehouse and goes to Mushroom Palace via warp tunnel.  When 
+he gets on the castle grounds, he notices that it is quiet.  Only the 
+sound of birds are whistling and the flapping wings of butterflies.  
+But Mario decides that it will be a Surprise Party for Mario, so he 
+decided to "take the cake" and enter the castle.
+
+When he enters, he heard the most unforgettable laughing he has 
+ever heard, and it was the sound of...hmmm, someone.  Mario decides to 
+check through the doors.  All of them were locked, accept the one on 
+the left bottom side of the balcony.  Mario enters and he sees the most 
+magnificent and intelligent painting ever.  It was pretty darn big, 
+too!  When Mario examines the painting, he heard a faint voice calling 
+for him.  Mario wonders who it could be?  He decided to give it a 
+chance to see if he could somehow enter the painting.  He decided to 
+use the "jump" method.  He jumps into the painting and he lands into a 
+glacing beautiful land.  It's the painting that he had seen in the 
+castle!  It was true--you could enter this painting.  Mario decides to 
+investigate the land.  He ran into some bob-ombs, so Mario started to 
+walk away.  He then notices that they are his pals, the Bob-Omb 
+Buddies.  Mario asks them what has happened.  They responded, "We don't 
+have the exact details, but some green-shelled person ran into the 
+castle, took Princess and Toad and hid them in the attack."
+Mario knew who it was...it was that laughing sound he heard, the sound 
+of Bowser!
+
+The Bob-Omb Buddies also told Mario that Bowser hid all the Power 
+Stars around the castle and now you have to collect all of them to 
+release Peach and Toad.  "I'm really gonna give Bowser the time of 
+his life!" said Mario.
+
+
+Controller Config
+=================
+L Button – Not used.
+R Button – Switch to different camera positions.
+Directional Pad – Not used.
+START Button – It starts the game, it pauses the games (to the Pause Screen), 
+and it unpauses the screen.
+A Button – Jump and read signs.
+B Button – Punch.
+C Button - < = Turn camera right.
+           ^ = Look around mode.
+           > = Turn camera left.
+           V = Look far-away mode.
+Analog Stick – If you don't know this, you are the most pathetic player in
+               the world of gaming!  You move.
+Z Button – Crouch
+
+*Look at the "Mario's Moves" section for cool techniques!
+
+
+Menu Screen
+===========
+After you press the START button when prompted, you'll be at the Menu screen, 
+with these options:
+-Game Files (4)
+-Score
+-Copy
+-Erase
+-Audio
+
+>GAME FILES
+You have a choice of four game files to save your game to.  Heck, you'll need 
+them.  It's almost impossible to collect 120 stars in 24 hours ;).
+
+>SCORE
+This file has all coins you've collected in a level.  Remember that you can 
+see a score file for one file, or all files!
+
+>COPY
+Incase if you think a file will be erased, you can back it up on another 
+file.  If you have 3 other siblings in one house, it wouldn't be a good idea 
+to use this.
+
+>ERASE
+What do you think it does?
+
+>AUDIO
+Choose from Stereo (must have A/V Inputs, which means no screw-in 
+connections), Mono, or Headset (headphones).
+
+
+Cast of Characters
+==================
+Here are the list of important people/micelanious in the game.
+
+>MARIO MARIO
+Yep, that's his full name--Mario Mario.  His brother is named Luigi 
+Mario.  That's why they're called the Mario Bros.  Did you know that?  
+Anyway, he is the main man--he's the only guy that you actually "have 
+control of".
+
+>BOB-OMB BUDDIES
+Yep, these are the best enemy friends that you can find.  You can find 
+these dudes in every course.  They are for opening the bomb launchers.  
+Some are easy to find, and some are tough to find.  Don't worry--I'll 
+tell you all of the locations.
+
+>PRINCESS TOADSTOOL (PEACH)
+Her full name is: Peach "Princess" Toadstool.  She is so-called your 
+honey-bun.  She is also one of the people that you have to rescue in 
+the Mushroom Kingdom.  Good luck to ya!
+
+>TOAD MUSHROOM
+His friends and he are also locked in the castle.  Rescue him, too!
+
+>KOOPA THE QUICK
+Here's the biggest koopa troopa ever!  Beat him in two races and you 
+will be named the most fast racer!  Note that he is harder the second 
+time.
+
+NOTE: This is all the special characters that I could think of right 
+off my head.  If you have any more characters (not enemies) please e-
+mail me.
+
+
+Items and Caps
+==============
+Here are the main (and best) items that I have found.  If you have 
+more, please e-mail me.
+
+--------
+1) COINS
+--------
+>YELLOW COIN     WORTH: 1 COIN(S)
+This is the most popular coin in the game and from all those other 
+Mario games.  Find these from most enemies and scattered around all 
+over!
+
+>BLUE COIN       WORTH: 5 COIN(S)
+Mostly found from those Blue (pound the ground) Switches.  You can also 
+find these by jumping/punching those Koopa Troopas without their 
+shells.
+
+>RED COIN        WORTH: 2 COIN(S)
+Find 8 of these in every course.  Wonder why??
+
+---------------
+2) MISCELANIOUS
+---------------
+>SPINNING HEART
+Run through this if you need your life meter filled up.
+
+>1-UP MUSHROOM
+These are sort of hard to get, but with practice, you can get them!  
+They add an extra life to your...lives.
+
+>KOOPA SHELL
+Ride on these...they are pretty cool.  Get these by stomping on a Koopa 
+Troopa and jumping on their shell.
+
+>! BOX
+Make sure to always hit these!  You never know what the heck's in 'em!
+
+-------
+3) CAPS
+-------
+>WING CAP     COLOR: RED     LOCATION: IN THE CASTLE
+To get this cap, go into the castle.  Stand on that big potrait of the 
+princess with the flower.  Press C-up and look in the sun.
+
+>METAL CAP    COLOR: GREEN   LOCATION: IN HAZY MAZE CAVERN (COURSE 6)
+Get this in the Hazy Maze Cavern.  I'm sure you can find without me helping 
+you, just keep on looking!
+
+>VANISH CAP   COLOR: BLUE    LOCATION: IN THE CASTLE MOAT
+Once you lower the water in the castle moat, you will find a hole.  Go 
+into it to find the Vanish Cap.
+
+
+Mario's Moves
+=============
+Man, this is gonna be a while to to!  This will probably be as long as 
+my Star Fox 64 FAQ!  I will list EVERY move that Mario does 
+(hopefully).
+
+------------------
+1) THE BASIC MOVES
+------------------
+>WALKING / RUNNING
+To walk, all you have to do is press the Control Stick just a little 
+ways from the middle.  To run, push the Control Stick a lot farther 
+from the middle.  The harder the push, the faster Mario runs.
+
+>JUMPING
+Just press the A button.
+
+>CRAWLING
+For the first time ever, you can crawl!  Just hold the Z button and 
+move the Control Stick around.  Easy as that.
+
+>SWIMMING
+To swim horozontally, just use these two techniques: the arm stroke and 
+the kick stroke.  The arm stroke is simply pressing the A button 
+repeatedly.  The kick stroke is holding the A button.  This is slower.  
+To swim down further (watch your life meter), just press up on the 
+Control Stick until Mario faces down.  Then, press the A button to 
+swim.  To jump out of the water, just press down on the Control Stick 
+until Mario faces up all the way.  Then, press the A button.
+
+>FLYING
+To fly, you need to have the Wing Cap.  Once you have it, you can start 
+flying by doing two things.  1) Getting shot out of a cannon -or- 2) 
+Jumping 3 times.  To fly, just steer the Control Stick around.  To stop 
+flying, you can do two things.  1) Press the Z button -or- 2) Let the 
+flying time run out.
+
+>SLIDING
+You can slide two ways: on your butt or on your stomach.  When you are 
+sliding on your butt, you can jump.  I always do that!   To slide 
+faster (either way) just press the Control Stick all the way up.
+
+>SHELL RIDE
+You can find these in ! boxes, or you can just stomp on a Koopa Troopa 
+and ride its shiny shell.  You can also ride these in water but it is 
+very hard to do.  These go fast, so make sure to steer with the Control 
+Stick well!  You can also jump while you're on these, which is kinda 
+neat!  Whenever you hit something, you will fall off and can't go on it 
+again.
+
+-----------------------
+2) TIPS FOR THE MOTIONS
+-----------------------
+>JUMP ANGLES
+If you don't know where you are going to jump if you are on a pole, 
+tree, etc., then remember this.  What Mario's back is facing he will 
+jump for.
+
+>SHADOW SPELL
+If you are having trouble jumping on enemies or any other miscelanious 
+objects, just follow the shadow!  Once your shadow is on the 
+object/enemy, you should be able to destroy it, open it, etc.
+
+>HANDSTANDS
+These are neet to do!  Just go to the top of the tree or pole, circle 
+around while holding up on the Control Pad and you should to a perfect 
+handstand.  Follow the "Jump Angle" rule to jump off it the right way.
+
+-------------------------
+3) MARIO'S FIGHTIN' MOVES
+-------------------------
+>PUNCHING
+To punch, just press the B button.  To do cool punch + a kick, press 
+the B button 3 times fast.  Hey!  This is better than the hammer!
+
+>JUMPIN' 'N STOMPIN'
+Mostly old characters that like to jump on enemies will do this to 
+destroy an enemy or object.  Just press the A button.
+
+>POUND THE GROUND
+To perform this stunt, just press the A button and while in the air 
+press the Z button.  This is mostly for pounding in stuff.
+
+>SLIDIN' KICKIN'
+To do this, run fast and then jump.  Once you land, you should be 
+scooting on your butt, kicking all the stuff out of your way!
+
+>JUMPIN' KICK
+Are those flying enemies giving you a pain?  Just use the technique by 
+pressing the B button while Mario is in the air.
+
+>SWEEP KICK
+If you want to play a "joke" on your enemies, just hold Z and press the 
+B button.
+
+----------------
+4) JUMPING MOVES
+----------------
+>LONG JUMP
+To do a long jump, just run at full speed, and then press Z.  Once you 
+are skidding, press the A button and you should jump a long ways.
+
+>TRIPLE-JUMP
+To do this trick, jump three times in a row.  Make sure to run while 
+doing this.
+
+>WALL KICK / JUMP
+I call this the Wall Jump, but some people refer it to Wall Kick.  Just 
+jump to the wall, and once you reach the wall, press the A button.  You 
+should come riocheting off the wall.
+
+>BACKWARD FLIP
+I can't do this, but Mario can!  Just hold the Z button and press the A 
+button.  I can do a backward SOMERSAULT though!
+
+>SIDE FLIP
+Can't do this either, but Mario can!  I think he's too athletic {=^).  
+Just run fast and then while doing so, move the Control Stick fast to 
+the opposite side that you are running + press the A button.  It is 
+sort of tough to master, but you can do it!
+
+
+Mario's Enemies
+===============
+Here is the list of all the enemies.  Thanks to Nintendo Power for the 
+names of these.
+
+>GOOMBA
+The most classical enemy still out there in Nintendo land.  Just stomp 
+on him or punch him.
+
+>BOOK END
+A new enemy and he's only located in Big Boo's Haunt.  To destroy it, 
+jump on it or try to punch it.
+
+>SWOOP
+Don't know for sure if this is the first time he's in the Mario Enemy 
+Land?  Anyway, just jump/punch to kill him.
+
+>FLY-GUY
+These guys are in Super Mario Bros. 2, right?  But, they aren't SHY 
+guys.  They don't swoop toward you like these you.
+
+>SPINDRIFT
+Jumping on these guys are the best policy since you will be able to fly 
+for a while.  You can punch these too and get its coins faster.
+
+>SKEETER
+Oh, this guy's a real pain...NOT!  He's so dang easy, all you have to 
+do is jump on the stupid thing.
+
+>LAKITU
+He's the most popular weirdo in Nintendo land.  Of course, you won't 
+see him in many places.  Just stomp on him to defeat.
+
+>SCUTTLE-BUG
+This enemy will follow you around the place, so it's best to stomp on 
+it before it gets annoying.
+
+>WHOMP
+To defeat this lego piece, just let him see you.  He will then try to 
+smash you.  Once he is laying on his back, use the Pound the Ground 
+technique on the band-aid X.
+
+>BOO BUDDY
+The best way to destroy this piece of dust is to use Pound the Ground 
+on it.
+
+>MONEY BAGS
+You can kill these by stomping or using Pound the Ground.  The best 
+thing about these is that if you destroy it, it will put out 5 coins 
+out for you to get.
+
+>BOB-OMB
+Don't get confused with the Bob-Omb Buddies--they are red.  These are 
+black. To detonate these the "throwing" way, pick them up (B button) 
+and throw them (pressing the B button again).
+
+>CHUCK-YA
+To defeat this boxer, pick him up from the behind (not the front) and 
+throw the jerk on it's butt to destroy.  Don't throw this guy off the 
+cliff--if you don't, he will give you a ton of coins.
+
+>MR. I.
+All you do is run around it until it gets dizzy enough to go away.
+
+>MR. BLIZZARD
+Defeat him the same way you did with Mr. I.
+
+>BULLET BILL
+You can only stomp on this to defeat it, but you still won't get 
+anything if you do.
+
+>TOX BOX
+You can't destroy it, but to not get smashed, go under the opened part 
+of it.
+
+>UNAGI THE EEL
+Unagi cannot be defeated, but he does have a star on his tail...oh 
+dang!
+
+>BUB & BUBBA
+These two so-called "cool fish" can't be defeated.  Just stay away from 
+these guys.
+
+>SPINDEL & GRINDEL
+Now they sound very nice, don't they?  You can jump on Grindel, but 
+stay out of Spindel's way!
+
+>GHOST PIANO
+You can't defeat this with your bare hands, but you can make it run 
+into the wall to defeat it.  You won't get a reward, though.
+
+>AMP
+Don't bother him--he's just another enemy.
+
+>THWOMP
+Ride the head, but don't get smashed on the bottom of the head!  This 
+guy is undestructable, so don't bother!
+
+>CHAIN-CHOMP
+This guy is only in Course 1.  To get rid of it, just pound the stake 
+in...grrrrr!
+
+>KLEPTO
+Here's a bird that likes hats--and Mario's hat is absolutely what this 
+turkey wants!  Punch it or kick it if it is wearing your hat.  If not--
+kill it anyway!
+
+>SUSHI
+Just stay away from this shark.
+
+>HEAVE-HO
+"Step right up!  Put your feet on the feet marks and get lifted up to 
+the next floor.  This is new invention made from Bowser Productions, 
+Inc."  How's that for a speech?
+
+>FWOOSH
+Becareful of this guy--he can blow your hat off!
+
+>PIRANHA PLANT
+Sneak quietly up to him, then punch him to receive a blue coin.
+
+>SNUFIT
+Just like the Snifits, this guy can now fly.  Once you get toward this 
+guy, jump and kick/punch it!
+
+>POKEY
+This guy looks tough, but it has a weak point.  Just punch in the body 
+to weak it down until it disappears.
+
+>BOWSER
+Do I really have to explain this guy?
+
+Are these all the enemies??  If you have more, please e-mail me.  Thanks.
+
+
+Review
+======
+Here is my review for Super Mario 64.
+
+>Graphics (8/10)
+OK, you have to admit, this was Nintendo's almost-first try at the N64.  All 
+it has is a 64 megabit cart, for crying out loud!  Anyway, this game is 
+outstanding, and it does have glitches (like every game for N64), but pretty 
+good for a 64 megabit cart.  Other than that, this game has great graphics!
+
+>Sound (8/10)
+I have not yet found a sound that wasn't supposed to be there, so that's why 
+the points are up there, but there are those sounds in the game that make you 
+want to cringe (*ahem* baby penguin *ahem*).  It also has some pretty good 
+tunes, but nothing fancy.
+
+>Play Control (9/10)
+Can anyone say, "Perfect!".  This game has great responsive play control, and 
+trust me, I only counted one time where Mario wasn't fast enough for my 
+controller, but just ONE!  If you had more, it must be your controller.
+
+>Satisfaction (10/10)
+Yes, right here.  You heard it right.  A perfect score.  This game has a 
+great adventure mode.  You can do all kinds of things, and a great game for 
+beginners of the N64.  The only thing that I didn't like was the story (cake 
+… please), but I didn't count it against it.
+
+>Multi-Player (---)
+This game has no multiplayer.
+
+>OVERALL SCORE (9/10)
+A great game, a few glitches, but nothing too terrible.  I think everyone 
+should own this game, even if you aren't an adventure person and like to 
+shoot everything you can find ;)
+
+
+Walkthrough
+===========
+Whew!  I finally got here!  Well, this should tell you everything, so 
+be happy!  It will take me a while.
+
+C O U R S E 1: B O B - O M B  B A T T L E F I E L D
+***************************************************
+
+Star 1: Big Bob-Omb on the Summit
+---------------------------------
+REQUIREMENTS: NONE
+Well, this is the first time you'll meet the Bob-Omb Buddies.  The 
+objective of this level is to go up the mountain and reach the summit.  
+You will meet Big Bob-Omb.
+=================
+BOSS: BIG BOB-OMB
+=================
+To defeat this guy, just go a couple feet away from him, then keep on 
+turning until you face him in the back.  Quickly, grab his rear end and 
+throw him.  Don't throw him off the mountain though.  Repeat two more 
+times and you should defeat him.  After you defeat him, you will 
+receive your first star!
+
+Star 2: Footrace With Koopa the Quick
+-------------------------------------
+REQUIREMENTS: STAR #1
+There are plentiful shorcuts that you could use, but all of them are 
+cheating ones.  I have only found one shorcut that doesn't count.  Just 
+reach the mountain.  Once you find a hole in the mountain, go into it 
+and wait to be warped.  If you don't, continue until you reach another 
+one and repeat.  You should reach the top of the mountain!
+=============================
+A CLOSE LOOK: KOOPA THE QUICK
+=============================
+Koopa the Quick may seem big and not fast enough to run, but he is 
+pretty fast.  If you just stay on target and go the right way without 
+trying to cheat, you should make it on the top before he does.
+
+Star 3: Shoot to the Island in the Sky
+--------------------------------------
+REQUIREMENTS: STAR #1
+Here is my way to reach the island.  Just go into the Water Bomb area 
+where the stone with a cannon in it is.  Just reach the cannon and aim 
+all the way up once you get in it.  Then shoot out of it.  You should 
+reach the area of the island where the sign is.  Then, just go toward 
+the ! Box and open it to find the star.
+
+Star 4: Find the Eight Red Coins
+--------------------------------
+REQUIREMENTS: STAR #1
+Here it is! The list of the 8 Red Coins!  Now, I'll just list it from 1 
+to 8, OK?
+1-Jump on the rotating platform
+2-On a small grassy hill
+3-On the chain chomp's stake
+4-In the middle of the two stakes to the left
+5-In the middle of the two stakes to the right
+6-Under the arch
+7-On the long grassy hill
+8-On top of the tree on the floating island
+
+Star 5: Mario Wings to the Sky
+------------------------------
+REQUIREMENTS: WING CAP
+This star I think is the hardest in this whole course.  First, reach 
+the floating isle, then open up the Wing Cap box.  Make sure you have 
+the Wing Cap.  If not, look above to see how to get the Wing Cap.  
+Next, grab the Wing Cap and and go into the cannon.  Now, aim EXACTLY 
+at the middle coin of the first ring.  Shoot him out of the cannon.  
+Now, just let Mario do the rest of the work-don't even move the Control 
+Stick.  Once you go through all the rings, you should receive a star by 
+the Star 4 star.
+
+Star 6: Behind Chain Chomp's Gate
+---------------------------------
+REQUIREMENTS: NONE
+This star is pretty easy if you know how to do it.  First, reach Chain 
+Chomp.  Pound the stake that his holding him three times by doing the 
+pound the ground technique.  Chain Chomp should then break open the 
+cell that holds the star and run away.  Nab the star and congrats!  You 
+have done all your objectives.except one that appears in every course.
+=========================
+A CLOSE LOOK: CHAIN CHOMP
+=========================
+Here is a guy that you don't wanna mess with!  Just try to stay out of 
+the way while you are pounding in the stake or getting the red coin.
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+C O U R S E 2: W H O M P ` S  F O R T R E S S
+*********************************************
+
+Star 1: Chip Off Whomp's Block
+------------------------------
+REQUIREMENTS: NONE
+First of all, you need to climb up the castle.  Do that by going.up!  
+Once you reach the top of the castle, you will reach Whomp King.
+================
+BOSS: WHOMP KING
+================
+To defeat this block, use this easy step.  Go in front of it.  While it 
+is jumping on you, run under him.  Now, you should see an X.  Pound the 
+ground it.  Repeat this step two more times to finish him off.
+
+Star 2: To the Top of the Fortress
+----------------------------------
+REQUIREMENTS: STAR #1
+Whoa!  First you have to go to the top of the fortress, but now the 
+fortress now has a tower-with a star on top of the tower.  Now you have 
+to travel back up the castle in order to get it.  Oh boy!
+=========================
+A CLOSE LOOK: BULLET BILL
+=========================
+Who remebers this old fella?  Well, he can be destroyed the same way, 
+but you won't get anything out of it, so just try to ignore it.
+
+Star 3: Shoot Into the Wind Blue
+--------------------------------
+REQUIREMENTS: CANNONS ARE OPEN
+Make sure that you talked to the Bob-Omb Buddy to open up the cannons.  
+Next, enter the cannon right by him.  Aim for the bottom of the pole 
+and shot.  You should reach the second floor.  Now, go down the pole 
+and reach the star.  You should see a star.  Get it!
+
+Star 4: Red Coins on the Floating Isle
+--------------------------------------
+REQUIREMENTS: NONE
+Here they are!
+1-On top of the pushing block with eyes
+2-On top of the Blue Thwomp
+3-Behind the Piranha Plant
+4-Close to the wall (by RC #3)
+5-On the rotating bridge
+6-On the wall ramp
+7-On the floating block
+8-On the floating rotating block
+
+Star 5: Fall Onto the Caged Island
+----------------------------------
+REQUIREMENTS: STAR #1 AND #2
+First, you need to wake up the owl.  To wake him up, go climb up the 
+tree.  When you wake up the owl, Hoot, fly with him over Whomp's 
+Fortress.  Now, search for the caged island with a star in it.  Once 
+you do, watch for your shadow touching the floor and then let go.  You 
+should land on the island and get the star.
+===========================
+A CLOSE LOOK: HOOT, THE OWL
+===========================
+This bird loves to sleep in the trees, but you need to wake him up for 
+this objective.  I don't think he'll be too happy tonight when he hunts 
+for food.
+
+Star 6: Blast Away the Wall
+---------------------------
+REQUIREMENTS: OPEN ALL CANNONS
+First, go to the cannon right by the Bob-Omb Buddy.  Aim toward the 
+top-right corner of the closest wall to you.  You should get half off.  
+Do that again and you should find the star.  Now, go on top of that 
+wall.  Walk toward the star without falling and you should be home 
+free!  Make sure to not blast very hard or else you will fall off 
+Whomp's grounds.  Ouch!
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+C O U R S E 3: J O L L Y  R O G E R  B A Y
+******************************************
+
+Star 1: Plunder in the Sunken Ship
+----------------------------------
+REQUIREMENTS: NONE
+Hopefully you know how to swim, because welcome to the big bay!  Go 
+down into the water until you find a boat.  Go to a window that has an 
+eel in it.  Go close to it and it should look out.  Wait until it gets 
+out of the window, and then enter the window.  Now, open up the 
+treasure boxes using this method:
+								N
+           2            3				^
+							   E< O >W
+                  4					V
+              						S
+           1				
+
+Now, once you open those treasure boxes, the water will come draining 
+out of the boat since it is now rising from the depths of the ocean.  
+Now, climb up the slick slides until you reach a ! box.  Open it and 
+you should find the star.
+
+Star 2: Can the Eel Come Out to Play?
+-------------------------------------
+REQUIREMENTS: STAR #1
+Yep, you need to be risen before you can do this star.  First of all, 
+you need to go down and see the eel once again.  Its name is Unagi.  Go 
+close to it.  It will look out and run out of its home like it did with 
+the window of the boat.  Once it is outside, you will see a star at the 
+end of its tail.  Nab it before it goes back inside.  Make sure not to 
+hit the eel!
+
+Star 3: Treasure in the Ocean Cave
+----------------------------------
+REQUIREMENTS: NONE
+Go down into the ocean until you see a cave opening with a circle of 
+coins around it.  Enter the cave and you will be out of the water.  Be 
+careful of the falling pillars.  They will hurt.  But, if you have the 
+Metal Cap, you can be unarmed by the pillars.  Now, go to the treasure 
+chest.  Here is the map of the order of the treasure chests to open 
+(facing staight of it).
+
+	1		3
+
+		2		4
+
+Once you do this, you should find your star.
+
+Star 4: Red Coins on the Ship Afloat
+------------------------------------
+REQUIREMENTS: STAR #1
+Here is the list.again.
+1-4-Inside a clam
+5-On top of a pole
+6-8-On the boat
+
+Star 5: Blast to the Stone Pillar
+---------------------------------
+REQUIREMENTS: CANNONS ARE OPEN
+Make sure that the Cannons are open.  Now, go into the cannon in the 
+stone pillar.  Aim just a little higher than the pole close to the edge 
+that has an ! box on it.  Shoot and you should grab onto the pole.  
+Now, aim for the ledge.  Jump onto it, open the ! box, and get the star 
+on it.
+
+Star 6: Through the Jet Stream
+------------------------------
+REQUIREMENTS: METAL CAP
+You need the Metal Cap to get this sucker.  First, you need to find the 
+Metal Cap.  It is by the Bob-Omb Buddy.  Now, go under the water and 
+find the location that the sunken ship was resting at.  You should find 
+a star in the middle of the air bubbles.  Go through them to reach the 
+star.
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+C O U R S E 4: C O O L ,  C O O L  M O U N T A I N
+****************************************************
+
+Star 1: Slip, Slidin' Away
+--------------------------
+REQUIREMENTS: NONE
+Yahoo!  This star is very easy, but not very easy to get to!  Go into 
+the chimney.  After you land in the house, you will see a frosty slide.  
+Start going down it.  Use the Control Stick to steer your character.  
+After you go down the slide, you will see an icy end.  DON'T MOVE MARIO 
+AT ALL!  After you reach the end, go out the door and get the star.
+
+Star 2: Li'l Penguin Lost
+-------------------------
+REQUIREMENTS: NONE
+Tuxie, the lost penguin, needs to find her mom.  Luckily, she is by the 
+chimney.  Don't get confused with the decoy one on top of the house 
+which is at the end of the slide.  Now, carry the penguin to her mom.  
+Then, give it to her to receive a star.
+====================================
+A CLOSE LOOK: MOTHER PENGUIN & TUXIE
+====================================
+This gals are very alike - they cry whenever they both are separated!  
+Of course, that annoying baby penguin only cries whenever a stranger 
+holds him, but how in the heck does Mother Penguin know Mario's name?
+
+Star 3: Big Penguin Race
+------------------------
+REQUIREMENTS: STAR #1
+"Ladies and gentlemen, boys and girls, children of all ages.  The 
+Penguin Race is about to start.  The champion, weighing some-big-
+pounds, is Big Penguin.  The challenger, weighing less-than-the-
+penguin, is Mario.  These two will battle it out between who wins the 
+star.  Good luck Mario!  The Mushroom Kingdom is now in your hands!"
+===========================
+A CLOSE LOOK: PENGUIN CHAMP
+===========================
+This dude is very huge so don't bump into him during the slide down.  
+You'll be falling off the slide like Martin Short did when he was eight 
+years old (I heard this on the internet somewhere), but not the same 
+slide, though.
+
+Star 4: Frosty Slide for 8 Red Coins
+------------------------------------
+REQUIREMENTS: NONE
+1-Above the tree closest to the end of the slide house
+2-Right on the tip of the side of the mountain
+3-At the end of a broken-down bridge
+4-Right on the tip of the side of the mountain and the wall
+5-Above the tree closest to the beginning of the slide house
+6-Go across the bridge that as a little platform
+7-At the beginning of the moving platform
+8-Behind the big ice cube
+
+Star 5: Snowman's Lost His Head
+-------------------------------
+REQUIREMENTS: STAR #1, #2, #3, AND #4
+Oh my god!  A snowman without a head.  What the heck was that kid 
+thinking when he built it?  Oh well, you can help!  First, you need to 
+find the snowman's body.  Next, it will chase after you so go down the 
+slide across the mountain fast.  Now, fastly, run to the snowman's 
+head.  When the body is coming, quickly get out of the way.  Once you 
+do this objective, you will receive a star!
+============================
+A CLOSE LOOK: ROLY POLY BODY
+============================
+He needs to find it's head.  Can you help?  Of course ya can!
+
+Star 6: Wall Kicks Will Work
+----------------------------
+REQUIREMENTS: CANNONS ARE OPEN
+If you don't know how to do wall kicks, practic them now!  To get to 
+the star, go into the cannon that is closest to the bottom of the 
+moving platform.  Then, aim toward the tree.  You should grab it.  
+Continue on until you have to do a long jump.  Do so and then you'll 
+reach a place that you can't continue up on that platform.  Do get up 
+on the platform, do a wall kick.  Repeat until you find an icy path to 
+the star.  Walk it VERY, VERY slowly-don't rush!  If you do, you will 
+fall off and have to do this again.
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+B O W S E R  I N  T H E  D A R K  W O R L D (B O W S E R 1)
+***********************************************************
+
+Key 1: Route to Bowser
+----------------------
+REQUIREMENTS: 8 STARS
+Here is your first Bowser Course, and he is in the dark world!  First, 
+just follow the straight route.  You will find a Metal Cap box if you 
+hit the switch.  Now, you will find a ! switch.  Once you press it, 
+nothing happens, right?  Wrong!  To know what it does, just go to Star 
+1: The 8 Red Coins.  Now, follow the path until you reach a circular 
+platform.  You will find three Goombas.  Kill them and cross the 
+bridge.  Continue the path until you reach a block that has a yellow 
+platform going back and forth, so beware!  Afterwards, you will find 
+two teeter-totters.  Cross them to get onto a blue block platform.  
+Next, you will find a ! switch.  Stomp on it, climb the stairs, and 
+enter the pipe.  You will have to battle the first Bowser.
+============
+BOSS: BOWSER
+============
+To defeat Bowser, just grab onto his tail, swing him around, and make 
+him land on a mine.  Becareful of the fire that he breathes out.  
+Otherwise, you got the Mushroom Kingdom's Entry Way all cleared!
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+C O U R S E 5: B I G  B O O ` S  H A U N T
+******************************************
+
+Star 1: Go on a Ghost Hunt
+--------------------------
+REQUIREMENTS: NONE
+Are you ready to go on a ghost hunt?  All right then.  The only 
+objective to do is to kill every ghost in the house and then once you 
+go to the entrance, you have to defeat Big Boo.
+=============
+BOSS: BIG BOO
+=============
+Oh boy!  You think that this guy is totally hard, but he actually is 
+totally easy!  Just use the pound the ground three times on him.  It 
+could help with practice.
+
+Star 2: Ride Big Boo's Merry-Go-Round
+-------------------------------------
+REQUIREMENTS: STAR #1
+Go to the room with the collapsing bridge.  Let Mario plunge down to 
+the basement waters.  Then, enter the door in the middle.  You should 
+find a merry-go-round.  Find the ghost picture that spits out Boos.  
+Destroy them and eventually, Big Boo will come back out again.  Defeat 
+him the same way you did in Star #1.
+
+Star 3: Secret of the Haunted Books
+-----------------------------------
+REQUIREMENTS: STAR #1
+Go into the Haunted Library upstairs.  Once you enter, run as fast as 
+you can, not getting hit by the books that fly at you.  Then, turn 
+right, and go all the way up.  You will see three books slide out of a 
+bookshelf.  Here is the right order to put them in: 
+
+						1
+				3
+								2
+
+After you do that, the bookshelf will slide to the left and it will 
+allow you to go through the secret door.  Enter the door and get the 
+star on the balcony.
+
+Star 4: Seek the 8 Red Coins
+----------------------------
+REQUIREMENTS: STAR #1
+1-Behind the Mad Piano
+2-3-On top of the two bookshelfs in the next room after the Mad Piano
+4-5-In the coffin room
+6-On the red grid pattern
+7-In the room right after the colapsing bridge room
+8-Right by the trap door
+
+Star 5: Big Boo's Balcony
+-------------------------
+REQUIREMENTS: STAR #1
+It's easy to get the star, but hard to retreive the star.  First, go to 
+the room with the trap door.  Go on the wooden platform.  Hit the right 
+wall by doing a wall kick and try to reach the above platform.  Enter 
+the door.  Go up the stairs to the right and enter the door.  Again, 
+you will have to beat Big Boo.  Defeat him and you will find that the 
+star will be at the very top of Big Boo's Haunt.  Now, either face the 
+right or left dormer.  Then, do a long jump to it.  Try to reach the 
+top of the dormer and then put it in Mario's view.  This is a lot 
+easier to do than Lakitu's view.  Crawl or walk very slowly to the real 
+top of the house, then do the same thing-crawl or walk until you are at 
+the big dormer with the star spinning right above it.  Slide onto it 
+and get the star.  Good luck getting the star-it can be very difficult, 
+so practice.
+
+Star 6: Eye to Eye in the Secret Room
+-------------------------------------
+REQUIREMENTS: STAR #1, VANISH CAP
+Once you got the Vanish Cap, come back here and get ready to do the 
+last objective.  First, get on the balcony in the first room that has a 
+Vanish Cap on it.  Then, go back into the trap door room.  Quickly get 
+on the wooden platform and do a wall kick on the left wall.  Reach the 
+platform and enter the door.  Go to the ghost picture and go through 
+it.  You will meet your boss, Big Mr. I., which I think is the easiest 
+boss in the entire game!
+================
+BOSS: BIG MR. I.
+================
+Just circle around him like you did with the other normal Mr. I.s.  
+See!  Easy as that!
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+C O U R S E 6: H A Z Y  M A Z E  C A V E R N
+********************************************
+
+Star 1: Swimming Beast in the Cavern
+------------------------------------
+REQUIREMENTS: NONE
+Now, get this straight: In the beginning, there is a left route and a 
+right route.  Every time I start a star strategy, I'll tell you which 
+way to go first.  Got that?  All right, now let's get on with it!  Go 
+through the left route.  Long jump and enter the door.  Go through the 
+route crap until you reach a place with a lot of water and as a 
+mountain in the middle of the pool.  Swim around in it until you find 
+the swimming beast, Dorrie.  Get on Dorrie's head by using the pound 
+the ground technique and walking on its long neck reaching its head.  
+The way you are facing is where Dorrie will be heading.  Face toward 
+the mountain in the middle of the pool.  Once you get the closest you 
+can to it, jump onto it and get the star.
+=============================
+A CLOSE LOOK: DORRIE THE DINO
+=============================
+Yep, she's/it's the only dino that can swim in Mario 64.  She/It is 
+very helpful, but can be confusing to control her!  And, in case you 
+are wondering, she will not eat you-the signs just want you to be 
+afraid of her.
+
+Star 2: Elevate for 8 Red Coins
+-------------------------------
+REQUIREMENTS: NONE
+Go through the right route.  Continue until you get to the elevator 
+room.  All of these red coins are in this room.
+1-4-Punch open the crates on the 4-arrow elevator
+5-8-On the route of the checkered elevator
+
+Star 3: Metal-Head Mario Can Move!
+----------------------------------
+REQUIREMENTS: METAL CAP
+Go through the left route.  Go to the room with Dorrie in it.  Get the 
+Metal Cap in the green box (make sure you hit the Metal Cap Switch that 
+is located in this course somewhere) and follow the dirt path all the 
+way to the ! switch (even underwater).  Enter the door that was 
+blocked.  Now, jump across the two pits with your long jump to get to 
+the star.
+
+Star 4: Navigating the Toxic Maze
+---------------------------------
+REQUIREMENTS: METAL CAP (OPTIONAL)
+The Metal Cap is optional, but is the best to have!  Go through the 
+right route and into the elevator room.  Enter the beginning door to 
+the toxic maze.  Fall down the pit and you will enter the maze.  Here's 
+my secret strategy and the easiest.  Get the first Metal Cap box, open 
+it, and get the metal cap.  Now, follow the left wall until you find 
+two pits.  Go into the middle of them and then do a backward somersault 
+to the door above.  Enter it and follow the route to the star.
+
+Star 5: A-Maze-Ing Emergency Exit
+---------------------------------
+REQUIREMENTS: METAL CAP (OPTIONAL)
+Go through the right route and enter the toxic maze.  Reach the exit, 
+but just before it, double jump/backward somersault to the door above.  
+Enter it and you will find a red grid.  Follow the grid until you find 
+the floating platform with the star on it.  Reach the star.
+
+Star 6: Watch for Rolling Rocks
+-------------------------------
+REQUIREMENTS: NONE
+Go through the left route.  Long jump and enter the door.  Cross the 
+rolling rocks hill.  Once you reach the end of it. You will find two 
+walls right before the door.  Wall kick them until you reach the top of 
+the right wall.  You should see a star.  Nab it!
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+S T A R 7: L E T H A L  L A V A  L A N D
+****************************************
+
+Star 1: Boil the Big Bully
+--------------------------
+REQUIREMENTS: NONE
+Carefully follow the route to Boil.  Becareful not to fall into the 
+lava and get yer rear smokin'.  But, you can still control him even if 
+he is on fire.  Just keep him on land!  Once you reach Boil, defeat 
+him!
+=========================
+BOSS: BOIL, THE BIG BULLY
+=========================
+This bully is a real pain in the a-, oh never mind..  Anyway, you can 
+defeat him two ways: A. Reaching the very tip of the platform, jump 
+over him when he charges toward you, and when he's about to fall, kick 
+him in the rear -or- B. Kicking him all the way off the side.  It's 
+your choice, so choose the right one that fits you the most.
+
+Star 2: Bully the Bullies
+-------------------------
+REQUIREMENTS: NONE
+Oh my god!  There are little Bullies swarming around Lethal Lava Land.  
+Oh well, I guess Nintendo found out a way to tick you off!  Defeat the 
+little Bullies the way you did with Boil.  But be prepared!  Once you 
+beat all the little Bullies, you will have to defeat Boil once again.
+
+Star 3: 8-Coin Puzzle With 15 Pieces
+------------------------------------
+REQUIREMENTS: NONE
+Well, duh!  These are easy to get!  All the red coins are located on 
+the 15 piece puzzle of Bowser.  Be careful!  The pieces move one at a 
+time!
+
+Star 4: Red-Hot Log Rollin'
+---------------------------
+REQUIREMENTS: NONE
+Get into the caged part of LLL.  Once you enter, you will be able to 
+roll on the log.  Make sure not to fall off it or Mario will suffer a 
+bad ending!  Once you reach the end of the caged part, go across the 
+arrow-point bridge and get the star.  Otherwise, just get the Wing Cap 
+and fly to the star.
+
+Star 5: Hot-Foot-It Into the Volcano
+------------------------------------
+REQUIREMENTS: NONE
+Get the shiny shell from Koopa Troopa.  Once your on it, go into the 
+lava and locate the volcano.  When it is not errupting, enter it.  Once 
+you do, you will go inside the volcano.  Oh boy!  It is sure hot in 
+here!  I bet Mario feels like Fox McCloud riding the Arwing on Solar 
+{=^).  Go `round and `round the volcano until you reach the top 
+and.grab the star.  Easy as that!
+
+Star 6: Elevator Tour Inside the Volcano
+----------------------------------------
+REQUIREMENTS: NONE
+Wow!  No requirements in this whole course!  Ain't that sweet?  Well 
+anyway, I'm the tour guide, and here's my speech: "Wecome to Koopa 
+Volcano Erruptions, Inc.  You have come here on your elevator tour of 
+the volcano where the magma works hard.  I will be your tour guide.  
+Please call me BJ if you have any questions.  Now, let's get on the 
+first elevator.  To every direction, you should find magma everywhere, 
+including the magma firefall.  Oh, let's jump to the second elevator.  
+Look all around the place and see the magma working hard and.oh!  Look 
+at the that!  To your right you should see a Power Star!  Oooh!  Is 
+Mario abored on this tour?  Oh, there you are!  Hurry, Mario!  Nab that 
+star!"
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+C O U R S E 8: S H I F T I N G  S A N D  L A N D
+************************************************
+
+Star 1: In the Talons of the Big Bird
+-------------------------------------
+REQUIREMENTS: NONE
+Soaring in the sky, it's not a flying fish, a plane, or Superman.  It 
+is Klepto the Condor.  He has a star in his talons and it's up to you 
+to get it.  But, it's up to me to tell you how to!  Go to one of the 
+red and brown checkered towers.  Once he comes flyin' in, punch/run 
+into/jump on him and make him give up that star.  If you take any 
+damage and don't make it, go into the Oasis located to the far-left 
+part of SSL from where you start.  Good luck to ya!
+================================
+A CLOSE LOOK: KLEPTO, THE CONDOR
+================================
+He is named after two things: The star bird and the hat-nappers.  Why 
+the heck is he named a hat-napper?  You'll find out why in the last 5 
+star objectives!
+
+Star 2: Shining Atop the Pyramid
+--------------------------------
+REQUIREMENTS: WING CAP (OPTIONAL)
+The easiest way to get this star is to get the Wing Cap on top of the 
+shelter, fly to the pyramid, circle it until I find a hole with a star 
+in it.  I nab it.  But some people pefer to use the Wing Cap on the 
+Pyramid or follow the circular route upto the star.  Ahhh, I gave you 
+the strategy.  Just wanted to know if you were listening.
+
+Star 3: Inside the Ancient Pyramid
+----------------------------------
+REQUIREMENTS: NONE
+This course wouldn't be a course if it didn't have a pyramid, right?  
+Right.  And, a pyramid wouldn't be a pyramid if it didn't have booby 
+traps, right?  Absolutetly!  Nintendo has gone overboard with booby 
+traps and very difficult enemies to deal with during the trek up to the 
+star!  All I can say is that this is one of the hardest stars in the 
+game if you haven't fully explored the pyramid.  But this star would be 
+one of the easiest if you had the Player's "Cheating" Guide from the 
+"pros" at Nintendo Power.  But of course, your cheating right now 
+aren't ya?  Right!  Yeah, I know your type-the FAQ lookers man.  Yeah, 
+I am too, so don't sweat it.  Anyway, back to the game: Be careful of 
+Spindel and Grindel in this level.  They can smash you like a pancake 
+in a cartoon photoraph machine!
+
+Star 4: Stand Tall on the Four Pillars
+--------------------------------------
+REQUIREMENTS: WING CAP (OPTIONAL)
+"Ye person to stand tall on ye pillars ye'll receive ye Pow'r Star."  
+(Sorry `bout the crap writing, but "This is the Good Ship Lifestyle" is 
+booming in my ears!)  Ha, just kidding!  The easiest way to stand on 
+the pillars is to fly to them.
+
+Star 5: Free Flying for 8 Red Coins
+-----------------------------------
+REQUIREMENTS: WING CAP
+You need the Wing Cap for sure on this one!  There are 3 red ! boxes 
+that hold the Wing Cap: One on top of the shelter at the beginning of 
+the level, in the Tox Box maze, and by the pyramid.  Now, just surf 
+around until you find them.  Oh, who am I kiddin'?  Here's the list:
+1-4-By the four pillars
+5-Above the Tox Box maze
+6-By the Oasis
+7-In the shelter
+8-At the extreme southeastern part SSL
+
+Star 6: Pyramid Puzzle
+----------------------
+REQUIREMENTS: NONE
+OK, people have been e-mailing this A LOT, and I will answer it ONE MORE 
+TIME!  Go down to the "Frequently Asked Questions".
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+C O U R S E 9: D I R E ,  D I R E  R O C K S
+********************************************
+
+Star 1: Board Bowser's Sub
+--------------------------
+REQUIREMENTS: NONE
+Yep, this fits the definition: "This is the Good Sub Lifestyle!"  Just 
+board the sub-it has a star on top of it.
+
+Star 2: Chests in the Current
+-----------------------------
+Well, the course will move out of your way to Bowser at the Fire Sea.  
+I will put the map up so you can look off of it.  This is overhead 
+view, OK?
+
+
+			3
+					START
+
+
+
+							4
+
+
+
+							    2
+			   1
+
+Ya got it?  OK.  Now remember: These are chests you are looking for!
+
+Star 3: Pole-Jumping for Red Coins
+----------------------------------
+REQUIREMENTS: BEAT BOWSER IN THE FIRE SEA
+Before continuing on, beat Bowser in the Fire Sea so he'll aboard his 
+sub and leave Dire, Dire Rocks and for you to jump pole to pole, to 
+collect those coins.
+1-3-On platforms
+4-5-Between two platforms
+6-In front of the left cage
+7-8-Behind the two cages
+
+Star 4: Through the Jet Stream
+------------------------------
+REQUIREMENTS: METAL CAP
+Hmmm, this star objective was from another course.oh yeah!  It was from 
+Course 3: Jolly Roger Bay.  And guess what!  The jet stream is 
+underwater.  Now you have to find the Metal Cap.  Hmmm, oh there it is!  
+By the Vanish Cap box.  Now I need to open and go through.
+
+Star 5: The Manta Ray's Reward
+------------------------------
+REQUIREMENTS: NONE
+Hey, that big fish is not bad at all!  Just go behind it, going through 
+its five rings it leaves.  Just make sure not to run into him while 
+doing this.  This is not as easy as it sounds.  In fact, it's pretty 
+hard to do.
+============================
+A CLOSE LOOK: MANTA, THE RAY
+============================
+There's nothing to talk about this fish.  It justs swims around.  If 
+you have any info, e-mail me.
+
+Star 6: Collect the Caps
+------------------------
+REQUIREMENTS: VANISH CAP, METAL CAP (OPTIONAL)
+Right away, let's start at the two caps.  Jump over the red cage grid 
+to enter the Vanish Cap's cell.  Get it and then run through the next 
+red cage grid.  Get the Metal Cap and go underwater.  Walk around until 
+you find the red grid cage that holds the star.  Go into the cage and 
+get the star quickly before your Vanish Cap runs out.  You can also do 
+this without the Metal Cap, but I pefer to do the Metal Cap.  It's 
+easier for me to do.
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+B O W S E R  I N  T H E  F I R E  S E A (B O W S E R 2)
+*******************************************************
+
+Key 2: Route to Bowser
+----------------------
+REQUIREMENTS: 30 STARS
+Here's the full walkthrough: Turn your camera angle to forward.  Wait 
+for the cage elevator to come to you.  Jump onto it.  When it starts to 
+sink in the lava, go on the two tipping platforms until the cage 
+elevator pops back up.  Jump on it once again until it reaches its end.  
+Then, jump on the blue wavy platform, being careful of the lava that 
+goes on it.  Then, jump off it to the circle platform with those 
+healing hearts.  Run through it if you fell in the lava to replenish 
+your life meter.  Continue on the gray road until you find the cage 
+elevator with a pole on it.  Whenever it is not in the lava, go on it, 
+and get on the pole because it will sink in the lava.  When it is 
+getting out of the lava, do a handstand and then jump to to the tipping 
+platform above (it tips to the right and left only).  Now, jump to the 
+green pole and go up to the caged room.  Then go to the caged route of 
+the gray elevator.  Once you reach the second floor on it, you'll find 
+out that the whole floor is in lava.  Watch the yellow elevator and the 
+fire coming out of that thing.  When the time is right, jump on the 
+elevator when the fire doesn't come out of the thing.  Then, go up and 
+down the triangle thing and then climb across the grid.  Then continue 
+on the gray path to the octagon platform.  Then, take the stairs that 
+go up and up while the blue platforms with stairs move.  When you see a 
+shadow, wait until you go up.  You should see a ! box/red coin.  Then, 
+once the stairs go up to the gray road, go on the gray road until you 
+reach the third floor which is also covered in lava.  Continue on the 
+blue wavy platform until you reach a platform that has a healing heart 
+on it.  Run through it if you've been hit or you went into the lava.  
+Now, I'll leave you with the last 5/6 of the level.  It's not that 
+hard.  It's just those cage elevators with a pole on them.  It's not 
+that hard to do.  But, if you are really stuck, e-mail me.  I don't 
+think you will.  Whew!  This took a while.
+============
+BOSS: BOWSER
+============
+Beat him the same way you did back in the Dark World, but this time he 
+is a lot trickier.  Now he can disappear and reappear right by you and 
+he can turn and face you a lot quicker that he could.  Be careful of 
+his stomp that starts in the beginning!  Since this platform is held 
+only by one spike, Bowser can turn this platform in a turning pancake!
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+C O U R S E 10: S N O W M A N ` S  L A N D
+*******************************************
+
+Star 1: Snowman's Big Head
+--------------------------
+REQUIREMENTS: NONE
+First, you need to get to the big snowman.  Oh, I forgot to mention-if 
+you don't know or can't find the star, you will spend uncounted hours 
+in front of the tube.  Now, I'm here to tell you where it is.even if 
+"Tubthumping" is in my ears: Get past the block elevator/conveyor.  
+Once your done with that mess, then you will reach a part where there 
+is an ice bridge with a snowman blowing gusts and your buddy Penguin 
+Champ is walking along.  Wonder why he is here?  Well, since you 
+defeated him, he'll be nice to you and let you across so you won't get 
+blown away from the snowman.  You can do two things with him to get 
+across: A. Use the penguin as a shield to protect you -or- B. Jump on 
+his head to get across.  Now continue on the circular path until you 
+reach the star.  Another way to get the star is to get into the closest 
+cannon to the snowman and shoot to the star, but this is very difficult 
+to perform
+===========================
+A CLOSE LOOK: PENGUIN CHAMP
+===========================
+He's back, and now he treats you as royalty-without even talking!  
+Since he's so fat, he can protect you from the breath gusts of the 
+snowman.  Doesn't he seem just a little bit fatter than before?
+
+Star 2: Chill With the Bully
+----------------------------
+REQUIREMENTS: NONE
+Just like his "hot" brother, this guy really gets a "chill" into things 
+(get it?)!  You can find this guy's "spot" in Snowman's Land, but he'll 
+never have a "warm" spot in him (get this one?)!  HA!  Man, I'm 
+"smokin'" tonight, so I better get a "chill" pill before bed!
+=================
+BOSS: CHILL BULLY
+=================
+To defeat this Puff Daddy, just stand by the side, and once he comes, 
+double-jump over him and kick him into the deadly water.  Or else you 
+can just go on the ice and duke him out, but it could take a couple 
+rounds to do (hahahaha)!  He's much the same as Boil in Lethal Lava 
+Land.  But the icy platform can make it a bit trickier to do-one hit 
+from him could mean instant death!
+
+Star 3: In the Deep Freeze
+--------------------------
+REQUIREMENTS: NONE
+Go to the "ice cube" of the level.  It should be near the entrance.  
+First, enter the very small maze.  Keep on doing backward somersaults 
+until you find the hole in the roof.  Get on top of the "ice cube" and 
+then go into the hole next to the other one.  You should find the star.  
+Nab it!
+
+Star 4: Whirl From the Freezing Pond
+------------------------------------
+REQUIREMENTS: NONE
+Go to the big freezing pond by Chill Bully's pond.  You should find 
+those enemies that make you twirl around once you stomp on them.  Do 
+that to one of them and then go across the fence.  You should see two ! 
+boxes: One containing a shiny shell and the other containing a star.  
+Don't forget about the shiny shell location-you need it in the next 
+star objective which is.
+
+Star 5: Shell Shreddin' for Red Coins
+-------------------------------------
+REQUIREMENTS: SHINY SHELL
+All I can say is that you need the shiny shell to collect most of the 
+red coins.  Of course, I use it to get all the coins, since it is 
+faster and I can jump on it.
+1-Between two trees
+2-Head northwest and get it on the small hill
+3-8-Located closest to the wall side (4 northeast, 2 northwest)
+
+Star 6: Inside the Igloo
+------------------------
+REQUIREMENTS: NONE
+The easiest way to get inside the igloo is to use the shiny shell.  
+Just go to the icy pond that is close to Chill Bully's pond (or is it 
+in Chill Bully's pond?).  Use should find a steep hill with coins going 
+up it.  Follow the coins up the hill and you should find the igloo.  
+Get into it by using the crawl technique.  Now you're in the igloo.  
+You find out that the star is in ice.  You need the Vanish Cap and oh 
+my God!  There is a Vanish Cap box, but how the heck can you get it?  
+Simple.  Double-jump or backward somersault over the wall!  Now, go to 
+the star and get it.  Remember!  The Bob-Omb Buddy is located in this 
+place.  Oh!  I forgot to mention that you can use the cannons to get 
+over the fence in Star #4.
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+C O U R S E 11: W E T  -  D R Y  W O R L D
+*******************************************
+
+Star 1: Shocking Arrow Lifts!
+-----------------------------
+REQUIREMENTS: NONE
+To start off, hit the Crystal Tap that is on the big platform.  Now, go 
+on the arrow lifts until you see a ledge with a ! block on it.  Hit the 
+! block and then it should spit out a star.
+
+Star 2: Top O' the Town
+-----------------------
+REQUIREMENTS: NONE
+Yes, it is a very long way up to the top, but it is worth since you get 
+a star.  Since this is pretty dang easy to do, I'll give you a few 
+tatics: Use those enemies that lift you up so you can get on the next 
+floor.  But you have to be in a specific place to do this-ya can't be 
+anywhere and jump to the next floor.  If you're aim is too low, you 
+fall down and plunge to the floor, losing 2 pieces of your life meter.
+
+Star 3: Secrets in the Shallows & Sky
+-------------------------------------
+REQUIREMENTS: NONE
+OK, the objective name makes sense.  There is a total of 5 things you 
+need to do to get this star.  Here's the list:
+1) Push the block into the wall
+2) Push the block that is by the high-up ! box
+3) Open the ! box that was way-to-high-for-you-to-reach with the block
+4) On the top floor and on the chimney-like platform with a ! box-open
+5) On the caged elevator with a ! box-open
+
+Star 4: Express Elevator - Hurry Up!
+------------------------------------
+REQUIREMENTS: NONE
+This is simply a puzzle to solve-and it was very tricky for me when I 
+first did this star, but now I can master this on my first try, and 
+let's see if you can!  First, hit the Crystal Tap that is behind those 
+circular stairs.  Next, break the block that is blocking the entrance 
+to the express elevator (this is most important).  Now, go up the 
+ledges using Heave-Ho for your "stepping" guide.  Now go on the top of 
+the express elevator.  Ride the right half of the elevator, which is 
+the moving part.  When it starts moving, go off it.  Then, wait for it 
+to go all the way down.  Then do a wall kick/backward somersault to the 
+wooden platform INSIDE THE SHAFT.  Once you are going up, you will be 
+going to the star!
+
+Star 5: Go to Town for the Red Coins
+------------------------------------
+REQUIREMENTS: NONE
+So, this is your first time going downtown?  Well, you can go into any 
+buildings, since this ain't an RPG game.  If it was, it would be 
+awesome.  Wouldn't the castle make a sweet star objective?  Well, it 
+isn't.
+1-8-In boxes on the roofs of houses
+
+Star 6: Quick Race Through Downtown!
+------------------------------------
+REQUIREMENTS: VANISH CAP
+Oh, I forgot to tell you how to get to downtown: First, get in the 
+cannon.  Then, shoot to the other side of the tall fence, swim down the 
+long corridor to reach downtown.  Easy as that!  Now, you may have seen 
+a ! switch while you walking on the roofs.  It makes a block appear in 
+the caged star.  Now, you need the Vanish Cap, which is located at the 
+southeastern part of downtown, but wait!  That is caged!  Now whatcha 
+gonna do?  Ah, there's another location of the Vanish Cap.  It's in the 
+south central part of downtown.  Now, quickly go into the cage, get on 
+the block and nab the star.
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+C O U R S E 12: T A L L ,  T A L L  M O U N T A I N
+****************************************************
+
+Star 1: Scale the Mountain
+--------------------------
+REQUIREMENTS: NONE
+If you don't know what scale means, it means to climb to the top of the 
+mountain!  If you know your controlling skills and practiced them with 
+earlier courses, this will be easy for you, while if you haven't 
+practiced your controller skills, this could be the worst course in the 
+game.  If you haven't tested your jumping to very small platforms, like 
+the arrow lifts, do it know.  Here are some things to watch for during 
+the way up: Moles.  They infest a part of TTM.  If you don't watch out, 
+they could send you off the mountain and could die or reach a part in a 
+course and you will lose a lot of pieces of your life meter!  Make sure 
+to watch for the cloud that can blow you sky-high.and your hat!  Don't 
+worry-you'll see that Ukkiki, the monkey will have it (I'll explain him 
+later on).  Be also careful of the bowling balls!  They can hurt if you 
+get run over by them!
+
+Star 2: Mystery of the Monkey Cage
+----------------------------------
+REQUIREMENTS: STAR #1
+From the summit, you should be able to see the star in the monkey cage.  
+And the cage belongs to Ukkiki, the monkey!  Go to him and grab him.  
+Once you do, release him and he'll give you the star.
+================================
+A CLOSE LOOK: UKKIKI, THE MONKEY
+================================
+Man, this monkey can be a pain to catch, and doesn't help if he has 
+your cap!  If you take the first two letters off his name, doesn't it remind 
+you of the monkey Kiki from The Legend of Zelda: A Link to the Past?  No, 
+didn't think so.
+
+Star 3: Scary `Shrooms, Red Coins
+---------------------------------
+REQUIREMENTS: NONE
+OK, if you don't know how to stay on a mushroom, here is a tip.  Put 
+the camera view to the farthest away Lakitu view.  Now you will see 
+everything and you should make it on the mushroom.  And make sure to 
+jump from left to right, not forward.  It's harder to from forward 
+view.
+1-4-Located at the Mushroom Pit
+5-8-Scale more of the mountain (right next to the mushroom pit)
+
+Star 4: Mysterious Mountainside
+-------------------------------
+REQUIREMENTS: NONE
+Uhh, what the heck is this?  It is a slide that is, well, in the 
+mountain.  Scale the mountain until you find a hole in the mountain.  
+Get in it.  Now you should find yourself at the beginning of it.  Now 
+go down it!  It's kinda fun, and a lot longer than the Princess's 
+Secret Slide, but the same size as the Course 4 slide.  At the end of 
+this slide, you will get a star.
+
+Star 5: Breathtaking View From Bridge
+-------------------------------------
+REQUIREMENTS: NONE
+Scale the mountain until you see ! switch next to a small bridge and a 
+star in the waterfall.  First, hit the ! switch.  Now, go on the bridge 
+and you should see blocks.  Go on it and then jump to the star that is 
+in the waterfall.
+
+Star 6: Blast to the Lonely Mushroom
+------------------------------------
+REQUIREMENTS: NONE
+There are two ways to get to this mushroom and the star.  Here is the 
+easiest way to do it.  Go on the log and roll that to the end.  No long 
+jump to the mushroom.  You should be able to get the star before 
+landing on the mushroom though.  Now here is the hard way: Get into the 
+cannon and shoot to it.
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+C O U R S E 13: T I N Y  -  H U G E  I S L A N D
+*************************************************
+
+Star 1: Pluck the Piranha Flower
+--------------------------------
+REQUIREMENTS: NONE
+Go into the first pipe you see.  Once you exit out of the pipe, you 
+will be attacked by five piranha plants.  Destroy them all!  You should 
+be in huge island.  Hey!  This reminds me of Super Mario Bros. 3!
+=========================
+BOSS: FIVE PIRANHA PLANTS
+=========================
+If you ask me, these guys are SOOOOO easy!  If you are in huge island 
+(where you should be), punch/kick/trip/slide into them to hurt them.  
+If you are in tiny island, you should just be able to stomp on them.  
+Remember that they go underground whenever they spit out a firey burst.  
+Big or small, that fire can burn you!
+
+Star 2: The Tip Top of Huge Island
+----------------------------------
+REQUIREMENTS: NONE
+First, go in the first tunnel you see.  You should be in huge island.  
+Now, just go up and up and up huge island until you reach the top.  
+Here are some tips along the way: Bowling Balls.  They are back, but if 
+you are in tiny island, they will be very small, but they can still 
+hurt you by half from normal size amount.  Also, use the Shrinker Pipes 
+if you have to if need to feel big/small to get up.  Just make sure at 
+the end that you are in huge island.  Also, only in huge island, you 
+need to be warned about the Windswept Valley.  This is where you'll be 
+racing against.
+
+Star 3: Rematch With Koopa the Quick
+------------------------------------
+REQUIREMENTS: STAR #1 AND #2
+Man, this guy has really practiced since Course 1, and he is one tough 
+man to race!  First, go to Windswept Valley.  Along the way, you should 
+meet him.  He will ask for a remach.  Answer yes.  Now, the wind in 
+Windswept Valley doesn't bother him at all, he goes 10x as fast as 
+before.  Oh yeah.you need to be in huge world to race.  The cheating 
+method is to use the long jump until the finish-that's your only weapon 
+against defeating him!
+=============================
+A CLOSE LOOK: KOOPA THE QUICK
+=============================
+Well, he's back, but he has a new pair of running shoes, yet he has 
+been training hard.  The bowling balls and the wind does not stop him, 
+so your only weapon is using the long jump from start to finish.  Good 
+luck!  Remember that if you don't make it, enter a shinker pipe to get 
+to tiny island, and then re-enter the pipe to be in huge island, and 
+Koopa the Quick awaits you for yet another rematch!
+
+Star 4: Five Itty Bitty Secrets
+-------------------------------
+REQUIREMENTS: NONE
+Well, you have to be in tiny island to do this.  Here is the list of 
+all the five itty bitty secrets:
+1) In the water at the top of the island
+2) Where the bowling balls shoot out
+3) Cross the very skinny stick of wood to an opening
+4) An entrance at the lowest point of the island
+5) On the tip of the island
+
+Star 5: Wiggler's Red Coins
+---------------------------
+REQUIREMENTS: NONE
+Remember in Star #4 that I told you to cross the very skinny stick of 
+wood to an opening?  Well, get to huge island and try to find that very 
+skinny stick which now is a bridge to you!  Go into the opening and 
+you'll be inside Wiggler's home.  You'll find all the coins there.  
+C'mon!  They're all in one room, so I don't want to make this 
+Walkthrough any bigger by wasting my time!  They're all in front of 
+your eyes, but if you are blind, try to e-mail me and try to type the 
+question if you can click the "send" button with your mouse!
+
+Star 6: Make Wiggler Squirm
+---------------------------
+REQUIREMENTS: NONE
+Wiggler makes his home in Tiny-Huge Island, but he does make his top 
+part of his home very secure.  But to enter it, go to tiny island.  Go 
+to the summit and enter the middle of the water and Pound the Ground.  
+Now, be in huge island and make your way up to the summit once again.  
+You will now be small enough to enter the entrance.  Once you enter it, 
+you'll find Wiggler, waddling around.  Now, make him squirm out the 
+star!
+=============
+BOSS: WIGGLER
+=============
+Wiggler, your happy-go, flower-headed friend has no gone wacky for the 
+star.  He will let no one have his star-unless you "wiggle" it out of 
+him!  Besides, he's already mad at you for flooding his house, so he 
+goes fast-paced each time you stomp on him, which makes it tougher to 
+beat him.  But, you'll eventually defeat him and he'll give up the 
+star.
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+C O U R S E 14: T I C K  T O C K  C L O C K
+********************************************
+
+Star 1: Roll Into the Cage
+--------------------------
+REQUIREMENTS: NONE
+This star can be the easiest star in this course, or the toughest ever.  
+Your choice wether to stop or run the clock.  Here's the "time" to 
+enter this course for the speed:
+===============================
+Minute hand on 12 - Stops clock
+Minute hand on 9  - Fast
+Minute hand on 6  - Medium
+Minute hand on 3  - Slow
+===============================
+Now, I recommend that you put it to stop, just to make it easier.  Now, 
+just climb up the clock until you find a star in a cage.  Then, "roll" 
+into the cage to get the star.  Sorry I couldn't be anymore help, but 
+It's pretty obvious on how to get in the cage.
+
+Star 2: The Pit and the Pendulums
+---------------------------------
+REQUIREMENTS: NONE
+To cheat on this star, stop the clock.  Go all the way up until you see 
+two pendulums with a star beyond them.  Well, of course, cross the 
+pendulums safely.  If they are not moving, well, you got the star 
+already (only if you are dumb enough to mis-jump)!  Remember that the 
+clock has no floor in it so if a pendulum knocks you off your platform, 
+then it's good-bye for you!
+
+Star 3: Get a Hand
+------------------
+REQUIREMENTS: NONE
+Don't stop the clock for this one!  Set it on medium fastness.  After 
+you go up the 3-box elevator, wait on the floor until you see hand 
+moving.  Jump on the hand until you see a small platform with a star on 
+it.  Get the star!
+
+Star 4: Stomp on the Thwomp
+---------------------------
+REQUIREMENTS: NONE
+Set the motion to slow.  Now, go up the clock-all the way up!  That's 
+right!  Every nook and crany you have to get on to get to the top.  
+Hey, at least you're "movin' on up"!  Get it?  HAHAHA!  Anyway, once 
+you get to the top, you will have to jump on Thwomp's head.  Like an 
+elevator, wait until he goes all the up and then go on the platform 
+that has a star on it.
+====================
+A CLOSE LOOK: THWOMP
+====================
+From Course 2, you had to ride him like an elevator to get a red coin, 
+but now you have to ride him like an elevator to get a star!
+
+Star 5: Timed Jumps on Moving Bars
+----------------------------------
+REQUIREMENTS: NONE
+You can do this in slow speed or no speed at all.  No speed at all 
+takes a great effort to do, since you need to do some wall kicks that 
+are hard!  I recommend you do this on slow speed.  I don't know how to 
+explain this star objective to you.I just can't!  If you do FAQs, you 
+probably have one of those days where you can't explain something on an 
+FAQ/Walkthrough.  I'm having one of those days right now on this 
+objective.  Oh well, just e-mail sometime.or wait until my next 
+version.  I might explain the objective.
+
+Star 6: Stop Time for Red Coins
+-------------------------------
+REQUIREMENTS: NONE
+For God sakes, stop the clock for this one!  If you can do this on any 
+speed (except slow), I'll be pretty amazed!  All the red coins are 
+located on those small rotating platforms.  But still, even if they 
+aren't moving, it can be hard if you don't know which camera angle to 
+use.  I suggest the Lakitu view going the farthest distance.
+
+=======================================================================
+
+C O U R S E 15: R A I N B O W  R I D E
+***************************************
+
+Star 1: Cruiser Crossing the Rainbow
+------------------------------------
+REQUIREMENTS: NONE
+Oh, man!  It's finally that last course for me to explaim.  Remind me 
+to never do a long walkthrough like this again.  It's almost over.well, 
+anyway, you will going on a magic carpet ride tonight!  Just ride the 
+magic carpet to the boat in the sky.  The star should be on the boat.
+
+Star 2: The Big House in the Sky
+--------------------------------
+REQUIREMENTS: NONE
+Wow!  Another magic carpet ride!  Now, you may think that the big house 
+is a jail, but it's not!  Now, once you enter the big house, DO NOT 
+LEAVE THE CARPET!  Keep patient and wait for a bit.  You will be going 
+in the house again by using the window and you will be going on the 
+roof.  The star will be on the roof.  Nab it!
+
+Star 3: Coins Amassed in a Maze
+-------------------------------
+No!  Don't even think about it, mister!  I am absolutely, positively 
+not going to tell you where every Red Coin is!  They are all in a maze!  
+I'll tell you where the maze is!  Once you ride your stupid magic 
+carpet, you will see the stupid maze with all your stupid Red Coins in 
+it!  Now, you can figure it out!  Use your brain!  If you e-mail me a 
+question about this, I will specificly not answer since this is for 
+some people a no-brainer!  Forget it!  Period!
+
+Star 4: Swingin' in the Breeze
+------------------------------
+REQUIREMENTS: NONE
+Here is a shorcut to get to it:  From the start, keep on turning around 
+until you see a pole.  Now long jump to the pole.  You should be able 
+to grab it.  Now, slide down it.  Now, follow the route until you can 
+take two routes-go up the slanted wall or continue with the regular 
+route.  To get this star, you need to go up the small slanted wall and 
+then continue with that route (very, very short) until you find the 
+star.
+
+Star 5: Tricky Triangles!
+-------------------------
+REQUIREMENTS: NONE
+From the two-route break (remember from the last star objective), 
+choose to continue the route.  This route is very difficult, but is 
+possible to complete.  Now, the ! switch is to be used for.oh, you'll 
+find out once you push it.
+
+Star 6: Somewhere Over the Rainbow
+----------------------------------
+REQUIREMENTS: NONE
+Considered the last star.and the hardest.  First, go to the cannon on 
+the boat.  Aim toward the cirular rainbow and-wait!  There's a pole 
+there!  Try to aim exactly in the middle of the rainbow.  If you do 
+EXACTLY in the middle, you are home-free and you have done that last 
+star objective in a course in the whole game.  Congratulations.
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+B O W S E R  I N  T H E  S K Y (B O W S E R 3)
+**********************************************
+
+Fi Ni: Route to Bowser
+----------------------
+REQUIREMENTS: 50 STARS
+Fi ni stands for the end, incase you didn't know.  First, just jump 
+platform to platform until you reach a sideways W-shaped see-saw-oh, 
+who am I kidding!  If you need help, e-mail me!  This is too long to 
+do.  But trust me-I'll do the whole thing in the next version!
+==================
+FINALE BOSS BOWSER
+==================
+This Bowser is one real meanie.  He now spits out icy fire that is included 
+with smann firey breaths.  It now takes three hits of a bomb to kill him, and 
+once he stomps on the ground, he'll make two white quakes that will shake you 
+if you get hit by them.  Hit him 3 times and you have one the game-no matter 
+if you collected 120 stars or not.  But Bowser says different stuff after you 
+collect 120 stars.  But be warned: After you hit him in a bomb, he'll 
+take of the rest of the pieces (if he knocked any down after you 
+possibly threw him off the edge) out of the platform shaping it like a 
+star.  SwEeT!
+
+
+Bonus Courses / Secret Stars
+============================
+
+Princess's Secret Slide
+-----------------------
+REQUIREMENTS: 1 star
+LOCATION: On the balcony
+DESCRIPTION: A very short but neat slide!
+SHORTCUTS/HINTS: Here's a neat shorcut.  Once you get out of the 
+beginning tunnel, jump over the left bumper.  You should see another 
+part of the slide.  Try to land on while in the sliding mode so you can 
+just slide whenever you land
+STARS: You can receive a total of 1 star(s).  To get the star, you need 
+to beat the time of 0'20"9.  Use the shorcut by doing the following 
+above.
+
+The Secret Aquarium
+-------------------
+REQUIREMENTS: 3 stars
+LOCATION: To the right of the Jolly Roger Bay picture
+DESCRIPTION: It's all in water, so beware!
+SHORTCUTS/HINTS: If your life meter is getting low, find a bunch of 
+coins and re-boot your life.  There are a lot of coins in the aquarium!
+STARS: You can receive a total of 1 star(s).  To get the star, you need 
+to collect the 8 red coins.  There is one in each corner, and one by 
+each window.  You should find the star in the middle-bottom.
+
+Tower of the Wing Cap
+---------------------
+REQUIREMENTS: 1-3 stars (it depends)
+LOCATION: On the Peach potrait, press C-up and look at the sun.
+DESCRIPTION: Fly, fly, fly!
+SHORCUTS/HINTS: None
+STARS: You can receive a total of 1 star(s).  To get the star, you need 
+to collect the 8 red coins.  There are two between each tower (except 
+the north one) and two in the three rainbow circles.
+
+The Metal Cap Cavern
+--------------------
+REQUIREMENTS: Key to the Basement
+LOCATION: In Dorrie's water cavern
+DESCRIPTION: A very tricky route to the switch, but it can be done!
+SHORTCUTS/HINTS: Make sure not to fall in the water because it is 
+raging, so it will be hard to get back into progress.  But, if you have 
+the Metal Cap, you will be able to walk in it.  Without it.let's just 
+say that the story's over for you.
+STARS: You can receive a total of 1 star(s) by collecting the 8 red 
+coins.  Two are behind the two pillars and six are circled around the 
+Metal Cap switch's platform in the water.
+
+A Star From Toad
+----------------
+REQUIREMENTS: Key to the Basement
+LOCATION: By Hazy Maze Cavern's metal pool entrance
+DESCRIPTION: Why describe?
+SHORTCUTS/HINTS: None whatsoever!
+STARS: What's the title?  Just talk to Toad and he'll give you a star.  
+Duh!
+
+Vanish Cap's Cavern
+-------------------
+REQUIREMENTS: Key to the Basement, Drain the Moat
+LOCATION: A hole in the ground where the moat was
+DESCRIPTION: This is one of the hardest routes to a switch I've seen!
+SHORTCUTS/HINTS: None.  Just watch out below!
+STARS: You can receive a total of 1 star(s) by collecting the 8 red 
+coins.  Four are on the ramp and four our in the elevator place (close 
+to the end).
+
+MIPS the Rabbit
+---------------
+REQUIREMENTS: Beat Bowser in the Dark World, 50 stars
+LOCATION: In the Basement
+DESCRIPTION: Bowser's wascally wabbit has escaped because he is late, 
+late, is late!  I wonder what he is late for?  Don't you??
+SHORTCUTS/HINTS: When he is at the entrance to Course 8, and when you 
+get close enough, do a belly flop to the right.  You should nab him to 
+get the star from him.
+STARS: You can receive a total of 2 star(s) from him.  Just grab him!
+
+Wing Mario Over the Rainbow
+---------------------------
+REQUIREMENTS: 50 stars
+LOCATION: In the tower
+DESCRIPTION: The most very hardest bonus course in the game.  Be 
+prepared for the worst red coin collecting ever!
+SHORCUTS/HINTS: Follow the rainbows from cloud to cloud.  That should 
+help you find your way.
+STARS: You will receive a total of 1 star(s) by collecting the 8 red 
+coins.  Find one on each cloud/platform, except the three Red Coins on 
+the big cloud (is that where you start?).
+
+Toad Gifts
+----------
+REQUIREMENTS: 30/50 stars
+LOCATION: Third/Fourth floor
+DESCRIPTION: You can find Toad two times with one on the third and 
+fourth floor.  They will give you a star.
+SHORCUTS/HINTS: Why?
+STARS: You will receive a total of 2 star(s).  I'm not going to tell 
+you.  Not at all!
+
+BITDW: Collect the 8 Red Coins
+-----------------------
+REQUIREMENTS: 8 stars
+LOCATION: First room you enter in the castle.
+DESCRIPTION: You get in "Bowser in the Dark World".
+SHORTCUTS/HINTS: Why?
+STARS: Now people, this is the only star that you can get, OK?  OK.  Now, 
+here is the list of the eight coins:
+1-2-On the brown bridge (the ! switch needs to be pressed at the begin)
+3-On the crystal green path behind a spike
+4-On the moving yellow back and forth platform
+5-On the crystal green moving platforms
+6-By the second weird green hook
+7-On top of the first weird green hook
+8-On the platform with the lone spike in the middle
+
+BITFS: Collect the 8 Red Coins
+------------------------------
+REQUIREMENTS: 30 stars, get one star in Course 9
+LOCATION: In the basement.
+DESCRIPTION: You get in "Bowser in the Fire Sky".
+SHORTCUT/HINTS: Why?
+STARS: Here they are:
+1-On the wire platform before the healing heart thing
+2-On a rotating platform
+3-In the cage
+4-Make platform go up in the cage, go down and get it
+5-On the octigonal platform above that wired platform
+6-Somewhere in the moving platforms (those blue ones that shift)
+7-On the blue platforms that sink and rise from the lava
+8-On the last pole (pole on that cage platform that rises and sinks)
+
+BITS: Collect the 8 Red Coins
+-----------------------------
+REQUIREMENTS: 70 stars
+LOCATION: After the Endless Stairs
+DESCRIPTION: You get in "Bowser in the Sky".
+SHORTCUTS/HINTS: Why?
+STARS: Here are the Red Coins from beginning to end:
+1-On top of the first box you see
+2-On top of the four rotating platforms
+3-On the colorful stairs
+4-On the side of the green side-walking stairs (talk about no gravity)
+5-On the first diamond-shaped platform
+6-On the first circling platform
+7-On top of the pole between the two orange moving platforms
+8-Under the stairs that lead to Bowser
+
+
+100 Coin Collecting
+===================
+
+Lots of people say, "Hey!  There are only 105 stars in the game!"  
+Well, you are wrong!  You need to collect 100 coins in every course, 
+but I won't tell you where every coin in the game is.  I will tell you 
+where the Blue-Coin blocks are so I can give you a boost.  But, if you 
+want to know where every coin is, go to www.nintendo.com and go to N64 
+Game List.  Choose Super Mario 64 and then go to all the crap until you 
+find "Collect 100 Coins."  Now, here they are!
+
+Course 1: Bob-Omb Battlefield
+Well, there is no Blue-Coin Block, but all you need to is go to the 
+floating isle, get the Wing Cap, and fly around the coin circles to get 
+a lot of coins.
+
+Course 2: Whomp's Fortress
+The Blue-Coin Block is located by the Bob-Omb Buddy.  Just go left all 
+the way, turn right and go forward all the way.  Also make sure that 
+you defeat all the sleeping Piranha Plants-you will get a blue coin 
+from each of them.
+
+Course 3: Jolly Roger Bay
+You will find the Blue-Coin Block in the Ocean Cave.  If you want more 
+coins than that, go to the ! switch that is by the boat and the three 
+floating platforms with a lot of coins on them.  Hit the switch to make 
+roads to each of them.
+
+Course 4: Cool, Cool Mountain
+You will find the Blue-Coin Block on the last turn of the slide 
+circling the mountain (not the big slide).  At the last turn, turn 
+right.  You should find the Blue-Coin Block, but you only get two blue 
+coins out of it.  Make sure to go down the big slide-that's the place 
+to get a lot of coins!
+
+Course 5: Big Boo's Haunt
+The Blue-Coin Block is located on the top floor of the house.  Remember 
+that you can defeat the Boos and the Mr. Is.  Overall, this is not a 
+difficult place to collect 100 coins.
+
+Course 6: Hazy Maze Cavern
+In the hazy maze, try to find the Blue-Coin Block.  Once you do, push 
+it and then follow them around the maze.  There are a lot of them, so 
+make sure you just tried a Metal Cap on.
+
+Course 7: Lethal Lava Land
+There is no Blue-Coin Block.  All you have to do is surf the lava!  
+There is a lot coins-you just don't know it!
+
+Course 8: Shifting Sand Land
+The Blue-Coin Block is located in the pyramid.  Once you hit it, there 
+will be 5 blue coins in a line.  Get them and-wow!  You just got 25 
+coins!
+
+Course 9: Dire, Dire Rocks
+There is no Blue-Coin Block, and you will need to get every coin in the 
+course to get the star.  Good luck to ya!  Make sure not to forget all 
+those coins all around the whirlpool, the ledges of the submarine pen, 
+and the bottom of the sea (under the sub).
+
+Course 10: Snowman's Land
+There is no Blue-Coin Block (that I know of), but go into the igloo and 
+get the Vanish Cap.  Now go into the ice cube that has the treasure!
+
+Course 11: Wet-Dry World
+There is a Blue-Coin Block, and boy does it hold a lot of blue coins!  
+Collect them all!
+
+Course 12: Tall, Tall Mountain
+Go into the slide and run through it fast.  You should see a lot of 
+blue coins along the way.
+
+Course 13: Tiny-Huge Island
+In huge island, Goombas are worth a blue coin!  Don't forget the Koopa 
+Troopa.
+
+Course 14: Tick Tock Clock
+Yep, there is a Blue-Coin Block, and it holds up to 5 coins!!
+
+Course 15: Rainbow Ride
+There is a Blue-Coin Block, and it is located by the maze.  The Blue 
+Coins are "atop the maze."
+
+
+Frequently Asked Questions
+==========================
+Amazingly, I only have one so far.  Well, I do have a couple more, so I'll 
+put them in.
+
+Q. So, how do you solve the puzzle in "Puzzle Pyramid" in Course 8?
+A. OK, OK: FIRST, GO INTO THE PYRAMID.  GO ALL THE WAY TO THE TOP, WELL, GO 
+ALL THE WAY TO THE PLATFORM NEXT TO THE STAR.  YOU SHOULD SEE A CUT IN THE 
+BRIDGE.  DROP A LITTLE AND YOU WILL COLLECT THE FIRST SPECIAL COIN (1/5).  
+NOW, LOOK BELOW.  YOU'LL SEE ANOTHER SMALL PLATFORM WITH ANOTHER SPECIAL 
+COIN.  AIM RIGHT AND JUMP TO COLLECT IT (2/5).  NOW, AIM AND JUMP WITH THE 
+NEXT PLATFORM (3/5).  JUMP NOW ONTO THE SAND SLIDE AND COLLECT THE LAST TWO 
+COINS (5/5).  COLLECT THE STAR AT THE END!  REMEMBER, YOU CAN SINK INTO THE 
+SAND SLIDE, SO BEWARE!
+
+Q. hyi wuz wenderin' wer tham casile c-crit starrs rthay aint in yer wakthrw
+A. THEY WERE SO-CALLED "HIDDEN" IN MY WALKTHROUGH IN MY LAST VERSION, BUT NOW 
+THEY HAVE THEIR OWN SECTION CALLED "BONUS COURSES / SECRET STARS"
+
+Q. Well, where can I collect the 8 red coins for Bowser at the Fire Sea?
+A. WELL, GO CHECK OUT THE NEW SECTION, "BONUS COURSES / SECRET STARS".
+
+Q. In Course 5, it said that you can get the Ghoul Medal if you escape.  
+Well, how can you escape?
+A. ALRIGHT, TIME TO CLEAR UP THIS NONSENSE.  THERE IS NO SUCH THING AS A 
+GHOUL MEDAL.  NINTENDO PROBABLY JUST ADDED IT IN TO TAKE YOUR MIND AWAY AND 
+WASTE A WEEKEND TRYING TO FIND IT.
+
+Now, I DO get questions like the second FAQ above.  Do you see what happens 
+when you play too much video games ;)
+
+
+Cheats and Hints
+================
+Since I did the walkthrough, you guys help me on this one!  Send me a tip, a 
+trick, or cheat that you have.  Please don't send me one if it is already on 
+here!
+
+(Start typing.  Yeah, you!  Get on your Hotmail and send me something, or any 
+other e-mail provider.)
+
+
+E-Mail Note
+===========
+Even though I've dropped the subject codes DOESN'T MEAN that you just put 
+whatever subject name you want.  You need to put the name of the game on the 
+subject line, be it a question, comment, whatever!
+
+Now, if you want to e-mail me asking for permission on this game, please put 
+your URL address so I can see your site.
+
+I do have a couple more e-mail addresses, but please only e-mail me at the 
+one at the top.  Thanx!!
+
+
+Credits
+=======
+The section that I have trouble on.
+
+Jeff "CJayC" Veasey – Accepting my FAQ on his site.
+
+Al Alamoo – For putting my FAQs on his site.
+
+Procyon Lotor – To tell you the truth, he inspired me on writing an FAQ from 
+reading his Super Mario RPG FAQ.  He is also one great FAQ writer and I do 
+believe with him that writing FAQs are fun and not for competition.
+
+marshmallow – One of the greatest FAQ writers ever, if not the best!
+
+Nintendo – Making one of the greatest light adventure games.
+
+E-Mailers – For making me busy during the boring day at noon.
+
+
+(((the end)))
+   1999 BJ
+
+
+Check out my other FAQs!!
+-------------------------
+*Star Fox 64
+-Super Mario 64
+*Castlevania
+*Super Smash Bros.
+*Fighting Force 64
+>Extreme-G 2
+?WinBack: Covert Operations
+?Quake 64
+
+KEY: *=completed  -=looking at it  >=coming soon  ?=might be coming soon
+Restore Page
