@@ -811,6 +811,26 @@ document.addEventListener('click', () => {
     try { if (Module?.SDL2?.audioContext?.state === 'suspended') Module.SDL2.audioContext.resume(); } catch {}
 });
 
+// ── Manual teach hotkeys: reward / punish the last action (teaches both RL child and AI parent) ──
+document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.code === 'KeyT' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        var reward = e.shiftKey ? -0.8 : 1.0;
+        var stateKey = _brainState();
+        var cat = _lastBrainActionCat || 'forward';
+        if (_adaptiveBrain) _qUpdate(stateKey, cat, reward);
+        var label = reward >= 0 ? 'REWARDED' : 'PUNISHED';
+        updateAIStatus(`✏️ ${label} "${cat}" (${reward.toFixed(1)})`);
+        // Also feed into AI parent memory so the LLM learns from manual feedback
+        aiRewardMemory.push({
+            action: cat, reward: reward, region: _region || 'unknown',
+            stuck: _stuckCount >= 2 ? 'stuck' : 'moving', time: Date.now()
+        });
+        while (aiRewardMemory.length > 40) aiRewardMemory.shift();
+    }
+}, { passive: false });
+
 // ── EmulatorJS + BPS patcher integration ────────────────────
 function switchToEmulatorJS(romBlob) {
     stopAIPlayer();
@@ -1598,6 +1618,7 @@ let aiManualState    = 'idle';
 let aiPlannedActions = null;
 let aiMemory         = [];
 let aiNotes          = [];
+let aiRewardMemory   = [];  // [{action, reward, region, stuck}] — successful moves the AI should repeat
 let userInstruction  = '';
 let gameSpeed        = 1;
 let playerMovementDetected = false;
@@ -1821,6 +1842,18 @@ function _brainLearn() {
     while (_eligTrace.length > 4) _eligTrace.shift();
     _lastReward = r;
     _lastBrainActionCat = p.actionCat;
+    // AI PARENT REWARD MEMORY: store successful LLM actions so the parent can
+    // learn which moves work, just like the child's Q-table does for the RL model.
+    if (r >= 0.25 && !p.wasOverride && p.actionCat) {
+        aiRewardMemory.push({
+            action: p.actionCat,
+            reward: r,
+            region: _region || 'unknown',
+            stuck: _stuckCount >= 2 ? 'stuck' : _stuckCount >= 1 ? 'slow' : 'moving',
+            time: Date.now()
+        });
+        while (aiRewardMemory.length > 40) aiRewardMemory.shift();
+    }
     // The child grows up by proving itself. When IT took the step, its result
     // moves trust the most; even while just watching, consistent good/bad calls
     // nudge trust a little. This is the "parent grading the child" feedback.
@@ -1983,7 +2016,7 @@ function startElderWatch() {
             if (_elderPrevFrame) {
                 const vm = await _frameDiffScore(_elderPrevFrame, ss);
                 if (vm != null) {
-                    _qUpdate(_brainState(), cat, Math.max(0.12, Math.min(0.8, vm * 1.2)));
+                    _qUpdate(_brainState(), cat, Math.max(0.2, Math.min(1.2, vm * 2.5)));
                     _trainStats.taught = (_trainStats.taught || 0) + 1; _saveTrainStats();
                     _setChildTrust(_childTrust + 0.004);
                     _lastTaughtCat = cat;
@@ -2990,7 +3023,7 @@ async function aiThink() {
             (_checklist.length ? `- CHECKLIST: ${_checklist.map(c => `${c.done ? '✅' : '⬜'} ${c.text || c}`).join(' | ')}.\n` : '') +
             `- Update "region" every turn from what you SEE. If you just walked through the castle's front doors, your region is now "castle-foyer" — you are INSIDE; do not turn around and leave.`;
         const cameraCtx = _camera2d
-            ? '\n\nCAMERA PERSPECTIVE: The previous frame was detected as a 2D/front-facing or side-view camera. In this mode LEFT/RIGHT move Mario across the screen (hold them like forward travel); UP/DOWN move him toward/away from the camera and are usually NOT the way to progress. Do NOT "turn then go forward" in 2D mode.'
+            ? '\n\nCAMERA PERSPECTIVE: 2D/front-facing mode — Mario is facing the camera.\n  CONTROLS ARE REVERSED: hold ArrowDOWN to move FORWARD (toward the camera/screen), ArrowUP to move BACKWARD (away from the camera into the screen). ArrowLeft/ArrowRight move horizontally across the screen (hold them 1200–2500ms for travel). Do NOT use ArrowUp when you want to go forward — it will move you the WRONG way.'
             : '';
         // Calibration grounding (measured: what "forward" actually did on screen)
         const planCtx = _aiGoal
@@ -3014,6 +3047,11 @@ async function aiThink() {
             : '';
         const notesCtx    = aiNotes.length > 0
             ? `\n\nYOUR PRE-GAME STUDY NOTES:\n${aiNotes.join('\n')}`
+            : '';
+        // Feed the AI a memory of which specific actions were rewarded, so it learns
+        // what works — just like the RL child learns from its Q-table.
+        const rewardMemCtx = aiRewardMemory.length > 0
+            ? `\n\n🟢 REWARDED MOVES (these were CREDITED as successful — repeat them!):\n${aiRewardMemory.slice(-12).map((m, i) => `${i + 1}. "${m.action}" in ${m.region} (${m.stuck}) → +${m.reward.toFixed(2)}`).join('\n')}`
             : '';
         const instrCtx    = userInstruction
             ? `\n\nUSER INSTRUCTION (follow this): ${userInstruction}`
@@ -3097,9 +3135,9 @@ WATER — you get this BACKWARDS, so read carefully:
 
 2D / FRONT-FACING / SIDE-VIEW CAMERA (critical):
 - Sometimes the camera shows Mario's face (he is looking at you) or locks into a side-scrolling / 2D-like angle.
-- In that mode the world is FLATTENED: ArrowLeft and ArrowRight move Mario across the screen and are your MAIN way to travel. ArrowUp/Down move him toward/away from the camera (into/out of the screen), which is usually NOT the path forward.
-- When you see this, set "camera2d": true in your response and navigate horizontally — do NOT "turn then go forward".
-- In 2D mode hold ArrowLeft/ArrowRight for 1200–2500ms to travel, just like you hold ArrowUp in normal mode.
+- CONTROLS REVERSE: ArrowDOWN = forward (moves Mario TOWARD the screen), ArrowUP = backward (away from screen).  ArrowLeft/Right move horizontally.
+- When you see this, set "camera2d": true and use ArrowDown as your forward direction. Do NOT hold ArrowUp trying to go forward — he'll go backward.
+- In 2D mode hold ArrowDown/ArrowLeft/ArrowRight for 1200–2500ms to travel, just like you hold ArrowUp in normal mode. Do NOT "turn then go forward".
 
 DELAYED / SEQUENCED ACTIONS:
 - The AI can now execute actions with DELAYS between them. This is crucial for: waiting for moving platforms, timing jumps after a run-up, or adding breathing room between complex moves.
@@ -3140,7 +3178,7 @@ RULES:
 - ${memOn
     ? 'You may use tools (get_game_state, set_game_speed for tricky jumps, save_move/play_move for reusable sequences) when helpful, but don\'t call tools every turn.'
     : 'There is no reliable game memory — judge everything from the image. You may use set_game_speed, is_stuck/is_trapped, or save_move/play_move when helpful, but don\'t call tools every turn.'}
-${brainmapCtx}${cameraCtx}${brainCtx}${trustCtx}${rewardCtx}${depthCtx}${movementCtx}${planCtx}${lastActCtx}${preplanCtx}${memStateCtx}${motionCtx}${memoryCtx}${notesCtx}${instrCtx}${teachCtx}
+${brainmapCtx}${cameraCtx}${brainCtx}${trustCtx}${rewardCtx}${depthCtx}${movementCtx}${planCtx}${lastActCtx}${preplanCtx}${memStateCtx}${motionCtx}${memoryCtx}${notesCtx}${rewardMemCtx}${instrCtx}${teachCtx}
 
 ${_cmdFormat === 'simple'
 ? `Reply in this SIMPLE LINE FORMAT (one field per line, NO JSON, NO markdown):
