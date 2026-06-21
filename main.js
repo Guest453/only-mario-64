@@ -1503,6 +1503,10 @@ const SCENE_HISTORY_MAX = 8;
 // Goal persistence — don't let the AI abandon goals too easily
 let _goalAbandonCount = 0;      // how many times we've switched goals recently
 
+// ── ACTION QUEUE — schedule inputs with delays between them ──
+let _actionQueue     = [];      // [{keys, ms, wait, delayBefore, description}]
+let _queueRunning    = false;   // prevent overlapping queue runs
+
 // ── BRAINMAP: the AI's running sense of WHERE it is and WHAT it's done ──
 // Persists across turns and is replayed into every prompt so the model stops
 // forgetting it already entered the castle / which area it's in.
@@ -2916,6 +2920,12 @@ WATER — you get this BACKWARDS, so read carefully:
 - To GET OUT of water: hold ArrowDown (to aim UP) + tap jump repeatedly to rise to the surface, then swim toward the nearest shore and up onto land.
 - If Mario is clearly ON DRY LAND he is NOT swimming — just walk normally.
 
+DELAYED / SEQUENCED ACTIONS:
+- The AI can now execute actions with DELAYS between them. This is crucial for: waiting for moving platforms, timing jumps after a run-up, or adding breathing room between complex moves.
+- In JSON format: add "delay_before_ms": N to any action group. Example: [{"keys":["ArrowUp"],"hold_ms":2000},{"keys":["jump"],"hold_ms":250,"delay_before_ms":500}] — runs forward 2s, waits 0.5s, then jumps.
+- In simple format: append "delay <ms>" after any action. Example: DO: up 2000 | jump delay 500 | up 1500
+- Use delays deliberately when timing matters — don't just spam actions back-to-back.
+
 READING THE SCREEN — depth & obstacles (you are bad at this; slow down and look):
 - WALL vs PATH: a WALL is a solid surface that fills the view and STOPS you (you stop moving, the view freezes). A TUNNEL / DOORWAY / PATH is a DARKER opening or gap that RECEDES into the distance — you can pass THROUGH it. Unsure? Nudge forward briefly: if the view keeps changing it's a path; if it freezes it's a wall — then back up (ArrowDown) and go around.
 - DOORS vs PAINTINGS: a DOOR is a flat panel at FLOOR level you WALK through. A PAINTING is a framed picture on a wall that you JUMP INTO to enter a level. They are NOT the same — never try to jump into a door or walk into a painting.
@@ -2937,8 +2947,10 @@ Commit to a PLAN (your "goal") that spans several turns instead of re-deciding f
 
 CHAINING ACTIONS:
 - "actions" is a SEQUENCE of groups done one after another. Keys INSIDE one group happen SIMULTANEOUSLY (e.g. ["ArrowUp","jump"] = hold forward while jumping).
-- Give each group a "hold_ms": FORWARD travel long (1200–2500ms); a TURN to re-aim short (250–500ms — a long turn just spins you in a circle); a jump or dialog-skip short (150–350ms).
+- Give each group a "hold_ms": FORWARD travel long (1200–5000ms — use LONGER holds for open ground, the ai can handle up to 8s); a TURN to re-aim short (250–500ms — a long turn just spins you in a circle); a jump or dialog-skip short (150–350ms).
+- You can add "delay_before_ms" to ANY action group to insert a pause BEFORE that action executes. Use this to: wait for a moving platform to arrive, pause after a jump before the next move, or add breathing room between actions. Example: [{"keys":["ArrowUp"],"hold_ms":2000},{"keys":["jump"],"hold_ms":250,"delay_before_ms":500}] — runs forward 2s, waits 0.5s, then jumps.
 - A good navigation turn is almost always two groups: TURN briefly to face the target, THEN hold forward toward it — e.g. [{"keys":["ArrowLeft"],"hold_ms":350},{"keys":["ArrowUp"],"hold_ms":1800}].
+- For long straight runs (bridge, open field), use a SINGLE long forward hold (3000–5000ms) instead of multiple short ones — the ai will queue it and execute it fully.
 
 RULES:
 - ⛔ Never press start during gameplay (it pauses).
@@ -3201,12 +3213,12 @@ function _normalizeGroup(g, fast) {
     else if (g && typeof g === 'object') { keys = g.keys || g.actions || []; ms = g.hold_ms ?? g.ms ?? g.duration ?? null; }
     else if (typeof g === 'string') keys = [g];
     const rawKeys = Array.isArray(keys) ? keys : [keys];
-    // A WAIT/OBSERVE group presses nothing — it just holds still for ms so the AI
-    // can watch a moving platform's cycle. Detect it BEFORE the keyMap filter drops
-    // the '_wait' sentinel, and return a sane pause duration.
-    if (rawKeys.some(k => k === '_wait' || k === 'wait' || k === 'observe')) {
+    // A WAIT/OBSERVE/DELAY group presses nothing — it just holds still for ms so the AI
+    // can watch a moving platform's cycle or insert a deliberate pause between moves.
+    // Delay is a REAL action: it schedules a gap before the NEXT action executes.
+    if (rawKeys.some(k => k === '_wait' || k === 'wait' || k === 'observe' || k === 'delay')) {
         const wms = (ms == null ? 700 : ms);
-        return { keys: [], ms: Math.max(200, Math.min(2000, wms)) / gameSpeed, wait: true };
+        return { keys: [], ms: Math.max(200, Math.min(5000, wms)) / gameSpeed, wait: true };
     }
     keys = rawKeys.filter(k => keyMap[k]);
     // Resolve to physical key CODES so aliases ("up", "forward") classify correctly.
@@ -3223,7 +3235,8 @@ function _normalizeGroup(g, fast) {
         else                 ms = fast ? 150 : 240;
     }
     // Clamp: turns get a tighter ceiling so the AI can't accidentally spin in circles.
-    const maxMs = isTurnOnly ? (fast ? 700 : 900) : (fast ? 1800 : 4000);
+    // Forward/back travel gets a generous ceiling — the AI needs time to cross open ground.
+    const maxMs = isTurnOnly ? (fast ? 700 : 900) : (fast ? 1800 : 8000);
     ms = Math.max(80, Math.min(maxMs, ms));
     return { keys, ms: ms / gameSpeed, wait: false };
 }
@@ -3312,17 +3325,31 @@ function _expandGroups(groups) {
 //   DONE: entered the castle
 function _parseStep(tok) {
     // "up+jump 300" → {keys:['ArrowUp','jump'], hold_ms:300};  "run_jump" → macro string
+    // "up 2000 delay 500" → {keys:['ArrowUp'], hold_ms:2000, delay_before_ms:500}
     tok = tok.trim();
     if (!tok) return null;
-    const m = tok.match(/^(.*?)(?:\s+(\d{2,5}))?$/);
-    const keysPart = (m?.[1] || tok).trim();
+    // Check for delay syntax: "action 1500 delay 300" or "action delay 300"
+    const delayMatch = tok.match(/^(.*?)\s+(?:delay|wait|pause)\s+(\d{2,5})\s*$/i);
+    const delayBefore = delayMatch ? parseInt(delayMatch[2], 10) : null;
+    const tokWithoutDelay = delayMatch ? delayMatch[1].trim() : tok;
+    
+    const m = tokWithoutDelay.match(/^(.*?)(?:\s+(\d{2,5}))?$/);
+    const keysPart = (m?.[1] || tokWithoutDelay).trim();
     const ms = m?.[2] ? parseInt(m[2], 10) : null;
     const lower = keysPart.toLowerCase().replace(/[\s-]+/g, '_');
-    if (_MACROS[lower]) return lower;                         // a macro name
+    if (_MACROS[lower]) {
+        const macro = _MACROS[lower];
+        // If it's just a macro name with no delay, return the name
+        if (!delayBefore) return lower;
+        // If there's a delay, expand the macro and add delay to first step
+        return macro.map((step, i) => i === 0 ? { ...step, delay_before_ms: delayBefore } : { ...step });
+    }
     const keys = keysPart.split(/[+&]/).map(k => k.trim()).filter(k => keyMap[k] || keyMap[k.toLowerCase()]);
     if (!keys.length) return null;
     const norm = keys.map(k => (keyMap[k] ? k : k.toLowerCase()));
-    return ms ? { keys: norm, hold_ms: ms } : { keys: norm };
+    const result = ms ? { keys: norm, hold_ms: ms } : { keys: norm };
+    if (delayBefore) result.delay_before_ms = delayBefore;
+    return result;
 }
 function parseSimpleCommands(text) {
     const out = { actions: [] };
@@ -3431,30 +3458,71 @@ async function aiExecute(response) {
     const watch = preplan && !_turboMode;
     let watchFrame = watch ? await captureScreen(aiStream).catch(() => null) : null;
 
+    // Build the action queue with optional delays between steps
     for (let i = 0; i < groups.length; i++) {
         if (!aiPlayerActive) break;
         if (preplan && playerMovementDetected) { updateAIStatus('✋ Pre-plan aborted — you took control'); break; }
-        const { keys, ms, wait } = _normalizeGroup(groups[i], fast);
+        
+        const g = groups[i];
+        // Support delay_before_ms on individual action groups
+        const delayBefore = (g && typeof g === 'object' && !Array.isArray(g)) ? (g.delay_before_ms || 0) : 0;
+        const { keys, ms, wait } = _normalizeGroup(g, fast);
         if (!wait && !keys.length) continue;
-        // Hold all keys in the group simultaneously for the (sustained) duration.
-        // A wait group presses nothing — it just holds still and observes.
-        for (const action of keys) {
-            const keyCode = keyMap[action];
-            if (keyCode) simulateKeyPress(keyCode, Math.max(70, ms * 0.92));
-        }
-        updateAIStatus(`${preplan ? '🧠' : (wait ? '⏳' : '🎮')} [${i + 1}/${groups.length}] ${wait ? 'wait / observe' : keys.join(' + ')} (${Math.round(ms)}ms)`);
-        await delay(ms);
-
-        if (watch && i < groups.length - 1) {
-            const nowFrame = await captureScreen(aiStream).catch(() => null);
-            if (nowFrame && watchFrame) {
-                const d = await _frameDiffScore(watchFrame, nowFrame);
-                if (d != null && d > 0.6) { updateAIStatus('🛑 Big change mid-plan — re-planning'); break; }
-            }
-            if (nowFrame) watchFrame = nowFrame;
-        }
+        
+        // Enqueue this action with its delay
+        _actionQueue.push({ keys, ms, wait, delayBefore, description: wait ? 'wait' : keys.join('+') });
     }
-    updateAIStatus('✅ Done');
+    
+    // Execute the queue with proper delays between actions
+    await _runActionQueue(fast, watch, watchFrame);
+}
+
+// ── ACTION QUEUE RUNNER — execute queued actions with delays between them ──
+async function _runActionQueue(fast, watch, initialWatchFrame) {
+    if (_queueRunning) return;   // don't overlap
+    _queueRunning = true;
+    let watchFrame = initialWatchFrame;
+    
+    try {
+        while (_actionQueue.length > 0 && aiPlayerActive) {
+            const action = _actionQueue.shift();
+            
+            // Wait for the delay_before_ms if specified
+            if (action.delayBefore > 0) {
+                updateAIStatus(`⏳ Waiting ${Math.round(action.delayBefore)}ms before next action…`);
+                await delay(action.delayBefore / gameSpeed);
+            }
+            
+            if (!aiPlayerActive) break;
+            
+            // Execute the action
+            if (!action.wait) {
+                for (const key of action.keys) {
+                    const keyCode = keyMap[key];
+                    if (keyCode) simulateKeyPress(keyCode, Math.max(70, action.ms * 0.92));
+                }
+            }
+            updateAIStatus(`${action.wait ? '⏳' : '🎮'} ${action.description} (${Math.round(action.ms)}ms)`);
+            await delay(action.ms);
+            
+            // Watchdog between steps
+            if (watch && _actionQueue.length > 0) {
+                const nowFrame = await captureScreen(aiStream).catch(() => null);
+                if (nowFrame && watchFrame) {
+                    const d = await _frameDiffScore(watchFrame, nowFrame);
+                    if (d != null && d > 0.6) { 
+                        updateAIStatus('🛑 Big change mid-plan — clearing remaining queue');
+                        _actionQueue = [];   // clear remaining actions
+                        break; 
+                    }
+                }
+                if (nowFrame) watchFrame = nowFrame;
+            }
+        }
+    } finally {
+        _queueRunning = false;
+        updateAIStatus('✅ Done');
+    }
 }
 
 let _busyCycle = false;   // prevents a new think starting while still executing
@@ -3704,6 +3772,8 @@ function stopAIPlayer() {
     _aiGoalAge        = 0;
     _lastActions      = null;
     _lastActionSummary = '';
+    _actionQueue      = [];     // clear any pending actions
+    _queueRunning     = false;
     _resetBrainmap();
     _escapeArmed      = false;
     _escapeExtraTurns = 0;
