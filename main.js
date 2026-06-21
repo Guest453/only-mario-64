@@ -811,25 +811,32 @@ document.addEventListener('click', () => {
     try { if (Module?.SDL2?.audioContext?.state === 'suspended') Module.SDL2.audioContext.resume(); } catch {}
 });
 
-// ── Manual teach hotkeys: reward / punish the last action (teaches both RL child and AI parent) ──
+// ── Manual teach: reward / punish the last action (teaches both RL child and AI parent) ──
+function _manualTeach(reward) {
+    var stateKey = _brainState();
+    var cat = _lastBrainActionCat || 'forward';
+    if (_adaptiveBrain) _qUpdate(stateKey, cat, reward);
+    var label = reward >= 0 ? 'REWARDED' : 'PUNISHED';
+    updateAIStatus(`✏️ ${label} "${cat}" (${reward.toFixed(1)})`);
+    aiRewardMemory.push({
+        action: cat, reward: reward, region: _region || 'unknown',
+        stuck: _stuckCount >= 2 ? 'stuck' : 'moving', time: Date.now()
+    });
+    while (aiRewardMemory.length > 40) aiRewardMemory.shift();
+}
+// Keyboard shortcuts: T = reward, Shift+T = punish
 document.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     if (e.code === 'KeyT' && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
-        var reward = e.shiftKey ? -0.8 : 1.0;
-        var stateKey = _brainState();
-        var cat = _lastBrainActionCat || 'forward';
-        if (_adaptiveBrain) _qUpdate(stateKey, cat, reward);
-        var label = reward >= 0 ? 'REWARDED' : 'PUNISHED';
-        updateAIStatus(`✏️ ${label} "${cat}" (${reward.toFixed(1)})`);
-        // Also feed into AI parent memory so the LLM learns from manual feedback
-        aiRewardMemory.push({
-            action: cat, reward: reward, region: _region || 'unknown',
-            stuck: _stuckCount >= 2 ? 'stuck' : 'moving', time: Date.now()
-        });
-        while (aiRewardMemory.length > 40) aiRewardMemory.shift();
+        _manualTeach(e.shiftKey ? -0.8 : 1.0);
     }
 }, { passive: false });
+// UI Buttons
+var teachGood = document.getElementById('teach-good-btn');
+var teachBad  = document.getElementById('teach-bad-btn');
+if (teachGood) teachGood.addEventListener('click', function() { _manualTeach(1.0); });
+if (teachBad)  teachBad.addEventListener('click',  function() { _manualTeach(-0.8); });
 
 // ── EmulatorJS + BPS patcher integration ────────────────────
 function switchToEmulatorJS(romBlob) {
