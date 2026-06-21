@@ -1728,6 +1728,71 @@ function setAiGrading(on) { _aiGrading = !!on; try { localStorage.setItem('sm64_
 let _rlRealtime = (() => { try { const v = localStorage.getItem('sm64_rl_realtime'); return v == null ? true : v === '1'; } catch { return true; } })();
 function setRlRealtime(on) { _rlRealtime = !!on; try { localStorage.setItem('sm64_rl_realtime', _rlRealtime ? '1' : '0'); } catch {} }
 let _qTable = {};            // stateKey -> { actionCat: { n, mean } }
+
+// ── TD(0) / TD(λ) reinforcement learning parameters ─────────────────────
+// gamma: discount factor — how much future rewards matter (0.9 = cares about
+//   rewards ~10 steps ahead; 0.95+ would care further but slower convergence)
+// alpha: learning rate — fixed (not 1/n) so the model stays plastic in
+//   non-stationary environments (Mario dies, restarts, enters new areas)
+// lambda: eligibility trace decay — 0.7 gives multi-step credit while
+//   preventing stale assignments from ancient actions
+const _RL_GAMMA  = 0.88;
+const _RL_ALPHA  = 0.25;
+const _RL_LAMBDA = 0.65;
+
+// ── Experience replay buffer (prioritized) ──────────────────────────────
+// Stores transitions as (state, action, reward, nextState, done) so the
+// agent can learn from past experiences multiple times. Prioritized by
+// |TD error| so surprising outcomes get replayed more often.
+let _replayBuffer = [];
+const _REPLAY_CAPACITY = 300;
+const _REPLAY_BATCH = 6;
+const _REPLAY_EVERY = 8;     // replay every N learning steps
+
+// ── Trust history for smoother parent↔child trust updates ───────────────
+let _trustHistory = [];       // rolling window of recent rewards
+const _TRUST_WINDOW = 20;
+
+// Mini-batch replay trigger: batch-update Q-table from past experiences,
+// weighted by TD-error priority so surprising outcomes replay more.
+function _replayBatch() {
+    if (_replayBuffer.length < _REPLAY_BATCH) return;
+    // Sort by |TD error| (priority), pick top batch
+    const pool = [..._replayBuffer].sort((a, b) => Math.abs(b.tdErr || 0) - Math.abs(a.tdErr || 0));
+    const batch = pool.slice(0, Math.min(_REPLAY_BATCH, pool.length));
+    for (const t of batch) {
+        const ns = t.nextStateKey ? (_qTable[t.nextStateKey] || {}) : {};
+        let maxNext = 0;
+        for (const a of _RL_ACTIONS) {
+            const v = ns[a];
+            if (v && v.mean > maxNext) maxNext = v.mean;
+        }
+        const target = t.reward + (t.done ? 0 : _RL_GAMMA * maxNext);
+        const s = _qTable[t.stateKey] || (_qTable[t.stateKey] = {});
+        const a = s[t.actionCat] || (s[t.actionCat] = { n: 0, mean: 0.1 });
+        a.n++;
+        a.mean += _RL_ALPHA * (target - a.mean);
+        // Decay TD error after replay so it isn't replayed forever
+        t.tdErr = (t.tdErr || 0) * 0.7;
+    }
+    _lsSet('sm64_qtable', JSON.stringify(_qTable));
+}
+
+// Push a transition into the replay buffer
+function _pushReplay(stateKey, actionCat, reward, nextStateKey, done) {
+    const tdErr = Math.abs(reward);   // initial priority = reward magnitude
+    _replayBuffer.push({ stateKey, actionCat, reward, nextStateKey, done, tdErr });
+    while (_replayBuffer.length > _REPLAY_CAPACITY) _replayBuffer.shift();
+}
+
+// Count-based exploration bonus: reward trying rarely-visited (state, action) pairs
+function _countBonus(stateKey, actionCat) {
+    const s = _qTable[stateKey];
+    if (!s) return 0.15;  // bonus for completely new state
+    const a = s[actionCat];
+    if (!a || a.n === 0) return 0.12;  // bonus for untried action in known state
+    return 0.06 / Math.sqrt(a.n + 1);  // diminishing bonus as count grows
+}
 // PERSISTENCE (experimental, OFF by default): a persisted Q-table is a real saved
 // "model" in your browser. When off, learning lives only for the session. When on,
 // it survives reloads and can be exported/imported to share a trained child.
@@ -1766,9 +1831,25 @@ function _humanPref(stateKey, cat) {
 
 function _brainState() {
     const region = /in-level/.test(_region) ? 'level' : (_region || 'unknown');
-    const stuck = _stuckCount >= 2 ? 'stuck' : _stuckCount >= 1 ? 'slow' : 'moving';
-    const vis = _lastVisualPct == null ? 'na' : _lastVisualPct < 8 ? 'none' : _lastVisualPct < 25 ? 'low' : 'high';
-    return `${region}|${stuck}|${vis}`;
+    // Finer stuck detection: 0=moving, 1=barely, 2=slow, 3+=hard stuck
+    const stuck = _stuckCount >= 4 ? 'stuck' : _stuckCount >= 2 ? 'slow' : _stuckCount >= 1 ? 'crawl' : 'moving';
+    const vis = _lastVisualPct == null ? 'na' : _lastVisualPct < 5 ? 'none' : _lastVisualPct < 20 ? 'low' : 'high';
+    // Mario action state from memory (ground/air/water) — adds physics awareness
+    let marioAct = 'unk';
+    if (_gameState) {
+        if (_gameState.inWater) marioAct = 'water';
+        else if (_gameState.actionId & 0x00000800) marioAct = 'air';
+        else if (_gameState.actionId & 0x00000400) marioAct = 'run';
+        else marioAct = 'ground';
+    }
+    // Speed bucket from memory if available
+    let spdBkt = 'na';
+    if (_gameState && typeof _gameState.speed === 'number') {
+        spdBkt = _gameState.speed < 1 ? 'stop' : _gameState.speed < 8 ? 'walk' : 'run';
+    }
+    // Last action category for momentum context (helps learn combos)
+    const lastCat = _lastBrainActionCat || 'none';
+    return `${region}|${stuck}|${vis}|${marioAct}|${spdBkt}|${lastCat}`;
 }
 // Classify a set of physical key CODES into one action category. Shared by the
 // AI's planned moves AND the human elder's live inputs (WASD mapped to arrows),
@@ -1804,15 +1885,34 @@ function _actionCat(actions) {
     keys = keys.filter(k => keyMap[k]);
     return _categorizeCodes(keys.map(k => keyMap[k])) || 'other';
 }
-function _qUpdate(stateKey, actionCat, reward) {
+// TD(0) Q-update with fixed learning rate (not 1/n — stays plastic in
+// non-stationary environments). Optimistic initialization: new entries
+// start at 0.1 (mildly positive) so untried actions are explored.
+// `nextStateKey` enables full TD(0): target = reward + gamma * max_a' Q(s',a')
+function _qUpdate(stateKey, actionCat, reward, nextStateKey = null, done = false) {
     const s = _qTable[stateKey] || (_qTable[stateKey] = {});
-    const a = s[actionCat] || (s[actionCat] = { n: 0, mean: 0 });
-    a.n++; a.mean += (reward - a.mean) / a.n;
+    const a = s[actionCat] || (s[actionCat] = { n: 0, mean: 0.1 });
+    // Compute TD(0) target: reward + discounted best future value
+    let target = reward;
+    if (!done && nextStateKey) {
+        const ns = _qTable[nextStateKey] || {};
+        let maxNext = 0.1;
+        for (const act of _RL_ACTIONS) {
+            const v = ns[act];
+            if (v && v.mean > maxNext) maxNext = v.mean;
+        }
+        target += _RL_GAMMA * maxNext;
+    }
+    // TD error (for prioritized replay)
+    const tdErr = Math.abs(target - a.mean);
+    a.n++;
+    a.mean += _RL_ALPHA * (target - a.mean);
     _lsSet('sm64_qtable', JSON.stringify(_qTable));
+    return tdErr;
 }
 // Reward (or PUNISH) the PREVIOUS action using the outcome we can now measure.
 // This is the core of the RL loop: did the last move help, do nothing, or hurt?
-function _brainLearn() {
+function _brainLearn(nextStateKey = null) {
     if (!_adaptiveBrain || !_pendingLearn) return;
     const p = _pendingLearn;
     let r = 0;
@@ -1832,21 +1932,26 @@ function _brainLearn() {
     // AI-TEACH BONUS: when the parent is deliberately demonstrating, boost
     // the teaching signal so the child learns faster from clean examples.
     if (_playMode === 'ai-teach' && r > 0) r += 0.2;
+    // Count-based exploration bonus: reward trying rarely-visited (state, action) pairs
+    r += _countBonus(p.stateKey, p.actionCat);
     r = Math.max(-1.2, Math.min(1.5, r));
-    _qUpdate(p.stateKey, p.actionCat, r);
-    // ELIGIBILITY TRACE — credit the few PRIOR actions with a decayed share of a
-    // SIGNIFICANT outcome, so the RL learns multi-step CHAINS (the actions that set
-    // up a good result, e.g. jump→crouch, gain value too). Only for big outcomes so
-    // routine little rewards don't smear.
-    if (Math.abs(r) >= 0.3) {
-        let decay = 0.5;
-        for (let i = _eligTrace.length - 1; i >= 0 && i >= _eligTrace.length - 3; i--) {
-            _qUpdate(_eligTrace[i].stateKey, _eligTrace[i].cat, r * decay);
-            decay *= 0.5;
+    // TD(0) update with nextState for bootstrap target
+    const tdErr = _qUpdate(p.stateKey, p.actionCat, r, nextStateKey, false);
+    // Push to prioritized replay buffer for later batch replay
+    _pushReplay(p.stateKey, p.actionCat, r, nextStateKey, false);
+    // Periodic mini-batch replay for sample efficiency
+    if (_trainStats.turns % _REPLAY_EVERY === 0) _replayBatch();
+    // ELIGIBILITY TRACE — TD(λ): credit prior actions with gamma*lambda decay
+    // only for significant outcomes to avoid smearing routine rewards
+    if (Math.abs(r) >= 0.25) {
+        let decay = _RL_LAMBDA;
+        for (let i = _eligTrace.length - 1; i >= 0 && i >= _eligTrace.length - 4; i--) {
+            _qUpdate(_eligTrace[i].stateKey, _eligTrace[i].cat, r * decay, nextStateKey, false);
+            decay *= _RL_GAMMA * _RL_LAMBDA;
         }
     }
     _eligTrace.push({ stateKey: p.stateKey, cat: p.actionCat });
-    while (_eligTrace.length > 4) _eligTrace.shift();
+    while (_eligTrace.length > 6) _eligTrace.shift();
     _lastReward = r;
     _lastBrainActionCat = p.actionCat;
     // AI PARENT REWARD MEMORY: store successful LLM actions so the parent can
@@ -1861,15 +1966,22 @@ function _brainLearn() {
         });
         while (aiRewardMemory.length > 40) aiRewardMemory.shift();
     }
-    // The child grows up by proving itself. When IT took the step, its result
-    // moves trust the most; even while just watching, consistent good/bad calls
-    // nudge trust a little. This is the "parent grading the child" feedback.
+    // ── IMPROVED TRUST SYSTEM: EMA of recent reward scores ──────────────
+    // Smoother than raw bumps — trust is an Exponential Moving Average of the
+    // child's recent outcomes, so one fluke doesn't swing it wildly.
+    _trustHistory.push(r);
+    while (_trustHistory.length > _TRUST_WINDOW) _trustHistory.shift();
+    const avgRecent = _trustHistory.reduce((a, b) => a + b, 0) / _trustHistory.length;
+    // Map EMA score to trust: sigmoid-like curve centered at 0.1
+    const trustFromPerf = 1 / (1 + Math.exp(-6 * (avgRecent - 0.1)));
     if (p.wasOverride) {
         if (r >= 0.25)      _trainStats.overrideGood = (_trainStats.overrideGood || 0) + 1;
         else if (r <= -0.25) _trainStats.overrideBad  = (_trainStats.overrideBad  || 0) + 1;
-        _setChildTrust(_childTrust + (r >= 0.25 ? 0.04 : r <= -0.25 ? -0.05 : 0));
+        // Override results move trust faster (the child was actually driving)
+        _setChildTrust(_childTrust * 0.7 + trustFromPerf * 0.3);
     } else {
-        _setChildTrust(_childTrust + (r >= 0.4 ? 0.01 : r <= -0.4 ? -0.01 : 0));
+        // Watching results move trust slower
+        _setChildTrust(_childTrust * 0.85 + trustFromPerf * 0.15);
     }
     _pendingLearn = null;
     _prevProgressLen = _progressLog.length;
@@ -1919,7 +2031,7 @@ function loadQTable() {
     try { _humanPolicy = JSON.parse(localStorage.getItem('sm64_human_policy')) || {}; } catch { _humanPolicy = {}; }
 }
 function clearQTable() {
-    _qTable = {}; _humanPolicy = {}; _eligTrace = [];
+    _qTable = {}; _humanPolicy = {}; _eligTrace = []; _replayBuffer = []; _trustHistory = [];
     ['sm64_qtable', 'sm64_human_policy'].forEach(k => { try { localStorage.removeItem(k); } catch {} });
     _trainStats = { episodes: 0, turns: 0, overrides: 0, overrideGood: 0, overrideBad: 0, taught: 0, graded: 0, rated: 0, bestRegionRank: 0 }; _saveTrainStats();
     if (typeof _setChildTrust === 'function') _setChildTrust(0.15);   // back to a fresh, untrusted child
@@ -2089,7 +2201,7 @@ function _aggregateBySuffix(suffix) {
     for (const [k, acts] of Object.entries(_qTable)) {
         if (!k.endsWith(suffix)) continue;
         for (const [a, v] of Object.entries(acts)) {
-            const g = agg[a] || (agg[a] = { n: 0, mean: 0 });
+            const g = agg[a] || (agg[a] = { n: 0, mean: 0.1 });
             const tot = g.n + v.n; g.mean = (g.mean * g.n + v.mean * v.n) / (tot || 1); g.n = tot;
         }
     }
@@ -2116,7 +2228,7 @@ function _rlPickAction(stateKey) {
     // UCB value + behavioral-cloning prior, across ALL actions (primitives + combos).
     let best = 'forward', bestSc = -1e9;
     for (const a of _RL_ACTIONS) {
-        const v = s[a]; const mean = v ? v.mean : 0; const n = v ? v.n : 0;
+        const v = s[a]; const mean = v ? v.mean : 0.1; const n = v ? v.n : 0;
         const ucb  = 0.5 * Math.sqrt(Math.log(total + 1) / (n + 1));   // try under-sampled actions
         const imit = 0.6 * _humanPref(stateKey, a);                    // imitate how YOU play here
         const sc = mean + ucb + imit + (n === 0 ? 0.05 : 0);
@@ -2135,8 +2247,8 @@ async function rlThinkAndAct() {
             if (vm != null) { _lastVisualPct = Math.round(vm * 100); if (vm < 0.05) _stuckCount++; else _stuckCount = 0; }
         }
         await _depthAnalyze(ss);               // refresh _lastOpenSide so it steers toward openings
-        _brainLearn();                         // reward the previous RL move
         const stateKey = _brainState();
+        _brainLearn(stateKey);                 // TD(0): current state = next state for previous action
         const cat = _rlPickAction(stateKey);
         _pendingLearn = { stateKey, actionCat: cat, wasOverride: false };
         _pushShowoff(stateKey, cat);
@@ -2212,8 +2324,8 @@ function startRealtimeRL() {
                 if (vm != null) { _lastVisualPct = Math.round(vm * 100); if (vm < 0.04) _stuckCount++; else _stuckCount = 0; }
             }
             await _depthAnalyze(ss);
-            _brainLearn();                          // reward the action held last tick
             const stateKey = _brainState();
+            _brainLearn(stateKey);              // TD(0): reward action held last tick
             const cat = _rlPickAction(stateKey);
             _pendingLearn = { stateKey, actionCat: cat, wasOverride: false };
             _pushShowoff(stateKey, cat);
@@ -2256,8 +2368,9 @@ async function rlShowoff(steps = 5) {
             if (_prevScreenshot) { const vm = await _frameDiffScore(_prevScreenshot, ss); if (vm != null) { _lastVisualPct = Math.round(vm * 100); if (vm < 0.05) _stuckCount++; else _stuckCount = 0; } }
             _prevScreenshot = ss;
         }
-        _brainLearn();
-        const stateKey = _brainState(); const cat = _rlPickAction(stateKey);
+        const stateKey = _brainState();
+        _brainLearn(stateKey);
+        const cat = _rlPickAction(stateKey);
         _pendingLearn = { stateKey, actionCat: cat, wasOverride: false }; _pushShowoff(stateKey, cat);
         await aiExecute({ actions: _catToAction(cat, true) || [{ keys: ['ArrowUp'], hold_ms: 520 }] });
         updateDebugHUD();
@@ -2482,10 +2595,10 @@ function updateDebugHUD() {
     const _rankName = ['title', 'outside', 'foyer', 'in-level'][_trainStats.bestRegionRank] || 'title';
     const _og = _trainStats.overrideGood || 0, _ob = _trainStats.overrideBad || 0;
     const brainLine = _adaptiveBrain
-        ? `<div>child: ${Object.keys(_qTable).length} states · lastR: ${_lastReward == null ? '—' : _lastReward.toFixed(2)} (${_brainBias})</div>` +
+        ? `<div>child: ${Object.keys(_qTable).length} states · ${_replayBuffer.length} replay · lastR: ${_lastReward == null ? '—' : _lastReward.toFixed(2)} (${_brainBias})</div>` +
           `<div>trust: ${Math.round(_childTrust * 100)}% · steps ✓${_og}/✗${_ob} · best:${_rankName}</div>` +
           `<div>mode: ${_playMode} · taught:${_trainStats.taught || 0} · graded:${_trainStats.graded || 0} · rated:${_trainStats.rated || 0}</div>` +
-          `<div>trained: ${_trainStats.episodes}ep · ${_trainStats.turns}turns</div>`
+          `<div>trained: ${_trainStats.episodes}ep · ${_trainStats.turns}turns · γ=${_RL_GAMMA} α=${_RL_ALPHA} λ=${_RL_LAMBDA}</div>`
         : '';
     el.innerHTML =
         `<b>🐞 SM64-AI debug</b>` +
