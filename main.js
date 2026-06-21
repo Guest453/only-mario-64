@@ -3774,6 +3774,8 @@ function stopAIPlayer() {
     _lastActionSummary = '';
     _actionQueue      = [];     // clear any pending actions
     _queueRunning     = false;
+    _sceneHistory     = [];     // clear scene history
+    _goalAbandonCount = 0;
     _resetBrainmap();
     _escapeArmed      = false;
     _escapeExtraTurns = 0;
