@@ -1,0 +1,2986 @@
+-----------------------
+2) Items
+-----------------------
+
+
+Stars:
+These are what you're looking for throughout the entire game. You can't 
+progress unless you collect enough of these to unlock the levels. There 
+are 6 in each level, which can be retrieved in a number of different 
+ways (helping someone out, racing someone, finding it, uncovering it, 
+etc.). Another one in each level can be found by collecting 100 coins, 
+as well. There are also 15 secret stars around the castle. This adds up 
+to 120 stars, in total.
+
+1-up Mushrooms:
+Free life! These can be found in hidden areas. Very well hidden...check 
+the appropriate section for locations. 
+
+Yellow Coins: 
+If your energy bar is low, get one of these to fill it up one notch. 
+Worth one coin on the coin meter (get 50 for a free-life)!
+
+Red Coins:
+If your energy bar is low, get one of these to fill it up two notches. 
+Worth two coins on the coin meter (get 50 for a free-life)! Collect all 
+eight in each level to receive a Star.
+
+Blue Coins:
+These rare coins are worth five coins on the coin/health meter. 
+
+Koopa Shells:
+Found in "!" Boxes and from dead Koopas, these will serve as a 
+skateboard like contraption. Now you can go practically ANYWHERE! Over 
+lava, water...Your also invincible. Just don't hit a wall or you will 
+end your ride.
+
+"!" Boxes:
+These can hold almost anything: Stars, 1-ups, coins, Koopa Shells...you 
+name it. Although, I miss the "?" boxes of yore...
+
+Spinning Hearts:
+Run through these to gain back energy! The amount you get back depends 
+on how fast you went through it. To get the full effect, dive through 
+it.
+
+Box: 
+Pick it up to throw it against an enemy or wall to see what's inside. 
+More than often, it is a bunch of coins.
+
+Crazed Crate:
+Same as above, except when you pick it up it will jump around wildly 
+before crash landing into the ground. Take this into consideration 
+before using, because you don't want to end up dead.
+
+Switches:
+There are many different kinds of these...they all do something strange. 
+Most are purple "!" switches, which open doors and activate platforms, 
+and Blue Coin switches, which activate Blue Coins for a short amount of 
+time.
+
+Bob-omb Buddies:
+These pink bombs are your friends! They will activate the cannons when 
+talked to.
+
+Cannons:
+These can not be accessed until you talk to the Pink Bob-omb Buddies. 
+Once you climb inside you get a first-person view of the environment. 
+You can aim pretty much anyway you want. Once you have your target in 
+aim, push B or A to shoot. Note, however, for longer distances you'll 
+want to aim slightly above, because Mario will go downwards after a few 
+dozen feet.
+
+Stakes:
+Pound these into the ground with a stomp and see what happens! Before 
+doing so, though, run circles around it fives times, you'll get many 
+coins.
+
+Poles/Trees:
+You can climb up these and do a handstand at the top, where you can jump 
+off of! The direction you'll go is the direction Mario's back is 
+pointing to.
+
+(to receive the following items, you have to activate the switch in 
+their respective secret course)
+
+Wing Cap:
+Allows you to fly! Woohoo! Up is down and down is up, just like flying 
+an airplane. However, unlike an airplane, Mario will slowly go 
+downwards, it's impossible to stop. This, in my opinion, ruins the 
+entire Wing Cap concept.
+
+Metal Cap:
+Now you're metal Mario! During this time, you are invincible, can walk 
+under water, and...that's it. Same effects as getting a Star Man in the 
+original Marios. I like that music!
+
+Invisible Cap:
+Allows you to walk through enemies, fake walls, fire, etc...
+
+Invisible Metal Hybrid: 
+At one point in your adventure, you can get both the Metal and Invisible 
+Caps, which means you are invulnerable to everything but cliffs, can 
+walk through walls and enemies, can walk underwater, and have cool 
+music. I wish there was a Wing Cap near by...
+
+-------------------------
+3) Enemies
+-------------------------
+
+GOOMBA:
+These little mushrooms love to travel in groups of three and then charge 
+at you! Any attack will put them down in one shot. 
+Coins: One yellow.
+
+BOB-OMB:
+Upon spotting you they will charge and attempt to explode on you. You 
+can pick them up in time and hurl them at a foe, blowing them up (this 
+is a very powerful attack). 
+Coins: One yellow
+
+KOOPA TROOPA:
+In the Mario days of yore, every level was crawling with Koopas, you 
+would be lucky to NOT see one, but not so in this game. Surprisingly 
+rare, these turtles will run away, only to attempt to slide into you 
+when your back is turned. An attack will make them pop of their shell, 
+leaving them totally defenseless (and in their underwear). Take their 
+shell for a ride and see what you can find. Coins: One blue
+
+WHOMP:
+Another rarity (good thing) -- Only three of them exist. They will 
+attempt to fall down on you. While they're down, stomp 'em on the band-
+air on their back You can also receive four coins by jumping on them 
+while they are down. 
+Total Coins if you jump: 9 yellow
+
+THWOMP:
+These huge stone heads will attempt to crush you! Don't let this happen, 
+it is VERY painful. Invulnerable.
+
+PIRANHA PLANET:
+Normally asleep, they will be awaken if you run near them. During this 
+time they will try to snap ya! The trick to beating them is to sneak up 
+on them and kick them. Coins: One blue
+
+SUSHI:
+A blue shark that is made up of about 20 polygons, they inhabit the 
+water (where else?) and won't attack unless you get in their way. They 
+are invulnerable, so that would be a good idea.
+
+CLAM:
+They open their mouth occasionally, showing you their treasure. Get it 
+before they snap shut! Invulnerable.
+
+CHEEP CHEEP JR.:
+Small fish, very rare. Found in the beginning of Dire, Dire Docks. Not 
+much of a threat since most people don't even know these EXIST! :) 
+Invulnerable.
+
+BOO BUDDY:
+These shy ghosts will only become attackable when they are solid, which 
+is when your back is turned on them. When they get near you, jump and 
+stomp 'em! Coins: One blue (normally).
+
+SNOWMAN:
+They throw snowballs at you! To defeat them, run around them very 
+quickly. Coins: Five yellow
+
+MR. I:
+These eyes will shoot balls of plasma at you! To defeat them, run around 
+them quickly until they get dizzy and explode. Coins: One blue
+
+HOPPING SNOWMAN:
+Only two exist, they jump up and down over a bridge, attempting to push 
+you off. Be careful! Invulnerable.
+
+AMPZ:
+These flying metal balls will give you a charge if you touch 
+them...Invulnerable.
+
+CHUCKYA:
+One of my favorite enemies! Too bad there isn't more of them...These 
+purple balls will attempt to throw you over a cliff, down one, whatever. 
+To defeat them, make your way around them, pick them up, and hurl 'em! 
+Coins: Five yellow
+
+SKIMMER:
+Another favorite...These aqua-colored insects skim across water. Not too 
+bright, though...Coins: Five yellow
+
+BAT:
+These blue, jelly-like creatures will attempt to land on you! Found in 
+the Hazy Maze Cave. Coins: One yellow
+
+MUMMY THWOMP:
+Same as the normal Thwomp...just different :) I couldn't care less what 
+the real name is. Invulnerable.
+
+BOOKETTE:
+These books will come flying out from the bookshelf! Coins: One blue
+
+CHAIR: 
+Watch out as these chairs float in mid-air and then fly at you like a 
+rocket.
+
+BULLY:
+Small black balls with horns and slanted eyes that try to bump you into 
+the lava...Very dangerous when it is in groups! The best stragedy is to 
+wait near the edge, then when they come running, jump! If they don't 
+fall in, give 'em a little nudge. Coins: One yellow
+
+SHY GUY:
+These fly, though...They fire fireballs at you! If you can jump on them 
+you can do a helicopter move. Coins: One yellow
+
+SPINDRIFF:
+Found in cold places, these flower creatures will give you a helicopter 
+move if you jump on them! Other than that they're practically harmless. 
+Coins: One yellow
+
+POKEY:
+Found in the desert, these are the same cactuses as in Super Mario 
+World! Kick each segment off to destroy them. A shot to the head will 
+kill it instantly. Coins: One blue
+
+LAKITU:
+Those turtles in the clouds are back! It appears that the one who is 
+carrying your camera is a goodie-two shoes. They throw Spinies down at 
+you...jump from under them to destroy them. Coins: Five yellow
+
+SPINY:
+Wow, this is probably the least-dangerous creature in the entire game. 
+They don't even TRY TO ATTACK! And, where is its head? Invulnerable.
+
+MACHO CHEEP CHEEP aka BUBBA:
+What a pain in the...! They will try to swallow you whole. No matter how 
+much health you have, you'll die. If you're trying to survive I advise 
+staying far away from it. However, if you want to have some fun, try to 
+see how long you can stay around it without dying. This is a very fun 
+little game...Invulnerable. 
+
+TOX-BOX: 
+A giant box with strange faces on each side, they live in a maze and try 
+to crush adventuring plumbers. To get past you'll either have to go when 
+they're away, or position yourself so they fall ontop of you with their 
+hollow side.
+
+SNUFFIT:
+Snuffits are cousins of the Sniffit; these particular fellows float in 
+mid-air and don't move very much. This isn't that much of a 
+threat...unless it's in a group. Fires three bullets at you at once. 
+Coins: One yellow
+
+MONTY MOLE:
+They pop out of the ground and throw a rock at you. They can not be 
+killed, but they can be "hit." If you hit about eight of them, you get a 
+free life.
+
+SCUTTLE BUG:
+Small, red & yellow beetles that will charge at you. Coins: Three 
+yellow.
+
+BULLET BILL:
+Only one cannon exists, it fires these guys constantly. Fun to play 
+with, but not much of a threat.
+
+ROLLING PIN OF MILD IRRITATION: 
+Not really! But in the Pyramid, it will try to squish you.
+
+BALLS OF EVIL DARKNESS: 
+These big balls will shoot flames at you. 
+
+GERBILS FROM THE NINTH LEVEL OF HELL: 
+These will flip you up with their trash collecting tray. Their real name 
+is "Heave-Ho." Arf, arf.
+
+KING BOB-OMB:
+Pick him up from behind and toss him on the ground! After hitting the 
+ground three times he will be defeated. Similarly, he can pick you up 
+and throw you! The third throw will see you at the foot of the mountain, 
+badly injured. If you try to throw him off the mountain, he will tell 
+you it's against the rules. Very interesting...
+
+KING WHOMP:
+A giant Block Wall (Whomp), he's just like a normal one. He'll fall, 
+then you need to stomp on the "X" on his back. Three hits and he's 
+dust...But be careful, as he is VERY large and VERY strong. 
+
+UNAGI THE EEL:
+He can not be killed, or avoided easily. Getting hurt deep underwater 
+will surely kill you. He does look quite impressive, even for a game 
+this old. I like him a lot...
+
+MAD PIANO: 
+Very dangerous, as it's teeth are quite sharp. AVOID IT! It can rip you 
+apart easily.
+
+BIG BOO:
+Appearing three times, it's always the same -- kill him exactly the same 
+way you would a normal Boo. Takes three hits to kill. Each time he will 
+get faster.
+
+BIG BULLY/ICE BULLY:
+A giant Bully, this guy just needs a hot (cold) lava (ice) bath. Defeat 
+him like a normal Bully.
+
+GIANT PIRANHA PLANT:
+Discovered in Tiny-Huge Island, these five, fire spitting creatures 
+guard the first star. They can be beat just like normal flowers, problem 
+is, they all fire deadly amounts of fire and they are three times the 
+size of you!
+
+KLEPTO THE VULTURE:
+Found in the desert, he will attempt to pull your hat off! To hurt him, 
+get up high and kick him! Then he'll leave you alone...for awhile. Isn't 
+it funny that he has the first few letters as in Kleptomaniac? Hmm...
+
+WIGGLER:
+This guy gets faster and faster as you hit him. Simply jump on his back! 
+This can be difficult, as he twists and turns all the time. Three 
+strikes and he's out.
+
+GIANT CHAIN CHOMP:
+This guy is very powerful, taking 1/3 of your health each time he hits 
+you. Try to keep away. You can free him by stomping the stake he is 
+connected to three times, but this is really tough, especially if you're 
+new to the game.
+
+EEYEROK:
+Found in the pyramid in the desert, this is probably the most difficult 
+boss in the game (not to mention FUN!). This boss is really two giant 
+hands with an eye on each. They will try to pound you, grind you, slap 
+you, etc. VERY DANGEROUS! It can kill you in three hits! To defeat, 
+punch their eye when it's open. Requires three hits per hand. 
+
+KING BOWSER:
+The evil dinosaur/dragon/frog/turtle has returned yet again to spoil 
+Mario's pleasure. In Mario RPG he was the size of Mario, but he has 
+grown since then, becoming nearly five times his size, he takes up most 
+of the screen when close up. You have to pulverize him three times if 
+you wish to beat the game.
+
+------------------------------
+4) Cap Courses
+------------------------------
+
+
+Location of: TOWER OF THE WING CAP
+
+Once you have collected 12 Power Stars, a light will beam down from the 
+ceiling and hit the sun icon on the main floor. Stand on the sun icon 
+and use C up to look into the light. You will transport to the course! 
+ 
+Once inside, fly to collect the pairs of Red Coins around the tower. 
+You'll have to start with the ones directly across the level, because 
+they are the highest and can not be gotten from the tower. When they are 
+all gotten, go and stomp the red "!" switch, which will activate all the 
+Wing Caps in the game. Collect the Star to exit!
+
+Location of: METAL CAP CAVERN
+
+Go to the Hazy Maze Cave. From the start, go left and longjump over the 
+pit. Follow the path and ignore the door, and jump to the far side where 
+the boulders are spilling into the hole. Carefully avoid them and go 
+into the door behind them. Get on the elevator to transport to the 
+underground lake. Climb on the back of Dorrie, the sea "monster." Stomp 
+her back and her head will lower, climb on it and she will carry you to 
+any place you face. Go to the door on the far side of the cavern. 
+Inside, jump into the pool of liquid metal. 
+
+This cavern is filled to the brim with Snuffits, but you are have the 
+Metal Cap, so you have no reason to worry. Run forward and turn left, 
+avoiding the waterfall, which would plant you back outside the castle. 
+Two Red Coins are behind pillars, two others are next to the switch, and 
+the rest are underwater, surrounding the pillar with the switch. Stomp 
+the green "!" switch to activate all the Metal Caps in the game, collect 
+the coins, then get the Star to exit the course.
+
+Location of: VANISH CAP UNDER THE MOAT
+
+When in the basement, there is a regular wooden door next to the area 
+with the Hazy Maze Cave. Go through here and swim down the tunnel of 
+water, then surface to find two pillars and a sign. As if the sign 
+wasn't direct enough, stomp down the two pillars and the water will 
+drain. Go through the new door, and, surprise, you're outside the 
+castle, and the moat has been drained almost completely. Go in the 
+direction of the waterfall and you will see a hole in the floor...
+
+Once here, slide down the hill and collect the various items on the 
+ledges, including four Red Coins. At the bottom, continue past the 
+teeter-totters, flaming jets, and other obstacles to find another four 
+Red Coins. You'll need to use careful jumps around the revolving 
+platforms, and find the ledge with the blue "!" switch...stomp it! This 
+will activate all the Vanish Caps in the game. Grab the Vanish Cap and 
+go through the gate to get the Star, that is, if you got eight Red 
+Coins...
+
+ 
+-----------------------------
+5) Walkthrough
+-----------------------------
+
+Note: You will have to go back to get some of the stars as many of them 
+require caps you won't be able to get until later.
+
+After starting a new game and watching the opening cinema, run forward 
+and enter the castle. After hearing Bowser's threat, turn left and talk 
+to Toad to learn of Bowser's plan. Go in the door that is up the ramp, 
+it has a blank star on it. Jump into the painting!!
+
+
+                  ********************************
+                   COURSE 1: BOB-OMB BATTLEFIELD
+                  ********************************
+
+               B O B - O M B  B A T T L E F I E L D 
+
+
+ 
+General Notes: 
+There is a bridge that crosses from the field over to the mountain, you 
+can go underneath it to find a purple "!" switch. If you activate it, 
+the door in front will open up, allowing you free access to all the 
+canyon areas.
+
+The bowling balls are the main hazard on the mountain, as an infinite 
+amount pours out of a hole near the summit. They eventually hit a wall 
+at the base, near the above door, and explode. 
+
+If you wander around the fields for awhile, you will notice bubbles 
+falling from the sky. They're easy to avoid, but annoying. When you get 
+to the top of the mountain, you discover the source of this: a cannon 
+being controlled by a Bob-omb! 
+
+There is a warp point if you want to save some time. From the start, go 
+forward, across the bridge, and turn right to find a patch of yellow 
+flowers. Stand in there and you will warp to the other side of the 
+level, appearing in another patch of flowers. I still say using the 
+cannons is easier...
+
+There is another warp on the mountain, inside the little holes where the 
+bowling balls from. 
+
+
+STAR # 1 - BIG BOB-OMB ON THE SUMMIT
+
+Talk to the Bob-omb buddies to learn of Bower and the Stars. To get this 
+one, follow the dirt path, go across the bridge, turn left, and watch 
+out for the Giant Chain Chomp. Keep going, past the bridge. This bridge 
+is like a giant teeter-totter, so watch out. Go across the field of 
+Bomb-ombs and be careful of the falling bubbles, turn right, into the 
+gates. Run up the spiraling path that goes up the mountain, being 
+careful not to be hit by bowling balls, until you reach the summit. 
+
+To defeat the King Bob-omb, do a backflip or sidejump so you are behind 
+him, then grab him with 'A'. Then, toss him to the ground. Do this three 
+times and he will explode, revealing the Star.
+
+STAR # 2 - FOOTRACE WITH KOOPA THE QUICK
+
+Go forward and talk to the large Koopa. He will challenge you to a race 
+to where the Big Bomb-omb used to be. Say yes and beat him to win the 
+star. If you have any trouble with this race, quit playing this game 
+while you're ahead!
+
+STAR # 3 - SHOOT TO THE ISLAND IN THE SKY
+
+Go forward and talk to the Bob-omb buddy. Now fall into the cannon 
+beside him. Shoot yourself over the gate to the left. Get in the second 
+cannon and fire yourself to the top of the mountain (or close to it). 
+Now walk down, you'll spot a cannon. Aim yourself to the island it's 
+pointed to. Aim for the tree and you won't fall off. Climb down and get 
+the star in the nearby "!" Box.
+
+STAR # 4 - FIND THE EIGHT RED COINS
+
+It doesn't get more direct than that, eh? 
+
+Coin 1: 
+After the first bridge, keep going straight, past the Goombas, and it 
+will be on a green hill.
+
+Coin 2: 
+On the giant Chomp's Stake.
+
+Coin 3: 
+Near the Chain Chomp is a series of platforms that go up and down, 
+allowing you to get from the canyons below to the above area. Once on a 
+platform, you can see it clearly.
+
+Coin 4: 
+Out in the field after the teeter totter (turn left).
+
+Coin 5: 
+Next to Coin four.
+
+Coin 6: 
+On a long hill on the mountain. Requires a bit of patience to walk up 
+there, or you could slide down from above.
+
+Coin 7: 
+Under the bridge to the mountain, with a 1-up and the purple "!" switch.
+
+Coin 8: 
+On the island in the sky. Climb the tree.
+
+The Star appears in the field with the four stakes, near the Giant Chain 
+Chomp.
+
+STAR # 5 - MARIO WINGS TO THE SKY
+
+The Wing Cap is not required for this one, but it helps tremendously. 
+Simply go to the Island in the sky, get the Wing Cap, point the Cannon 
+right in the middle of the first ring and launch...DON'T PRESS ANYTHING! 
+You'll soar through each one, earning a number. When you reach five, the 
+Star will appear in the field below. If you don't have the Wing Cap, 
+you'll have to aim for the center of each ring one at a time.
+
+STAR # 6 - BEHIND CHAIN CHOMP'S GATE
+
+Go to the Giant Chain Chomp...this is always hard. See that stake he's 
+connected to? You have to pound in three times so it goes down. The 
+problem is, everytime this guy hits you your health goes down 
+dramatically. Run around the stake so he follows you, then when he's not 
+looking, stomp! Quickly! When it's all the way down the gate behind him 
+will open, revealing the Star.  
+
+STAR # 7 - 100 COINS
+
+This one shouldn't be too difficult...really. It's easy to forget about 
+the coin rings in the sky, the stake trick you can do with the stakes, 
+and the red coins. Be sure to kill all the enemies, too.
+
+************************************************************************
+
+OK, now to get to the second level, exit and go to the door on the other 
+side that's NOT up a ramp. It has the number one on the door. Jump in 
+the painting after listening to Toad's ramblings.
+
+
+                          ****************************
+                           COURSE 2: WHOMP'S FORTRESS
+                          ****************************
+
+                        W H O M P ' S   F O R T R E S S 
+
+
+General Notes: 
+ 
+Around this area you can find several Piranha Plants, if you run near 
+them they will wake up and attack, so try to go slowly, unless you're in 
+a big hurry.
+
+Near the start, you will find that the walls come out, if you note the 
+way they are out of the wall, you can gauge whether or not they will pop 
+out. After that you need to watch out for the Thwomps! 
+ 
+Near the middle of the level is a wooden plank that rotates around, 
+stops for someone to get on, and continues. To get across, you'll need 
+to stay in the center, otherwise you will be sweeped off by the block.
+
+There is a warp point very close to the Thwomps. In the area with the 
+sign and the green "!" box, stand in the corner, and you will warp to 
+the giant pole with a 1-up at the top.
+
+
+STAR # 1 - CHIP OFF WHOMP'S BLOCK
+
+Hop up on the path, go forward, avoiding the wall things, jump across 
+the gap, go up the stairs, avoiding the Thwomps, go up the stairs to the 
+right, across the collapsing bridge, across the turning bridge (you'll 
+have to stay in the center not to be knocked off) and then get past the 
+many Whomps. After that, use the platforms to reach the top.
+
+To defeat King Whomp, go in front of him so he falls on his face, then 
+quickly run to the side to avoid getting squashed. Stomp on the giant 
+band-aid on his back. He'll get back up and the process will start 
+again, do it three times in total to get the Star! 
+
+STAR # 2 - TO THE TOP OF THE FORTRESS
+
+Pretty easy! Get to where the boss was, now instead there is a large 
+tower with moving steps. Hop up the platforms, being careful not to fall 
+off the moving ones, then you'll reach the top, where this easy Star is.
+
+STAR # 3 - SHOOT INTO THE WILD BLUE
+
+Go to the Bomb-omb Buddy (Instead of going to the path with the wall 
+thingers, do a backflip up the wall and run across the water) and make 
+him activate the cannon, which is right there. Hop in and aim the 
+crosshairs on the pillar so you won't keep going past the platform. You 
+will rocket through the air, hit the pillar, and fall backwards towards 
+the end of a pole. Slide down the pole and collect the Star!
+
+STAR # 4 - RED COINS ON THE FLOATING ISLE
+
+Coin 1: 
+Near the Walls that try to push you over. 
+
+Coin 2: 
+Get on the stairs above the 2nd Thwomp and jump on top of him, he'll 
+carry you to it.
+
+Coin 3: 
+Behind the 2nd Piranha Plant, shortly after the Thwomps.
+
+Coin 4: 
+Near the Bomb-omb Buddy, on the gray hill, below the wooden bridge that 
+spins. 
+
+Coin 5: 
+On a narrow ledge near the 3rd Piranha, you'll need to move slowly.
+
+Coin 6: 
+On the rotating bridge, when it drops you off, stay on the edge and it 
+will carry you to it.
+
+Coin 7: 
+Go to where the Boss was. There is a large piece of wood standing up 
+straight. Punch it, then while it's facing away from you, hit it again 
+to form a bridge to a bunch of platforms. There is one.
+
+Coin 8: 
+Another platform near Coin seven.
+
+The Star will appear near the start of the level. Of course you already 
+know this since you see the cinema but...
+
+
+STAR # 5 - FALL INTO THE CAGED ISLAND
+
+Hop into the tree where you begin and a friendly owl will fly out. Jump 
+into him and he'll carry you over the level! You should see a large cage 
+with a star floating in mid-air...Fall into it! 
+
+Another, more difficult way is to try to actually shoot yourself into 
+with the cannon, although I think that is near to impossible. 
+
+STAR # 6 - BLAST AWAY THE WALL
+
+Go to the cannon and aim to the right...See the gray flooring and the 
+two brick walls surrounding it? Aim near the top of the one farthest 
+away and fire! It will break, revealing a star. Go get it! Man, I don't 
+know how ANYONE could know about that if they didn't know about it... 
+
+STAR # 7 - 100 COINS
+
+This stage is saturated with blue coins! Four Piranhas = 20 coins. 
+Another four blue coins is near the Bomb-omb Buddy. ANOTHER 20 can be 
+caught using the Whomp trick on the Whomp...then there's the eight red 
+coins, which makes another 16. That's 66 right there!
+
+************************************************************************
+
+Go back outside and go through the door that is up the ramp, it has the 
+number three on it. 
+
+
+                           ***************************
+                            COURSE 3: JOLLY ROGER BAY
+                           ***************************
+
+                          J O L L Y   R O G E R   B A Y
+
+
+General Notes: 
+ 
+There are several clams underwater, and they all have Red Coins inside 
+of them, except one, which has a Koopa Shell. If you grab onto it, you 
+can go very quickly under the water! It only lasts a limited time, 
+however.
+
+This level is home to Unagi the Eel, which is the largest single enemy 
+in the game. When diving underwater, if you want to live, stay as far 
+away from him as you can, because if you get hurt underwater at that 
+depth, you can just subtract a life right there.
+
+
+
+STAR # 1 - PLUNDER IN THE SUNKEN SHIP
+
+Swim forward as far as you can, then go down to find a ship with the 
+infamous Eel inside of it. Swim back to the surface, then come back 
+down. Mr. Eel will now be swimming about, leaving the sunken ship 
+accessible...go inside! You have to trigger these treasure chests in a 
+certain order...it's clockwise, just like when you enter the room. 
+
+
+
+                          1
+
+                     4
+                         2
+                    3
+
+___________________entrance________________
+
+The positions of the chests above are almost exact!
+
+The water will lower (the ship is rising to the surface...duh) so you 
+can bust open the "!" Box at the top of the stairs. If you're quick, you 
+can swim there before the water is completely gone. Which is, BTW, a 
+helluva lot easier than transgressing those nasty stairs.
+
+STAR # 2 - CAN THE EEL COME OUT TO PLAY?
+
+Swim to where Mr. Unagi is, but now he's inside of a large hole in the 
+side of the ocean wall. Go to him and he'll start to come out. Attached 
+to his tail is a star, to get it you must touch it...The easiest way to 
+do this is to get it the second his tail comes out of the cave. If you 
+can not do this, however, you will have to chase him around the bottom 
+of the sea, which is pretty hard since he is really fast and turns on a 
+dime.
+
+STAR # 3 - TREASURE OF THE OCEAN CAVE
+
+Swim to where the Eel was, except go in the gigantic hole in the wall 
+(not the same one as before). It's an underwater cave! Beware of the 
+Goombas, falling pillars, and um...more falling pillars. At the end 
+you'll have to activate Treasure Chests in a certain order...The one in 
+the left row farthest from you. Left row closest. Right row farthest. 
+Right row closest.
+
+__________
+?         ?
+?  1   3  ?
+?         ? 
+?  2   4  ?
+?         ?
+  s    x
+
+
+Legend: 
+ 
+S = This is the sign from the weird pirate guy. I think it's Johnny 
+Jones from Mario RPG...
+
+X = This is the direction you come from. 
+
+With the final chest, the Star will come flying out.
+
+STAR # 4 - RED COINS ON THE SHIP AFLOAT
+
+Coin 1: 
+In a clam in the first underwater area.
+
+Coin 2: 
+In a clam farther out.
+
+Coin 3: 
+This clam is close to the piece of floating debris near the Bob-omb 
+Buddy.
+
+Coin 4: 
+In the clam on the bottom of the deep part of the sea, where Unagi 
+lives. 
+
+Coin 5: 
+On a pole behind the Bomb-omb Buddy
+
+Coin 6: 
+On the ship. To reach the ship, go near the Bob-omb Buddy. Across from 
+him is a platform, get up there. Activate the purple "!" switch and 
+cross the bridges that appear. This coin is at the front.
+
+Coin 7: 
+Also on the ship, go in the opposite direction and do a triple jump to 
+reach the upper deck. The swaying floor makes this harder than it should 
+be, and watch out for the sliding treasure chest!
+
+Coin 8: 
+Across from Coin seven.
+
+The Star will appear on the ship.
+
+STAR # 5 - BLAST TO THE STONE PILLAR
+
+Get in the cannon and aim at the pole nearest to the left...Then jump 
+off to the ledge below. It's best to do this from a handstand, though it 
+is not necessary. Remember, you jump in the direction of his back. Get 
+the Star from the "!" Box.
+
+STAR # 6 - THROUGH THE JET STREAM
+
+In the middle of where the Eel lives, there is a large jet stream with a 
+Star in it. You can't get it because the jet pushes you away...Simply 
+collect a Metal Cap from any of the nearby blocks and get it! I think 
+the closest one is the one inside the underwater cavern.
+
+STAR # 7 - 100 COINS
+
+There's a Blue Coin switch in the underwater cavern, a ring around the 
+pillars, near the surface, and the many coins on the bridges leading to 
+the ship. That's the best amount of coins!
+
+************************************************************************
+
+Run to the last door with a Star in this room and jump into the 
+painting.
+
+
+                        *******************************
+                         COURSE 4: COOL, COOL MOUNTAIN
+                        *******************************
+                        
+                      C O O L,  C O O L   M O U N T A I N
+                      
+
+General Notes: 
+ 
+The first thing you'll notice in this level is the huge amount of hills, 
+which when capped off with ice, means a lot of sliding around. You'll 
+need to master the fine art of turning Mario into a sled, especially if 
+you want to get out of this level alive.
+
+This is a big level, and due to that, there are several ways to get from 
+one end to the other. From the top, the most obvious way is to use 
+either the chimney or the outside sliding course. From the bottom, you 
+can use the warp. The warp is on the broken bridge near the mother 
+penguin, at the last plank of the bridge. 
+
+You can also use the gondola if you're on the bottom, which is also near 
+the mother penguin. Just step right on and it will activate 
+automatically, taking you to the middle section of the mountain. Along 
+the way, be sure to jump off and have a chat with the Pink Bob-omb 
+buddy, who will turn on all the cannons in the level. Getting back on 
+the gondola from here is difficult, so jump back to the land. This is 
+easier than it looks, because the wind will glide you along.
+
+STAR # 1 - SLIP SLIDIN' AWAY
+
+Make like Santa Claus and go down the chimney of the cottage. Slide down 
+the slippery trail and you'll get a Star when you exit the house. Of 
+course, it's not as simple as that. The track has hairpin turns and no 
+handrails to boot. The best way to get down quickly is to use the 
+shortcut. When you see a trail of five yellow coins going into the wall, 
+follow it, and you'll go into a secret tunnel that spits you out at the 
+end. 
+
+STAR # 2 - LI'L PENGUIN LOST
+
+Get on the chimney, do a backflip, and pick up the penguin. Now slide 
+down the course until you find a bridge with snowmen jumping on it. 
+Slowly make your way across, then fall down to meet mother penguin. 
+She'll reward you with a Star for returning her child. Beware, there is 
+a decoy penguin on the cottage near the mother penguin. If you give it 
+to her, she says it's not her own child. Which means...
+
+STAR # 3 - BIG PENGUIN RACE
+
+Go inside the cottage and win the race against the Penguin! If you go 
+really slow at the start and then fast at the end you can easily win. 
+However, if you go as fast as you can at the start the penguin will get 
+PO'ed and go REALLY fast, and might even push you over the side. If you 
+use the shortcut described above, you are disqualified.
+
+STAR # 4 - FROSTY SLIDE FOR 8 RED COINS
+
+Coin 1: 
+On the tree at the start. This is impossible to miss. 
+ 
+Coin 2: 
+While sliding down the mountain, jump off to the right at the bridge 
+part. Another stragedy is to aim the cannon near the snowman head and 
+blast at the giant ice block. 
+
+Coin 3: 
+Found in a corner near the giant snowman head.
+
+Coin 4: 
+Found near where the gondola leaves you, it's by the giant snowman head.
+
+Coin 5: 
+On a tree near momma penguin, next to the cottage.
+
+Coin 6: 
+On a broken bridge near the bridge with hopping snowmen. 
+
+Coin 7: 
+In the corner at the level of momma penguin.
+
+Coin 8: 
+On the broken bridge near the mother penguin. Be careful!
+
+The Star appears on the other side of the broken bridge, where Coin six 
+is. To get it, either jump to it from the slide down the mountain, or 
+perform a mighty longjump. 
+
+STAR # 5 - SNOWMAN'S LOST HIS HEAD
+
+Get to where the baby penguin is and then slide down to find a large 
+snowball. Talk to him and race him down the mountain. When you get to 
+the Giant Head, bump right into him and hide behind the head. Now they 
+will hit each other, forming a snow man. Talk to it and it'll reward you 
+with a Star. How did it lose his body in the first place?
+
+STAR # 6 - WALL KICKS WILL WORK
+
+There are two ways to do this...activate the cannon by the momma penguin 
+and blast to the tree. Then do a bunch of wall kicks to get the star 
+OR...or you can jump off the Spindriff's head near the beginning and 
+simply float to it. The flower is easier...although, it is not the 
+"right" way to do it.
+
+STAR # 7 - 100 COINS
+
+With all the coins on the slides this one should be all but too simple. 
+There's also a nice blue block switch on a place above the location of 
+the Star from eight red coins. You can get to it when sliding down the 
+mountain, though.
+
+************************************************************************
+
+Now walk right from the exit and enter the door. Follow the Boo through 
+the hall to the backyard of the castle. Turn left and kill the ghost 
+with a strange item inside. Now just get near it and...
+
+                           ***************************
+                            COURSE 5: BIG BOO'S HAUNT
+                           ***************************
+
+                            B I G   B O O ' S   H A U N T
+
+
+General Notes: 
+ 
+The two main areas of this level are the haunted house and the haunted 
+shack, which is to the left of where you start the level. The shack and 
+house are connected by holes, but you can't get to the house from the 
+shack. The house itself is home to eyeballs, ghosts, haunted pianos, 
+flying books, and worse...
+
+
+STAR # 1 - GO ON A GHOST HUNT
+
+All you have to do is destroy all the ghosts inside the house...I would 
+be insulting your intelligence by listing them. But hey, I've done that 
+enough times already, so let's do it again! 
+ 
+Ghost 1: 
+In the room with two bookcases and a big picture of a boo, sit around 
+for a couple of seconds, facing away from the picture, and the ghosts 
+will come out. There is a door in the back of the house that leads to 
+the hidden room, but this is easier.
+
+Ghost 2: 
+Same as above.
+
+Ghost 3: 
+In the other room with the Mr. I.
+
+Ghost 4: 
+In the room where you run across the collapsing bridge. Be careful! If 
+you fall, you end up in the haunted shack.
+
+Ghost 5: 
+In the last room, there are thin ledges and many flames. Ahoy! 
+ 
+Once they all appear, the Big Boo will appear in the main part of the 
+mansion. Treat him like any of the other Boos. The only difference is 
+the size and the amount of times it takes to kill, which is three. The 
+Star appears on the second floor, and you can't get there. That is, 
+until the stairway forms. 
+
+STAR # 2 - RIDE BIG BOO'S MERRY-GO-ROUND
+
+From where you start the level, head left and go into the shack. Go down 
+the elevator, through the tunnels, and you will hear a strange noise. 
+The first I heard this I thought I was going crazy, but it turns out 
+that there is a giant merry-go-round in the basement! Ah, listen to that 
+carnival music...actually, this merry-go-round isn't so merry, because 
+there are flames coming out of the walls, and there are several ghosts 
+who are trying to kill you. Kill five of the boos and the Big Boo will 
+come back for some more tricks. Kill him again and this Star is yours.
+
+STAR # 3 - SECRET OF THE HAUNTED BOOKS
+
+Go upstairs in the house and through the door on the left side...Go 
+through the library, jumping to avoid the books, until you come to a 
+part where three books are sticking out. Hit the top one, the bottom 
+one, and then the middle one and the shelf will move aside, letting you 
+get the Star in the next room.
+
+STAR # 4 - SEEK THE 8 RED COINS
+
+
+Coin 1: 
+First floor, behind the haunted piano.
+
+Coin 2: 
+First floor, in the room with two bookcases, above one of the bookcases.
+
+Coin 3: 
+First floor. See as above.
+
+Coin 4: 
+First floor, in the room with narrow ledges. 
+
+Coin 5: 
+2nd Floor, under one of the moving coffins.
+ 
+Coin 6: 
+2nd Floor, same as above.
+
+Coin 7: 
+2nd Floor, in the room with red grating that is above a first-floor 
+room.
+
+Coin 8: 
+2nd Floor, near a trap in the floor which will send you hurdling to the 
+haunted shack.
+
+The Star, obviously, appears on the second-floor. 
+
+STAR # 5 - BIG BOO'S BALCONY
+
+Go into the house, second floor, door furthest to the right. Then go 
+through the door to the place with a library, the side with TWO 
+Bookettes. Do a wall jump to reach a higher platform. OK, go through the 
+door and defeat Big Boo yet again (he never knows when to stop). To 
+reach the Star you must long jump to one of the things on the side of 
+the house, then crawl to the Star. The only difficult part of that is 
+the long jump itself, because if it's too short or too long, you have to 
+get all the way back to the balcony again!
+
+STAR # 6 - EYE TO EYE IN THE SECRET ROOM
+
+Go get the Invisible Cap on the 2nd floor of the house and then do the 
+wall jump like the past Star. But instead of going to the balcony, walk 
+through the wall with a ghost on it to discover a gigantic Mr. I! You 
+can treat him the same way as his brothers –- that is, run around him 
+and he'll die, giving up the Star. The real trick is to get there before 
+the Vanish Cap wears out...
+
+STAR # 7 - 100 COINS
+
+Almost every creature here gives you a Blue Coin, so it shouldn't be too 
+difficult.
+
+************************************************************************
+
+Now exit the level and go to the big Star Door. Open it up and run 
+towards the picture of Peach. As you get closer, it transforms into a 
+picture of Bowser, then you fall into a secret trap in the floor. 
+Nintendo is ingenious I tell you!
+
+                      ****************************
+                        BOWSER IN THE DARK WORLD
+                      ****************************
+
+               B O W S E R   I N    T H E   D A R K    W O R L D 
+
+
+This is an area where you can get one of the Castle's Secret Stars. All 
+you have to do is get eight Red Coins...
+
+Coin 1: 
+Run forward and you will soon see a flameshooter showering a purple "!" 
+switch in fire. When it stops, press the switch and a wooden block will 
+appear next to you. Quickly go out there and get the coin.
+
+Coin 2: 
+When you activate the above switch, it also makes a wooden block appear 
+at the beginning, so quickly run back to get that one.
+
+Coin 3: 
+On the long, green trail with many Ampz flying around, you can find this 
+coin hidden behind one of the crystals sticking out of the ground.
+
+Coin 4: 
+After the green trail, you will find a platform with a moving bridge. 
+This coin is on the far side of it.
+
+Coin 5: 
+This one is in the series of platforms that go around in squares, it's 
+pretty hard to miss.
+
+Coin 6: 
+After the above coin, you will come to the start of the teeter-totter 
+area. Instead of proceeding, head in the other direction to find a thin 
+bridge leading to an island with some coins, a "!" box, and this coin.
+
+Coin 7: 
+Once at the teeter-totter area, make the second teeter totter in your 
+desired direction, allowing you on to the platforms above. Turn around 
+and do a long jump and you'll see this one easily.
+
+Coin 8:  
+In a very thin aclove type area next to the teeter-totters, I suggest 
+dropping down from above to get this one.
+
+The Star appears next to the pipe that leads to Bowser.
+
+Here's how to fight Bowser...as if you didn't know. Go around Bowser and 
+grab his tail, then swing him around using the analog stick. When you 
+get up enough speed, toss him into the bombs surrounding the 
+battlefield. One bomb will defeat him instantly. First off, though, 
+you'll need to learn his attacks. When he inhales deeply, move to the 
+side, because he will breathe fire all over the battlefield. This can be 
+good for you, though, because when the fire goes away, a few coins will 
+appear. If you get far away from Bowser, he will jump towards you. If 
+you are far away, and he lands, you will bounce around. However, if he 
+lands, and you are close, you will lose some life. Don't bother trying 
+to throw Bowser into oblivion, he will jump right back (which actually 
+looks pretty cool). When he dies, he says some stuff, then blows up and 
+leaves the BASEMENT KEY behind. Use this on the locked door near the 
+backyard...
+
+Go down the stairs and down the green hallway, go through that door. 
+Turn right and go through the door that is on a higher platform. Jump 
+into the liquid metal!
+
+
+                               **************************
+                                COURSE 6: HAZY MAZE CAVE
+                               **************************
+ 
+                               H A Z Y  M A Z E  C A V E                         
+
+
+General Notes: 
+
+The rocks in this cavern fall from a hole in the ceiling, roll down the 
+hill, and dump into the bottomless hole in the floor. If you get hit by 
+the rocks, you will be hurt quick a bit, but avoiding them is difficult 
+because they take up half the size of the hall! 
+ 
+The Toxic Maze is the only area in the level where the noxious green gas 
+can hurt you. If you stay in it too long, you will die from lack of 
+oxygen. If you wear the Metal Cap, though, you can avoid this fate...
+
+The underground lake is home to Dolly, the friendly pleosaur. Though the 
+signs warn of a terrible monster, Dolly is as placid as can be. Maybe 
+she can help you...
+
+
+STAR # 1 - SWIMMING BEAST IN THE CAVERN
+
+Turn left, long Jump over the pit, and follow the path to a place where 
+large boulders are falling. This place is VERY dangerous! Be 
+careful...follow the path to an underwater sea with a large sea 
+creature, Dolly. Get on her back and STOMP! Then get on her head, face 
+the middle island, and she'll take you there! Now just jump off and get 
+the Star.
+
+STAR # 2 - ELEVATE FOR 8 RED COINS
+
+Turn right and fall into the large workroom. Turn to your immediate 
+right and go up the stairs. Controlling zany platforms in the 2D era was 
+a breeze, but now you have to deal with this in the third dimension! The 
+rickety old platform will buckle when halting to a stop, and when 
+starting, so be careful not to fall off. The first three Red Coins can 
+be found in boxes in mid-air. Carefully avoid the bars that try to knock 
+you off, and get the fourth Red Coin in the corner. After this, make 
+your way towards the platform with a pole that goes up, and you will 
+find a green and yellow block platform. This will carry you to the last 
+four coins -– just be careful of the obstacles.
+
+STAR # 3 - METAL HEAD MARIO CAN MOVE!
+
+Get off the elevator that leaves you to the hill before Dolly's lake. 
+Get the Metal Cap and hustle down the brown path. Keep going even when 
+you're underwater! Soon you'll find a switch, since it's underwater you 
+can only hit it as Metal Mario. It will open the nearby gate surrounding 
+the door. Enter it and jump over the holes to reach the Star.
+STAR # 4 - NAVIGATING THE TOXIC MAZE
+
+Go right to get to the workroom. Once there, go up the ramp and through 
+the hole to find the Toxic Maze, a place where the gases will slowly 
+drain your energy. To combat this, wear the Metal Cap! Go forward from 
+it to find a bunch of Flying Snuffits. Go forward to get the Metal Cap, 
+and turn left, then go along the wall to avoid the pits in the middle of 
+the floor. Then do a backflip over the wall with green stripes on them. 
+Follow the path to find the Star!
+
+STAR # 5 - "A-MAZE-ING" EMERGENCY EXIT
+
+Go to the same place as before, except jump up to the edge WITHOUT 
+stripes. Cling onto the grating and climb across, avoiding the bats, to 
+find the Star out in the middle of no where. Be very careful, if you 
+fall you will die, because the bottomless pit where the boulders fall in 
+is right under you.
+
+STAR # 6 - WATCH FOR ROLLING ROCKS
+
+Stop in front of the door that leads to the elevator to Dolly's Lake, 
+which is where the rolling rocks are. Now, look up and you will see two 
+acloves high up. Do the walljump to get up there. One aclove has a Star, 
+the other doesn't. If you land in the empty one, do a longjump. Here...
+
+
+________A_
+!  X      C
+!      _B_C    
+!      !    
+!      !
+!      ! 
+!      !
+
+ 
+Legend:
+
+A = The empty aclove above the doorway.
+
+B = The aclove above the doorway with a Power Star.
+
+CC = The door that leads to the elevator, which will take you down to 
+the underground lake.
+
+X = This is the bad place where the giant boulders come out of.
+
+
+STAR # 7 - 100 COINS
+
+You'll have to collect nearly every coin in this level! It is essential, 
+however, to get all of the Blue Coins in the maze. Trigger the switch 
+and go in front of the door that led to Star # 5. Voila! A string of 
+Blue Coins! 
+
+************************************************************************
+
+After the fun in that level, go jump into the painting of the fiery 
+monster that wants to kill everybody in a bloody pit of fire. What joy!
+
+
+                           ****************************
+                            COURSE 7: LETHAL LAVA LAND
+                           ****************************
+
+                        L E T H A L  L A V A   L A N D 
+
+
+General Notes: 
+ 
+When I say, "Use the Wing Cap", I am referring to the Wing Cap behind 
+where you start. It's hard to notice, but there is an island behind 
+where you start. Get a running longjump to get there, and use the 
+Wingcap for your perverted purposes.
+
+Many of the platforms in this level sink when you stand on them. To 
+avoid this, hop up and down, or stay in the middle. Other platforms, 
+however, sink for a few seconds and then come back up, regardless of 
+what you do.
+
+Be wary of large spinning blocks, as most of the spit out flames or 
+other nasty surprises.
+
+If you fall into lava, you will spring into the air. Try your best to 
+steer yourself towards a safe platform, because falling back into the 
+lava means certain death unless you have a full power-meter. If you get 
+hit by a flamejet, you will run around wildly. This is even worse, 
+because you might fall into a lava pool. To avoid this, jump up and 
+down, this will slow you down until you stop.
+
+There is a warp point under the Mr. I that is near the start. It carries 
+you to the island with the Wing Cap.
+
+Star # 1 - BOIL THE BIG BULLY
+
+Go forward and go through the path with fireballs on either side. Wait 
+for the moving bridge to be whole and run across, avoid Mr. I, make your 
+way through the sinking platform, go through the twisting puzzle of 
+Bowser, through the thin bridge with the Bullies, past the fire 
+breathing block, across the collapsing bridge, and you will meet up with 
+Big Bully, a black ball with green feet and yellow horns. The best 
+stragedy to beat him would be to stay near the edge of the platform, and 
+when he comes, jump straight up. He'll go under you, you'll land on his 
+back, and he'll fall into the boiling lava, giving up the first Star of 
+the level.
+
+Or, you could just use the Wingcap to get there...
+
+STAR # 2 - BULLY THE BULLIES
+
+Do the exact same thing, except go to the island next to it via the cage 
+platform that goes back and fourth. Kill the three bullies, then the Big 
+one that comes down. Kill him, and you get another Star. Again, you 
+could use the Wing Cap to get there easier. Or, if you wish, instead of 
+going over the moving bridge, you could go the other way across the thin 
+platforms and the upside down pyramid platforms. Which ever one you 
+choose, you get to the same area.
+
+STAR # 3 - 8-COIN PUZZLE WITH 15 PIECES
+
+Make your way to the shifting Bowser puzzle in some way, and then 
+collect the easy Red Coins. The only thing you have to be careful about 
+is the fact that some of the pieces are constantly moving, and there is 
+a pool of lava under each. Still, this is a cinch.
+
+
+STAR # 4 - RED-HOT LOG ROLLING
+
+Instead of taking the moving bridge, go across the upside down pyramid 
+platforms and get on the cage ferry, which takes you to a gigantic log. 
+If you run, it goes in the opposite direction. Do this a few seconds to 
+reach the platform with a Star. You have to come from the log's 
+direction, because a large cage covers it.  
+ 
+Or, for an easier way, you can get the Wing Cap and simply fly to the 
+Star. However, you still have to go past the log.
+
+STAR # 5 - HOT FOOT IT INTO THE VOLCANO
+
+Go into the volcano that is in the center of the level. There are 
+several ways to get there, so I won't bore you with that. Instead, I 
+will bore you with a stragedy on how to get the Star. Aren't you glad? 
+Jump into the volcano! Then, go forward, from Mario's perspective, and 
+jump up the platforms, avoiding lava baths, falls, Bullies, and giant 
+things that fall out of the wall. At the very top, you will climb onto 
+poles. Remember, the direction you jump is the direction in which 
+Mario's BACK is facing. Also, you can do a handstand on the highest pole 
+and jump to the Star without going to the last pole. Neat, eh?
+
+STAR # 6 - ELEVATOR TOUR OF THE VOLCANO
+
+Go into the volcano, go behind you and get on the elevator. After a few 
+obstacles (that require SKILL) you will find the Star. Fun.
+
+STAR # 7 - 100 COINS
+
+The coins in this level are spread out, so it would be wise to get the 
+Shell in the box at the start. It only appears if you choose the 5th or 
+6th Star, though.
+
+This level was really rather pathetic, but if you want to make it a LOT 
+more interesting, simply don't use the Wing Cap! Haha! Now you'll be 
+COMPLANING.
+
+************************************************************************
+
+When facing the painting to Lethal Lava Land, turn left and go into the 
+seemingly dead-end. Jump into the wall, and you will go into...
+
+
+                             ******************************    
+                              COURSE 8: SHIFTING SAND LAND
+                             ******************************
+
+                          S H I F T I N G  S A N D  L A N D
+
+
+General Notes: 
+
+When going through this course, you will have to be careful of the two 
+types of quicksand you will find. There are the circular pits, which you 
+can escape from by jumping over and over. However, the dark sand around 
+the pyramid and the Tox-box Maze will suck you down instantly.
+
+The Tox-Box maze is a large area consisting of  a path of stepping 
+stones going over dark quick-sand. The maze would be easy to navigate, 
+but there are huge Tox Boxes, which will try to crush you. The only way 
+to get past is to wait for an opening, or position yourself so the empty 
+side of the box lands on you, you're safe inside.
+
+The stone structure near the start of the platform has two useful 
+objects on top. To get there, just do a triplejump. The "!" box has a 
+Koopa Shell, which is useful for going up the large pyramid in the 
+center of the level. The other one, a red box, has a Wing Cap. Seeing as 
+this level is mostly open space, the advantages of this object is easy 
+to see. 
+
+In three different areas, a large twister will come out of the quicksand 
+and hurl you into the air. This can be useful, but be careful you don't 
+fall into the quicksand!
+
+There is a warp under the palm tree next to the oasis, it takes you to 
+the cannon inside the Tox-Box Maze.
+
+There is another warp inside of the pyramid. Turn right, use the Mummy 
+Thwomp as an elevator, go to the pole, and hop off. You see the corner? 
+Stand there, and you will warp to the top of cage like area. 
+
+STAR # 1 - IN THE TALONS OF THE BIG BIRD
+
+From the start, go forward and ignore the stone structure, and make your 
+way through the Tox-Box Maze. Once on the other side, you will find two 
+red pillars which reach into the sky. If you run at them, you can run up 
+the side and reach the top –- do so. By now you should have spotted 
+Klepto the Condor, flying about with a Power Star in his talons. When he 
+gets close, jump at him and the Star will be free! 
+
+When you come back for more Stars, be wary when venturing around the 
+pillars, because Klepto will be very upset...he'll try to steal your 
+hat! If this happens, be sure to get it back in the same fashion as the 
+Star. You take twice as much damage without your hat. Besides...Mario 
+looks weird without a hat.
+
+STAR # 2 - SHINING ATOP THE PYRAMID
+
+You can either go up the side of the pyramid, fraught with fireball 
+blasters, Shy Guys, and other creatures that will make your trip very 
+difficult...Or could simply fly up there.
+
+STAR # 3 - INSIDE THE ANCIENT PYRAMID
+
+Stroll on into the Pyramid and slowly make yourself up to the top where 
+you will find the Star. It's quite linear, but since I'm bored out of my 
+brains, I'll present this non-needed walkthrough.
+
+Turn right and avoid the Goombas. Or beat them into a bloody pulp. 
+Whichever one you prefer...Keep going and hop onto the Mummy Thwomp to 
+get to the above area. Go towards the entrance and get on the pole, and 
+slide on up. Jump up and cling to the grating and go across the sandpit. 
+Climb the small stairs, and jump over the rolling pin that tries to 
+squash you. Then, go up the sliding floor pieces, across the thin ledge, 
+up the pole, across the bridge, up the slope, hop onto the platform, and 
+in the infamous words of Mario..."HERE WE GOOO!"
+
+STAR # 4 - STAND TALL ON THE FOUR PILLARS
+
+Get the Wing Cap and fly to each red pillar and stand in the center for 
+about 10 seconds. When each one has been visited, the top of the Pyramid 
+will blow off, revealing a platform that will take you down to Eyerok's 
+lair. Another way, although much more difficult, is to get to a very 
+high place in the pyramid and fall onto the red structure. Then locate 
+the hole, and attempt to fall off and cling to it. I've done it, I know 
+it can accomplished, but it's not a very sound method.
+
+Once you are fighting Eyerok, you'll need to overcome the huge onslaught 
+of slaps, claps, bangs, punches, and anything else you can do with your 
+hand (wait, wait...no, that's too nasty.) To defeat them, punch them in 
+the eye three times, each hand, so that's six punches. They only open 
+their eyes for a brief moment, so you'll need to be quick. They give you 
+a start once killed.
+
+STAR # 5 - FREE FLYING FOR 8 RED COINS
+
+
+Coin 1: 
+Behind you from the start.
+
+Coin 2: 
+In a block under the gray stone structure with the Wing Cap and a Shell.
+
+Coin 3:
+In the Tox-Box maze.
+
+Coin 4: 
+In the small lake near the Bird
+
+Coin 5 and 8: 
+These are around the pyramid. To collect them, talk to the Bob-omb Buddy 
+near coin four and he'll activate the cannon in the Tox-box Maze. Beside 
+it is a Wing Cap, so get inside of it with it on, blast out, and collect 
+the coins.
+
+The Star appears on the gray structure with the Wing Cap and Shiny 
+Shell.
+
+STAR # 6 - PYRAMID PUZZLE
+
+Go into the Pyramid and make your way to the very top, right before the 
+Star. See that little hole in the lip of the path? Fall down to get to a 
+secret platform with a single coin...which will give you a red number! 
+Fall down to the next platform for another...then into the sand for a 
+few more. When they're all gone a Star will appear near the end of the 
+sand river. Go get it! Some like to get on top of the grating and fall 
+onto the Star, instead of risking falling down into the quicksand below. 
+To get ontop of the grating you have to long jump from the path above.
+
+STAR # 7 - 100 COINS
+
+Collect all there is outside and then head inside the Pyramid. Most 
+people miss this, but there is a blue Coin switch near the start of the 
+pyramid! Look to your left...the coins will be nearby. Hurry! They don't 
+last long...
+
+************************************************************************
+
+Return to the Key Door that brought you to the basement, and open the 
+Star Door that is nearby. You can't get into the Bowser Course until you 
+get the first Star of the below level...which is through this door, too! 
+Just jump into the liquid wall.
+
+
+                             *****************************
+                              COURSE 9: DIRE, DIRE, DOCKS 
+                             *****************************
+
+                           D I R E ,  D I R E   D O C K S
+
+
+General Notes: 
+ 
+In the first area, there is a huge cyclone which will try to suck you 
+in. If you do get sucked you, you die instantly, so it's in your best 
+interests to keep away.
+
+The second area of Dire, Dire Docks has a large hole in the side of the 
+wall. This hole is covered up during the first Star, but not in any 
+other. If you get sucked inside, it will transport you to outside the 
+castle, near the big waterfall. Another no no.
+
+STAR # 1 - BOARD BOWSER'S SUB
+
+Not very difficult...but, you have to get one of the first stars in this 
+level to activate Bowser's 2nd Obstacle Course, so...Anyways, swim all 
+the way down, through the underwater tunnel, then into an open bay area 
+with a submarine in the middle. Climb the platform that surrounds the 
+sides of the room and activate the purple switch that will create a 
+temporary bridge to the sub. Climb it, then collect the Star on the 
+submarine. 
+
+STAR # 2 - CHESTS IN THE CURRENT
+
+Swim straight down to find four chests surrounding a large whirlpool, 
+which constantly is sucking you in, making you have to swim all the time 
+in order to stay alive. You must activate the chests in the correct 
+order (1st is right next to the clam, 2nd towards the underwater tunnel, 
+3rd is the lonely corner, and the final one is right next to the 
+whirlpool...BE CAREFUL! You'll have to come up from the slope and 
+quickly swim away) and the Star will appear nearby.
+
+STAR # 3 - POLE JUMPING FOR RED COINS
+
+(NOTE: The poles will only appear when you have beaten Bowser in the 
+Fire Obstacle Course)
+
+Go to the bay where the submarine was docked to find a large array of 
+poles and platforms in its place! Get up there using the purple switch, 
+then use all of your pole jumping abilities to collect the eight red 
+coins. Tip: Change your camera view so you can see exactly what 
+direction you'll be going...This one takes patience.
+
+
+STAR # 4 - THROUGH THE JET STREAM
+
+Return to where Bowser's Sub was, then to the very bottom. Notice the 
+bubbles? Get right over it and make it so five rings come up and you go 
+through it (Hold C up to get a good view of this), then a Star will 
+appear. Ah, but you need the Metal Cap near the purple switch to 
+retrieve it...shouldn't be hard, now should it?
+
+
+STAR # 5 - THE MANTA RAY'S REWARD
+
+In the first area you will find a gigantic Manta Ray swimming about the 
+room...Swim behind and go through all five rings it lays. Now, this can 
+be very difficult because if you screw one up you have to start over 
+again...But, everytime you go through a ring you get more energy! 
+
+STAR # 6 - COLLECT THE CAPS
+
+In the sub area is a cage with a Star inside, but the funny thing is 
+that there's no way in...or is there? Near the purple switch is an 
+Invisible Cap, so now you can just swim with it! Oh, try getting both 
+Metal and Invisible Caps! It's pretty...interesting...
+
+STAR # 7 - 100 COINS
+
+Even if you collect every single coin in this level, you're still 
+missing some...this is a common problem. The answer is right at the 
+start; instead of swimming down, go to the surface, near the 
+wall...Coins! 
+
+************************************************************************
+
+Now jump into the Bowser Level!
+ 
+
+                        *****************************
+                           BOWSER IN THE FIRE SEA
+                        *****************************
+
+                 B O W S E R   I N    T H E    F I R E   S E A 
+
+
+Coin 1: 
+After the first set of sinking platforms, you can left to find a gated 
+path. At the end is a Red Coin hovering over a hole.
+
+Coin 2: 
+After using a pole on a platform that goes up and down, you will see 
+this coin on the swaying platforms.
+
+Coin 3: 
+After climbing into the multi-colored cage, you can see this in the 
+corner.
+
+Coin 4: 
+Once in the multi-colored cage, step on the elevator, then step back and 
+let it go up. It was covering up a Red Coin.
+
+Coin 5: 
+After the elevator, avoid the flamejets, then go up the hill and through 
+the side path, up the hill, fight the Bully, and get this coin.
+
+Coin 6:  
+Once at the area with the rising and falling platforms, connected to 
+each other by grating, you can just barely see the shadow of this one. 
+Wait until the platforms go all the way up.
+
+Coin 7: 
+On the giant field of sinking platforms, this one can be found at the 
+very tip of a flamejet. Be careful! Dying this close to the end would be 
+pretty frustrating.
+
+Coin 8: 
+In the last obstacle area, with the rising and falling platforms with 
+poles. 
+
+The Star appears on top of the large structure that supports the falling 
+platforms. To get there, do the walljump.
+
+Once you reach Bowser, you will see that he has many new tricks up his 
+sleeve. The first thing he does to start off the fight is to jump 
+straight up, crash to the ground, and cause the entire arena to tilt at 
+a 45 degree angle, making you slide down at voracious speeds. To 
+counteract this, do a backflip before he lands, or jump and run like 
+Hell. After this, you'll notice that he doesn't breath flames anymore, 
+he just spits fireballs. The difference is the breathe has a torch 
+effect and leaves coins, where as fireballs are (surprise, surprise) 
+balls of fire and don't leave any coins, which means you can not 
+replenish any health. The method of defeating him remains the same, but 
+he turns around much faster and can warp away if you get close. The best 
+way to get his tail is to get far away from him, then he will charge at 
+a high speed. When he's about to hit, do a backflip or sidejump and he 
+will go under you, and you have a wide open shot at his tail. You need 
+to throw him into a single bomb to kill him, yet again. If you ask me, 
+it should have been two bombs...
+
+************************************************************************
+
+Bowser has been crushed again, and your receive the Third Story Key! 
+With this, you can open the locked door on the main floor, allowing 
+access to the third floor. All of the courses before this, compared to 
+the upcoming levels, are melted cheese. Prepare for the most difficult 
+levels of the game!
+
+  
+Go up the stairs and open the door. Go through the door with carpet in 
+front of it to be in the mirror room, which has a big mirror in it. As 
+Toad said, if you bothered to talk to him, the secret is to look into 
+the mirror and see something that is not on the wall...jump into the 
+left wall!
+
+
+                         ***************************
+                          COURSE 11: SNOWMAN'S LAND
+                         ***************************
+
+                       S N O W M A N ' S   L A N D
+
+
+General Notes: 
+
+The main feature of this large snow course is the huge snowman in the 
+center. If you have to climb up, you'll need to go by the large hole 
+that shoots out ice platforms. Jump over the platforms and then do a 
+double-jump to get on top. 
+
+Once you see the snowman, he will start to blow mightily. If you go into 
+the wind, you will be blown near the start of the level, and your hat 
+will be long gone. You can get it back, but if you exit the level for 
+some reason with it away, you'll need to go back in, but it won't be 
+where you left. Instead, one of the snowmen enemies near the start will. 
+Just kill them like normal and they'll give it back.
+
+There are two types of water in this winter-wonderland. First there's 
+the freezing water near the snowman. If you swim in this, your health 
+slowly goes down. The water around the Chill Bully, however, is so 
+frigid that it has the same effects of lava!
+
+There is also a warp near the single tree by the area with high winds.
+
+
+STAR # 1 - SNOWMAN'S BIG HEAD
+
+This one takes a bit of practice...go all the way around the mountain 
+and you'll find a hole with ice blocks coming out. To get past this, do 
+a triple jump (avoiding the ice cubes) and land above! Follow the path 
+above, you'll find a Penguin on an ice bridge, in front of a huge 
+snowman. If you try to pass, the Snowman will blow you off. To get past, 
+jump on top of the Penguin's head and he'll carry you over. Now simply 
+collect the Star on top of Mr. Snowman's big ol'e head!
+
+It's also possible to shoot yourself up their via the cannon. To 
+activate the cannon, you'll need to talk to the pink Bob-omb Buddy, who 
+lives inside the Igloo. Read about it below.
+
+STAR # 2 - CHILL WITH THE BULLY
+
+On your trip around the mountain, you probably noticed this large ice 
+platform with a ball on it, resembling the Bully. Beat 'em to get the 
+Star! Use the same stragedy...
+
+STAR # 3 - IN THE DEEP FREEZE
+
+Turn left from the start and you'll find a large ice cube with a Star 
+inside, with several passages inside. You'll find the right one soon 
+enough...it's not THAT difficult.
+
+Star # 4 - WHIRL FROM THE FREEZING POND
+
+Instead of going to the hole that spews ice cubes, keep going to find a 
+Spindrift in the water. Bounce off his head and whirl over the nearby 
+wall to find two "!" Boxes...one of them holds the Star you seek.
+
+It is also possible to shoot yourself there via the cannon. Just put the 
+"X" slightly to the left of where the fence starts on the green hill, 
+and a lot above that. Just takes a bit of practice!
+
+STAR # 5 - SHELL SHREDDIN' FOR 8 RED COINS
+
+Do the exact same above, except hit the other "!" Box to receive a 
+Shell, use this to collect the eight red coins on the path above, and 
+then near Chill Bully's Platform. This is REAL easy...
+
+
+STAR # 6 - INTO THE IGLOO
+
+The entrance to the Igloo is a slope near the hole that spews ice, 
+problem is, it's way out in the middle of the cold ice water, which 
+drains your health, and it's too slanted to climb. There are three ways 
+to into it: Get past the snowman head, then drop down to it. Or get the 
+Shell and go right up there. Or use the cannon When you do, crawl into 
+the teeny weeny igloo that you can barely fit into...
+
+IT'S HUGE INSIDE! A maze of ice and snow, littered with enemies, meets 
+your eyes. Make your way to the back and get the Invisible Cap, now you 
+can run through the ice walls that make up the maze. Near the entrance 
+is a tunnel, above the tunnel is a small aclove with the Star, blocked 
+off by ice. Go get her!
+
+STAR # 7 - 100 COINS
+
+The largest collection of coins in this level is inside the Igloo, which 
+is easy to forget since it doesn't exactly make its presence known. To 
+collect the coins inside you'll need the Invisible Cap, as they're 
+inside the ice blocks.
+
+************************************************************************
+
+The entrance to the next level is quite easy to locate, it's in the 
+large hallway with paintings. Jump into the one with a large, aqua-
+colored bug on it.
+
+
+                         **************************
+                          COURSE 11: WET-DRY WORLD
+                         **************************
+
+                         W E T - D R Y   W O R L D 
+
+
+General Notes: 
+ 
+Welcome to my favorite level of the entire game (and this is one of my 
+favorite games), I hope you enjoy yourselves. Don't you just LOVE that 
+classical underground Mario music? 
+
+In the corner there is a giant yellow arrow pointing to a downward 
+passage, but there is a titanic fence surrounding it. The only way to 
+get over it is to either backflip into the painting, or use the cannon 
+to shoot yourself into it.
+
+This level has seven hidden Crystal Taps. That is, diamonds that will 
+lower or raise the water level of the world, depending on its position. 
+Five of them are in the normal area, two are in downtown. 
+
+When entering the painting, the water level will be affected depending 
+on how high you went through the painting. If you do a high backflip, 
+the water will be higher than the highest Crystal Tap even. If you 
+barely jump into it, it will be all the way down. Keep this in mine for 
+the Stars you want to collect.
+
+Getting the cannon activated can be a tricky experience. The easiest way 
+is to backflip into the painting so the water level is higher than the 
+highest Crystal Tap. Then it's very simple to talk to your explosive 
+friend. However, it can still be done using the highest Crystal 
+Tap...activate it, and then go to the wooden platform near the Bob-omb 
+Buddy. Then do a very precise sidejump. Is it in you? 
+
+There is a warp that takes you from the cannon to ground level. First, 
+locate the tower like object on the ground with a Crystal Tap and an 
+Ampz on it. The Crystal Tap will raise the water enough to allow you to 
+get on the nearby wooden platform. Well, when the water is all the way 
+down, stand in the little corner of the tower and you will warp to the 
+cannon.
+
+
+STAR # 1 - SHOCKING ARROW LIFTS!
+
+Here is the "correct" way to do it. Enter the painting so the water is 
+at its lowest height. Climb the small tower with the Ampz and trigger 
+the Crystal Tap. Swim to the wooden platform and get on, and activate 
+the purple "!" switch to cause some wooden blocks to appear. Go across 
+and trigger that Crystal Switch. See the tons of platforms in mid-air? 
+Go there, and use the arrow lifts to reach the "!" box. The Star is 
+inside.
+
+Another way is to enter with the water at it's highest level and then 
+jump out of the water to get it. Another great way is to use the warp, 
+then drop down from the cannon.
+
+STAR # 2 - TOP O' THE TOWN
+
+Here is the "correct" way to do it.
+
+Enter the painting so the water level is at it's lowest. Trigger the 
+Crystal Tap with the Ampz to get the water level high enough so you can 
+go up the stone ramp. Once to the middle area, push the cube so you can 
+get on top of it and then jump to the highest area. Battle the Chuckya 
+until you win, and then hop onto the wooden plank and cross, carefully 
+avoiding the Ampz. Once at the end, jump on the spinning platform, then 
+bust open the "!" box. The Star shall be inside.
+
+Another way is to backflip into the painting so the water is so high you 
+can simply swim to it.
+
+STAR # 3 - SECRETS IN THE SHALLOWS AND SKIES
+
+There are five secret numbers hidden about the level...1st one is found 
+by pushing the block in the wall. 2nd is found by pushing the 2nd block 
+against the wall. 3rd is on the "!" Box near the box you just pushed. 
+4th is on the pillar on the same level of the large cage (use the Heave-
+hoes to get up there). The final one is in the "!" Box on top of the 
+caged pillar. You can get up there by activating the purple "!" switch.
+
+The Star appears on the wooden platform below.
+
+STAR # 4 - EXPRESS ELEVATOR; HURRY UP!
+
+First off, drain the water to it's lowest level and then break the block 
+near the lowest Water Tap. Make your way up the ledges using Heave-ho 
+and, when at the top, press the purple switch and climb the stairs to 
+find an elevator. Jump on, jump off (using Z before hitting the ground 
+so you won't be harmed) then walk in the hole that the block was 
+blocking. When the elevator comes down, hop on, then travel back on up 
+to get the Star!
+
+STAR # 5 - Go TO TOWN FOR 8 RED COINS
+
+You may have noticed that there are no Red coins in the first part of 
+this course...that's because they're behind the tall fence in the 
+corner...To get down there, back-flip into the painting then the water 
+will be so high that you can swim there! Or use the cannon. Under there, 
+hit the Water Tap under the entrance to drain the water...
+
+To receive the coins you'll have to Wall Jump past houses, backflip onto 
+platforms, and perform a balancing act that would scare the piss out of 
+rope balancers. 
+
+STAR # 6 - QUICK RACE THROUGH DOWNTOWN
+
+Get 'downtown', drain the water, then go to the Invisible Cap Block and 
+receive it, then run through the walls to find a large gate, go through 
+it and then wait until the effect wears off. Now just wall jump up to 
+it! You could also use the purple "!" switch near here to make a block 
+you could stand on, but it's not necessary.
+
+STAR # 7 - 100 COINS
+
+You should be able to get 100 coins before having to go 'downtown.'
+
+************************************************************************
+
+The next area is through a very small portrait. The portrait is 
+of...mushrooms.
+
+
+                        ********************************
+                         COURSE 12: TALL, TALL MOUNTAIN
+                        ********************************
+
+                      T A L L ,  T A L L   M O U N T A I N 
+
+ 
+General Notes: 
+ 
+This place is a nightmare for a FAQ writer. First off, there are several 
+different paths. The first split is the Monty Mole area. You can either 
+go forward or climb the many ledges. If you climb the ledges, you can 
+skip almost everything and go straight to the main path to the summit. 
+If you keep going, you will find a large log that needs to be rolled in 
+order to continue. Then another branch!  Left leads to two Bob-ombs and 
+the last legs of the ledges from the Monty Moles. Right goes to the most 
+dangerous bowling alley in the game, because of the dozens of balls and 
+their large speed. Though, that part is quite fun...it dumps you off 
+before Fwoosh.
+
+Fwoosh? Yes, Fwoosh. Fwoosh is the large cloud you see after making a 
+rather long...er...longjump. If you stay around too long, he'll blow the 
+cap right off your head. You can say goodbye to it for now, but when you 
+come back, the monkey Ukiki will have.
+
+Who? Ukiki! The monkey! You've surely wondered what that odd noise you 
+keep hearing is, haven't you? To get your hat back, you'll need to catch 
+him like you did MIPs. Thankfully, he's easier to get. Also, Ukiki will 
+steal your hat if you catch him with your hat still on, except when 
+getting the first Star. 
+
+There is a warp in the Scary 'Shrooms area, where the first four Red 
+Coins are. It's on the smallest mushroom, and takes you to the path that 
+leads to the cannon.
+
+STAR # 1 - SCALE THE MOUNTAIN
+
+A Star is your prize if you can reach the summit. I pretty much 
+explained all the routes in General Notes, so don't complain to me that 
+this is too short.
+
+STAR # 2 - MYSTERY OF THE MONKEY CAGE
+
+On the way up, you'll notice a large cage with a Star in it...you can 
+stomp it, punch it, kick it, shoot into it...whatever, you won't break 
+it. Make your way to where Star # 1 was to find a monkey; catch 'em, let 
+him go, and he'll thank you by opening the cage.
+
+STAR # 3 - SCARY 'SHROOMS, RED COINS
+
+Oooh! This one is EVIL! Four of the Red Coins are on tiny mushroom 
+platforms, over thin air. This requires practice and a lot of patience. 
+I recommend letting go of the analog stick so you won't accidentally 
+fall off (which is easy). The other four are near the moles, not so far 
+away. Simply climb the platforms, get the coins, and there ya go...It 
+will appear on a mushroom platform near the moles, just do a longjump to 
+easily get it.
+
+STAR # 4 - MYSTERIOUS MOUNTAINSIDE
+
+Right after the longjump past a waterfall and directly after Fwoosh, you 
+might notice part of the mountainside is a bit...strange. Jump in to 
+find a slide with no sides, 90 degree turns, loops, multiple roads (some 
+with dead-ends), and a long jump. At the end you will fall into an 
+aclove with the Star...there is another way, though. Past the moles is a 
+flying Shy Guy...jump on him, go whirling, backwards towards Chuckya, 
+and you can float into the aclove. Talk about secret!
+
+STAR # 5 - BREATHTAKING VIEW FROM THE BRIDGE
+
+Make your way up the dangerous mountain trail...You'll find a small path 
+past a waterfall, well, look in there to find a small aclove with a Star 
+inside! Simply jump in. This might be easier if you trigger the purple 
+"!" switch before, so the wooden blocks appear. But still, I think you 
+should be good enough to do without. 
+
+STAR # 6 - BLAST TO THE LONELY MUSHROOM
+
+There are two ways to get this one. The easy way, and the easy way. 
+Well, OK, most people consider the first way difficult, but I'll tell 
+you how it can be easy. Listen up! 
+ 
+Go to the area with Monty Moles, past the Bob-ombs, and go across the 
+bridge. Before jumping to the next platform, drop in the middle to find 
+a pink Bob-omb Buddy. Talk to him to activate the cannon. The cannon is 
+located in a very narrow ledge. There are two ways to reach it: Get near 
+the Monty Moles and jump down there, or use the warp in the Scary 
+'Shrooms section. Once inside the cannon, you can clearly see a giant 
+mushroom in the distance with a Star on it. The problem is, though, if 
+you're one inch off, you will die. YOU HAVE TO TOUCH THE STAR TO NOT 
+DIE. First, put the "X" so it is on the Star. Pull up so you can see 
+only the very upper part of the mushroom. If you're not an idiot, you 
+can do this easily! But if you are retarded, like many of the people who 
+actually need these walkthroughs to satisfy their lower-than average 
+gaming skills, read the next stategy. 
+
+Go to the area with the large log, and you will see a flying Shy Guy. In 
+the distance, beyond the log, you can also see the mushroom platform 
+with the Star on it. Hop on the Shy Guy, and then use the helicopter 
+spin move to get over there. This is for stupid people and people who 
+can already it the above way. Or both.
+
+
+STAR # 7 - 100 COINS
+
+Before collecting any coins outside, go inside the mountain slide and 
+earn some coins there, then slowly make your way out (fall down from the 
+aclove) and get some more coins to get 100!
+
+************************************************************************
+
+The next level is found through the door that does not have a carpet in 
+front of it.
+
+
+                          *****************************
+                           COURSE 13: TINY-HUGE ISLAND  
+                          *****************************
+
+                       T I N Y - H U G E   I S L A N D
+
+
+General Notes: 
+ 
+Ah, another favorite of mine. Nintendo is ingenious!
+
+Size doesn't matter, right? Well, not in bed, but it certainly does in 
+this level. If you came in through the tiny painting on the left, you 
+will be a gigantic Mario and everything around you will be really small. 
+If you came in through the huge right painting, everything will be 
+gigantic compared to you...even the Goombas tower above you. There are, 
+however, several pipes around the level that change you from big to 
+small. 
+
+
+STAR # 1 - PLUCK THE PIRANHA FLOWERS
+
+Be sure to come in as a large Mario. Then, turn left and jump into the 
+pipe over there, you then come back out as small Mario. Except, you will 
+have to do battle with five Piranha Plants, and these guys are huge! 
+Look at those teeth! They also spit fire at you, and if you get hit, 
+there's a good chance you're gonna fall into the water. if this is the 
+case, just start the level over, because that is faster than going to 
+the nearest pipe to get big, come back, etc., etc...You can kill them 
+like any other enemy. When they are all dead, the Star is yours.
+
+STAR # 2 - The TIP TOP OF THE HUGE ISLAND
+
+Go in 'small', go through the hole, and make your way up the mountain! 
+Giving you directions would insult your intelligence beyond everything I 
+have done yet. It's in the "!" Box.
+
+Another, faster way is to come in Big, go up there, and you can get up 
+the mountain in a flash.
+
+STAR # 3 - REMATCH WITH KOOPA THE QUICK
+
+Go in 'small', and go past the bridge with all the wind, keep going 
+straight, past the hole that is spewing out bowling balls, and you'll 
+find Koopa the Quick! Challenge him to a re-match, the goal is shortly 
+before the board where the wind is. This time he is FAST, and you have 
+bowling balls to deal with...A few longjumps near the beginning should 
+secure your win. Don't try anything on the bridge, just go straight.
+
+STAR # 4 - FIVE ITTY BITTY SECRETS
+
+Again, you have to find five secret numbers...As 'big' Mario. 1st one is 
+on the very top of the mountain, in the water. 2nd is on the TINY bridge 
+above the beach with Lakitu and Koopa Troopa. 3rd is on the hole near 
+the start, on the beach side. 4th is on the cannon near # 3 (the cannon 
+must be open...good thing the Good Bomb-omb is nearby!), and the final 
+one is in the hole where the bowling balls come out. To actually get the 
+Star you will have to return to the start as 'small' Mario, hit the 
+purple switch, then cross the bridge...whew!
+
+STAR # 5 - WIGGLER'S RED COINS
+
+Open the cannon, then aim it near where it is already. Cross the bridge 
+to find a hole, this leads to Wiggler's Secret Cave. Another good way to 
+get up there is to use the Shiny Shell from the Koopa on the beach. This 
+cavern has all the eight red coins, but they are all in dangerous 
+places...You'll have to master all of your jumping techniques to receive 
+them all!
+
+STAR # 6 - MAKE WIGGLER SQUIRM
+
+Go to the very top of the mountain as 'big', then stomp the water to 
+cause a small hole in it, the water will drain. Hop in the nearby pipe 
+to get 'small', then hop in the hole. 
+
+Wiggler will be very mad that you flooded his house. So you'll need to 
+pop him in the head three times, a classical Miyamoto fight. When he's 
+defeated, he gives you the Star as a present. Awww...
+
+STAR # 7 - 100 COINS
+
+As 'small' Mario the goombas are huge! Stomp them to get blue 
+Coins...You can get up to 178 coins in this level!!
+
+
+                            ****************************
+                             COURSE 14: TICK TOCK CLOCK 
+                            ****************************
+
+                           T I C K   T O C K   C L O C K 
+
+
+General Notes: 
+
+I could have a field day covering this level alone, with the tons of 
+obstacles and everything, but instead I decided to tell you the most 
+important secret of this level. You can stop ALL of the blocks, arches, 
+triangles, wedges, bars, and stabbers simply by jumping into the 
+clockface when the longhand points to, or near, the twelve (12). You can 
+get five of the seven stars this way! Also, for those times when the 
+parts need to be moving, jump in when the longhand faces the three (3), 
+and everything will go very s-l-o-w. Any other time will make everything 
+go really fast.
+
+
+STAR # 1 - ROLL INTO THE CAGE
+
+Stop the clock and then go up, you'll notice a Star in a cage...Jump in! 
+This would be very difficult if you didn't stop the clock.
+
+STAR # 2 - THE PIT AND THE PENDULUMS
+
+Stop the clock and go to where the first Star was, then go past it, 
+avoid Ampz, climb a pole, run past Heave-ho, longjump over the gap, then 
+carefully avoid the still parts, then grab the Star. These descriptions 
+are awfully short...
+
+STAR # 3 - GET A HAND
+
+Stop the clock! Go to the first star, then drop down to find this one. 
+Or you could have the clock moving, go to the first 2nd "!" Box near the 
+Black Ball and ride the hand across the gorge to it...you'll still get 
+there.
+
+STAR # 4 - STOMP ON THE THWOMP
+
+Uh-oh...This one is pretty hard! Go in with everything moving, then make 
+your way to the very top to find a large, blue Thwomp. Climb on top and 
+do a Backflip to find the Star! Avoiding the obstacles takes pure 
+skill...and a little luck.
+
+STAR # 5 - TIMED JUMP ON MOVING BARS
+
+From climbing up the pole near Ampz, get on the elevator, jump to the 
+spinning triangle, then longjump to a platform most people overlook. Hop 
+on the rotating bars, then get inside the cage to claim the Star. 
+Although this is possible with everything shut down, you'll have to do 
+some tricky walljumps where the elevator is. If you miss the jump, the 
+chances of you dying are great.
+
+STAR # 6 - STOP TIME FOR RED COINS
+
+Stopping time for this one is almost ESSENTIAL! Behind the start, 
+another place people seem to miss, are several bars with Red Coins, but 
+they're all rotating...normally. You may never reach them if you don't 
+turn off time...I know I sure can't! Collect them all and then collect 
+the Star.
+  
+STAR # 7 - 100 COINS
+
+You'll need to explore every nook and cranny for this one, which makes 
+this the most difficult Star in the level (which is already HARD 
+ENOUGH!). A lot of the "!" Boxes hold 10 coins, and you shouldn't miss 
+the Blue Coin switch near Star # 2. Good luck...you'll need it!
+
+
+                          *************************
+                           COURSE 15: RAINBOW RIDE
+                          *************************
+
+                         R A I N B O W   R I D E
+
+
+General Notes: 
+ 
+The main mode of transportation in this level is...a flying carpet. They 
+are follow a pre-determined path over the rainbows, as if you couldn't 
+tell from the name of this rather large and difficult level. There will 
+also be many different obstacles meant to push you off into the abyss 
+below, so don't fall asleep at the wheel.
+
+
+STAR # 1 - CRUISER CROSSING THE RAINBOW
+
+Hop on the carpet, go past the flames, then jump over the spinning 
+platforms to find yet another platform, which will eventually lead to a 
+junction with two more carpets to choose from; take the one on the left. 
+The path to the Cruiser will be blocked by blocks, Lakitu, and the 
+occasional high wind coupled with a stream of fire...Then just get the 
+Star on the deck of the ship!
+
+STAR # 2 - THE BIG HOUSE IN THE SKY
+
+Instead of picking the left path this time, choose the right, it's a 
+more difficult path, but it's the only one that will do. It will 
+eventually lead to a large house, get on the back to avoid being roasted 
+by the huge flame that comes out of the fireplace. Now wait patiently 
+for the carpet to get to the roof, where you will find a "!" Box with a 
+Star.
+
+STAR # 3 - COINS AMASSED IN A MAZE
+
+On the spinning platforms near the beginning, take the path that leads 
+to the gigantic, 2D (sorta), concrete maze. There are eight Red Coins in 
+here, and collecting them all requires full knowledge of the jumps in 
+this game!
+
+STAR # 4 - SWINGIN' IN THE BREEZE
+
+If the above title makes you think of a penis, you are as perverted as 
+me. Congratulations!
+
+Do an about face from the start and longjump to the platform (which is a 
+good shortcut to the spinning platforms, BTW) and make your way past 
+Shyguy and jump on the swinging platforms. Be sure not to fall near the 
+end, as it's a LOOOOONNNNGGG way down! At the end is a split in the 
+road, take the brown path to a swinging platform. Use it to jump to the 
+island with the Star!
+
+STAR # 5 - TRICKY TRIANGLES
+
+Instead of going left this time (above Star) turn right to find 
+some...triangles...that are...quite tricky! Hit the purple "!" switch to 
+make the triangle platforms flat, then you only have seconds to jump up 
+them and get the Star. It's not easy...but no one said it would be.
+
+STAR # 6 - SOMEHWERE OVER THE RAINBOW
+
+OK boys and girls, it's time to be frustrated beyond belief! First you 
+need to activate the canon, and the pink Bomb is in the highest 
+passageway in the maze near the spinning platforms. To get to him you 
+must use the 100 foot vertical tunnel to reach him (walljumps)...it's 
+not easy, but once you get started it flows like water. Problem is, the 
+canon is on the cruiser...d'oh!
+
+Get there, past the flaming platforms, spinning platforms, and the bombs 
+and Lakitu to find...yes...THE CANON! WOOHOO! Nintendo, feeling this was 
+already cruel enough, put in a nice easy target to shoot at: A circular 
+rainbow, just aim in the center to hit an island with one Chuckya (watch 
+out!) and a "!" Box with the Star. Whew...
+
+STAR # 7 - 100 COINS
+
+It is crucial you hit the Blue Coin switch in the maze! The coins are 
+way up where the Pink Bomb is, if you mess up there is no possible way 
+you can get the 100 Coin Star.
+
+************************************************************************
+
+With all the regular courses in the game complete, go up the endless 
+stairs, which should be solved by now, and jump into the final level. 
+
+
+                           ************************
+                              BOWSER IN THE SKY
+                           ************************
+
+Coin 1: 
+Go forward and carefully jump over the moving platforms. Get behind the 
+cube and push it towards where you started the level. Once you can not 
+push it anymore, climb on top and jump up to get the first Red Coin.
+
+Coin 2: 
+Follow the path after the last coin, and after the spinning platform, 
+you will easily find this Red Coin, being guarded by a Piranha Plant.
+
+Coin 3: 
+After the last coin, you will have the opportunity to ride on a ferris 
+reel platform. Instead, fall to the path below. You will see a line of 
+yellow coins...If you look over the edge, you will see a small nick in 
+the platform, and on this nick is another Red Coin.
+
+Coin 4:   
+After that coin, go forward and pound the Whomp into dust. Do a walljump 
+to get on the thin platform, then do a longjump to get into the fenced 
+area. Throw the Chuckya to get some coins, then pound the purple "!" 
+switch to make the sloped area turn into stairs. Keep climbing, and at 
+the top, past the flame-throwers, will be a Red Coin.
+
+Coin 5: 
+After that, slide down into the next area. get on the arrow platform and 
+jump over the bricks that come. One of the Red Coins is positioned on 
+one of them, so you'll need to make a tricky jump to collect it.
+
+Coin 6:
+The platform will drop you off at the sight of two Bob-ombs, so move 
+out, jump to the spinning platform while avoiding fireballs, and grab 
+the coin.
+
+Coin 7: 
+Go to the next spinning platform with the Ampz, and shinny up the pole. 
+Punch the Goombas away, then jump onto the next pole to get another 
+coin.
+
+Coin 8: 
+Avoid another pair of Bob-ombs, the fireballs, and you will arrive at a 
+set of ferris reel contraptions. After eluding three Goombas in the 
+windy area, you will come to the stairway that leads to the pipe that 
+takes you to Bowser. But under the stairs is a floor, and on the floor 
+is the last Red Coin of the game.
+
+The Star appears next to the pipe, easily retrieved.
+
+When I fight a last boss in a game, if I felt the boss was easy, I feel 
+cheated. Now, I'm not saying that the last Bowser is easy, but he could 
+have been harder. The first time I beat him I jumped for joy because I 
+had died the last four times...so I didn't feel it was easy then, but it 
+doesn't seem very difficult now. Maybe it's because I've become used to 
+3D space, or maybe it's because I have mastered the game...or both. 
+
+Bowser has many new tricks up his sleeve. First, when he jumps and 
+lands, shockwaves will emit from him, causing a lot of damage. Second, 
+he will cover the entire arena in fire, and then snort ice, which will 
+track you down and burn you. The only advantage you have is the fact 
+that his firebreath, not his fireballs, leave coins behind. The best way 
+to get him to connect with the bombs is to get far away, and he'll 
+charge, do a backflip or sidejump, and then you'll be face-to-face with 
+his tail. After you smash him into two bombs, sides of the arena will 
+explode until the playing field is shaped like a giant star. Right 
+here...getting the final hit is too easy. Now, if he were to make the 
+arena go into a 45 degree angle like in the Fire Sea, now THAT would 
+have made it a LOT harder. But, he doesn't, so the rest is easy. 
+
+When he fades, he warns you that he will come back for more in the 
+future, and then leaves behind the Big Star. Collect this to see the 
+three-minute ending, which quite frankly, I liked. What's so bad about 
+the cake? There's plenty of other stuff going on before that. Whatever 
+you do, don't think the game is truly over. The sections ahead will show 
+you why that would be a horrendous mistake on your part...
+
+-------------------------------
+6) Castle Stars 
+-------------------------------
+
+  
+PRINCESS TOADSTOOL'S SECRET SLIDE:
+
+On the first floor, go up the stairs, then turn left. Enter the window 
+on the right. Now just race down the slide, at the end is a box with a 
+Star in it.
+
+PRINCESS TOADSTOOL'S SECRET SLIDE...AGAIN!
+
+Beat the time of 21 seconds to get a second star! The best way is to 
+take a shortcut. As you come out of the tunnel at the start, you will 
+come to a straight down fall. Well, jump off to the left and land on the 
+track below! It will shave precious seconds off your final time. To 
+avoid being murdered when you hit the ground, press Z before you hit. It 
+is also possible to get under 21 seconds without this shortcut.
+
+SECRET AQUARIUM:
+
+Before entering Jolly Roger Bay, enter the hole in the wall on the 
+right. Retrieve all eight coins (which is really easy) to get a Star!
+
+TOAD SURE IS NICE:
+
+Near the entrance of Haze Maze Cave is Toad. Talk to him and he'll give 
+you a Star!
+
+MIPS:
+
+Upon entering the basement you will find a rabbit running around...catch 
+him and he'll give you a Star! The best way is to slide at him when he's 
+turning a corner. Otherwise it's nearly impossible!
+THAT WASCALLY WABBIT:
+
+After collecting 50 Stars, MIPS the rabbit will re-appear. Well, what do 
+you think you should do now? =) He's no harder than last time.
+
+TOAD YET AGAIN:
+
+Right by the stairs that lead to the final floor is the mushroom 
+retainer, Toad, and he has a little surprise!
+
+TOAD, IT IS NOT FUNNY ANYMORE:
+
+Right by the entrance to the Clock Level is you-know-who with a you-
+know-what.
+
+WING MARIO OVER THE CLOUD:
+
+In the room with clocks is a special hole that leads to this pre-mature 
+balding level...The level is so difficult because you have to...ah, 
+forget it! Here's recessions to complete it 
+
+Coin 1: 
+On the first platform. Now, use the Wing Cap and fly on the LEFT rainbow 
+to find...
+
+Coin 2: 
+Now you got that, fly past the pink platform to find an island with...
+
+Coin 3: 
+Great! Using the Wing Cap, obviously, fly to the pink platform and go up 
+the pole to find...
+
+Coin 4: 
+Hooray! Talk to the Pink Bomb and he'll open the canon, get a Wing Cap, 
+hop inside and aim directly at the sun, you will go flying to another 
+island with a canon. Inside, aim at the distant cloud with poles 
+underneath, aim high though, and on it you'll find...
+
+Coin 5...
+
+Coin 6: 
+Way out on the horizon is a clear blue cloud with a Red Coin smack in 
+the middle of it...ouch. It will take a lot of passes to get this one, 
+which makes matters worse as it is quite far out there! Once you do get 
+it
+
+Coin 7: 
+Only one more left! Pretend like you were going to get #'s 5 & 6, but 
+instead, grab onto the poles underneath the cloud. Slide down to find...
+
+Coin 8: 
+WHOOHOOIE! Now use the Wing Cap to go the Star, conveniently located on 
+the starting cloud.
+
+
+The Bowser Courses are included in the walkthrough, and there's a 
+special section for the Cap Courses, so the above is the rest of the 
+Castle Stars!
+
+
+--------------------------------
+7) Locations of 1-ups
+--------------------------------
+
+I made this because I am bored, no one has ever done it before, and I am 
+bored. I'm bored, also. :)
+
+CASTLE GROUNDS: 
+
+# 1 - Everybody knows about the one where you shinny up the tree and 
+jump off, it's near the waterfall. 
+
+# 2 - Under the bridge that leads to the castle, underneath are two 
+coins, collect them by using the wall jump and it will appear.
+
+# 3 and # 5 - There are three 1-ups on the castle roof, once you have 
+120 Stars you can activate the cannon and shoot yourself up there. 
+
+# 6 and # 105 - For those people who really like to be technical, Yoshi 
+will give you 100 1-ups.
+
+CASTLE: 
+ 
+# 1 - In the room with the Jolly Roger Bay painting, there are two black 
+holes, one leads to a bonus level, the other has a 1-up.
+
+BOB-OMB BATTLEFIELD: 
+
+# 1 - There is a cannon underneath the island in the sky, and next to it 
+is a tree. Climb to the top to claim your prize.
+
+# 2 - Near the main entrance to the mountain, there is a meadow of 
+flowers surrounded by coins, walk inside of it and it will appear.
+
+# 3 - This one is sitting under the bridge to the mountain, where the 
+purple "!" switch is.
+
+WHOMP'S FORTRESS: 
+
+# 1 - Near the top is a very high pole with a sign next to it, climb up 
+to the top and this one is yours.
+
+# 2 - Get on the wooden bridge, and get on the tip so you collect the 
+red coin, you will also activate a 1-up! It is very difficult to catch, 
+however, because it keeps trying to go up the tilted path.
+
+# 3 - Very, very few people know about this one. Go to the very top when 
+the tower is there, and punch at each section while on the same level as 
+the Bullet Bill. Eventually, you will hit the secret aclove, it will 
+explode, and this top-secret 1-up is yours.
+
+JOLLY ROGER BAY: 
+ 
+# 1 - On top of the big pillars that stick out of the water is one, but 
+you'll need to have a good aim from the cannon near the start of the 
+level to reach it.
+
+# 2 - At the mouth of the underwater cave, there is a ring of coins, if 
+you swim through the center it will appear in front of you.
+
+COOL, COOL MOUNTAIN:
+
+# 1 - Go into the cabin, where the big slope race is, and you'll have to 
+take the shortcut. If you don't know what that is, it's the turn where 
+five coins go into the wall, you can go through that wall. When you go 
+through a 1-up appears.
+
+# 2 - After taking the shortcut, you will spill out onto the ledge above 
+the exit, but don't fall off! Instead, follow the ledge to find a "!" 
+box with a 1-up inside.
+
+# 3 - If you take the long trail down the mountain by sliding, you will 
+come to the area with the snowman head. There is a lower area in front 
+of him, so go down there and head away from, the bridge with the hopping 
+snowman. There's the "!" box...
+
+# 4 - In the same general area is a cannon, use it to shoot the ledge 
+above the snowman head –- it has a thick block of ice, a red coin, and 
+an "!" box. Guess what's inside?
+
+# 5 - Directly in front of the snowman is a tree, climb up and it will 
+pop out like all the others.
+
+BOWSER IN THE DARK WORLD: 
+ 
+# 1 - After avoiding several flame-throwers and getting over a platform, 
+you will find a "!" box guarded by several Goombas.
+
+# 2 - After a pair of platforms that go circles around each other is an 
+area with teeter-totters. Before braving them, go backwards to find a 
+skinny bridge which leads to a platform with an Ampz and an "!" box. You 
+know what to do.
+
+# 3 - The platforms across from the teeter-totters hide one, they are in 
+plain sight.
+
+# 4 - Here's another.
+
+# 5 - Climb on top of the platforms that cover the teeter-totters and 
+you will be pleasantly surprised.
+
+# 6 - Make that surprised twice! 
+ 
+PRINCESS' SECRET SLIDE: 
+ 
+# 1 - When you're going down, it will just be sliding along. 
+
+# 2 - This only appears if you go really fast and slam into the wall 
+behind the "!" box that holds the main Star.
+
+THE SECRET AQUARIUM: 
+ 
+# 1 - As you start out, swim straight down, into the center of the ring 
+of coins that is over the block where the Star appears after you collect 
+eight red coins. What a mouthful!
+
+BIG BOO'S HAUNT: 
+ 
+# 1 - This one is near impossible to get, it is on the top of the shed 
+next to where you start. The only way to get it is to somehow maneuver 
+the Crazed Crate so it goes up there. I've done it once out of one 
+hundred times. 
+
+# 2 - On the roof of the mansion, where you fight Big Boo for the last 
+time and are heading towards the Star, there is a "!" box. Easy.
+
+HAZY MAZE CAVE: 
+
+# 1 - Near the elevator that takes you down to the underground lake is a 
+"!" box. I wonder what's inside...
+
+# 2 - Find your way to the top floor of the room where the rocks spill 
+into the hole, and get a hold of the grating above. There's a fork, you 
+go left to a "!" box, or right, for a Star. Take the box, of course! 
+ 
+LETHAL LAVA LAND: 
+ 
+# 1 - Pick Star five or six so you can get the Shiny Shell from the "!" 
+box. Go under the bridge that separates every once and awhile and you 
+will see a large platform with a 1-up on it.
+
+# 2 - This one is only a few feet from # 1, and is also on a platform.
+
+# 3 - Also on a platform, this one is in the corner of the level, 
+nearest the Bowser Puzzle/Big Bully platform.
+
+# 4 - Get on the platform that is circling the volcano in the center of 
+the level, there is a 1-up on the flamethrower.
+
+# 5 - Near the platform where you kill a bunch of Bullies to make a Big 
+Bully appear, there is a platform nearby, the Shiny Shell makes it easy 
+to get up there.
+
+# 6 - When inside the volcano, at the very top you will have to get on a 
+bunch of poles...well, you'll activate one automatically.
+
+# 7 - When on the Shiny Shell, go behind the platform where the Star 
+appears when you beat the Big Bully for the first time. There it is.
+
+SHIFTING SAND LAND: 
+ 
+# 1 - By the watery oasis on the far side of the level is a palm tree. 
+Climb up! 
+
+# 2 - Near the entrance to the pyramid entrance is a "!" box. Jeez, I 
+wonder what's in there.
+
+# 3 - Near the big stone structure with many wooden blocks, there is a 
+quick-sand pit with a 1-up floating over it. To get it, take a big 
+longjump. 
+
+# 4 - There is a pair of quicksand pits outside of the gate that 
+separates you from the pyramid, the 1-up is sitting there. Brave the 
+pits! 
+ 
+# 5 - Once inside the pyramid, turn left and avoid the Mummy Thwomp, and 
+hit the "!" box.
+
+# 6 - After number five, climb onto the Mummy Thwomp and you can easily 
+get the 1-up near the ceiling.
+
+# 7 - Turn right at the start of the pyramid, avoid the Mummy Thwomp and 
+continue. There are several tiles out in the sand, if you touch them all 
+a 1-up will start to run away from you. You better catch it quick, 
+because it's going straight towards the quick-sand!
+
+# 8 - After going past the tiles, you can either go up some stairs or 
+continue, just continue, you hit a dead-end with a "!" box. 
+
+# 9 - The last 1-up in the level is on the top of the grating inside of 
+the pyramid, where you collect a few coins while avoiding an Ampz. To 
+get up there you need to use the warp. I've already mentioned it, but 
+what the Hell, here it is again: from the start of the pyramid, turn 
+right, climb onto the Mummy Thwomp, and ride it up. Go towards the pole 
+with the Goombas and climb up. Now, it is in the corner, just stand 
+there and off you go!
+
+DIRE, DIRE DOCKS: 
+
+# 1 - At the very first area, it's in a clam. When you swim into the 
+clam, it magically appears.
+
+BOWSER IN THE FIRE SEA: 
+ 
+# 1 - You will find this one near the very start, when you are riding 
+the blue platform.
+
+# 2 - This one follows shortly after the last, it is so painfully 
+obvious.
+
+# 3 - Once get this automatically when you get to the top of the pole 
+that is inside the multicolored cage.
+
+# 4 - In the area with the rising/lowering blocks, this one is inside a 
+"!" block. 
+
+# 5 - You know where the Star appears if you get all eight Red Coins, 
+don't you? Well, across from that is a "!" block.                                                                                                                                                                                                                   
+
+METAL CAP COURSE: 
+
+# 1 - Once you find the river, turn right and you can break open the "!" 
+block. If you don't have the Metal Cap on, though, you will be swept 
+away.
+
+# 2 - This one is near two Red Coins. Very obvious.
+
+VANISH CAP COURSE: 
+ 
+# 1 - This one is in a "!" box as you go down the slope.
+
+# 2 - This one sits alone on a ledge, also on the slope.
+
+# 3 - Same as above, except just a bit further down.
+
+# 4 - Near the area where the Star appears when you get all eight Red 
+Coins.
+
+SNOWMAN'S LAND 
+ 
+# 1 - On top of the snowman's head is a tree. Get up there, ya dunce!
+
+# 2 - There should be a "!" block next to the area after the Ice Bully. 
+For reference, a Money Bag is also nearby.
+
+# 3 - Near the Pink Bob-omb Buddy in the Igloo Maze are two "!" blocks. 
+Guess what's in one...
+
+# 4 - This is also in the Igloo Maze, it's frozen solid in a block of 
+ice. You'll need to use the nearby Vanishing Cap if you want to get 
+it...
+
+WET-DRY WORLD: 
+
+# 1 - Go to the very top of the first section, the "!" box at the top, 
+and you will see a hollow tube floating in mid-air. There are two 1-ups 
+in there. One...
+
+# 2 - ...two...
+
+# 3 - In the town, drain the water, and go to the center area and notice 
+the ring of coins around the cement thing. Well, collect them all and 
+this will pop out.
+
+# 4 - On the same side of the 'down-town' with the crystal switch that 
+lowers the water, but on the opposite end, is a "!" box surrounded by 
+two trees...
+
+TALL, TALL MOUNTAIN: 
+
+# 1 - Once you start the level off, run behind you to find a 1-up on a 
+very thin ledge. 
+
+# 2 - In the 'Shroom ahead where you collect four Red Coins, there is a 
+"!" box.
+
+# 3 - Above the area with Monty Moles, there are several platforms. Keep 
+climbing up and you will see this green mushroom, just sitting there.
+
+# 4 - When attempting to long-jump over the large gap before Fwoosh, you 
+will pass a 1-up. You know, the waterfall, Fwoosh being the big 
+cloud...yeah, that jogged your memory.
+
+# 5 - When you get into the secret hill race, before taking the plunge 
+down the hill, turn right to find a 1-up right after the exit.
+
+# 6 - There is another one on the course itself.
+
+# 7 - And another...
+
+TINY-HUGE ISLAND: 
+ 
+# 1 - Enter the level as big Mario and head left, you will find a "!" 
+box on a platform in the water.
+
+# 2 - This time it's small Mario! This one is out in the water, right 
+underneath the area with the Giant Piranha plants. Just watch out for 
+Bubba, or he'll eat you before you even know what's happening.
+
+# 3 - Small Mario. On the beach with the Koopa-Troop, there are two 
+coins, if you collect them both this one will appear.
+
+# 4 - Small Mario. In the grassy area before the wooden bridge that 
+leads to Wiggler's Basement, there is a tree, so go up it!
+
+# 5 - Small Mario. When you use the wind to lift yourself up and float 
+to another platform, you will see a "!" box right out in the open.
+
+# 6 - In Wiggler's Basement, this is near the far corner of where you 
+enter, and it will take some fancy jumping to get to it.
+
+TICK-TOCK CLOCK: 
+
+# 1 - At once point you have to shinny up a pole to go onward. Once you 
+reach the peak, it is yours.
+
+# 2 - When going to the top, you will see a long row of flippers slowly 
+rotating, and they are "guarding" a "!" box. It's probably easier to get 
+there if you fall from above, or stop the clock altogether.
+
+# 3 - Once you reach the very, very top, there will be two "!" boxes, 
+one has a 1-up.
+
+RAINBOW RIDE: 
+ 
+# 1 - From the start, turn around and long-jump to the pole behind you. 
+Go to the main floating platforms, except go to the bottom area, a lone 
+"!" box awaits. 
+
+# 2 - After that, continue going over obstacles until you reach the area 
+where you hit the "!" switch to make the pyramids flip over. Once you do 
+that, it will be on an out-of-the-way pyramid.
+
+# 3 - This mushroom is in a "!" box, sitting on the very top of the 2D 
+maze. The only way to get up there is either a huge long-jump from the 
+house in the sky, to fall down from the second blue cube on the trip to 
+the flying ship, or to just use the warp. The warp is in the house in 
+the sky, sorta. When you ride a carpet into it for the first time, it 
+will go past a fireplace, then come out and go back outside again. Drop 
+off here, on the little ledge, and stand in different places until it 
+clocks.
+
+# 4 - On the roof of the house in the sky, in a "!" box. 
+
+# 5 - On the floating ship, at the very front, where the stick thing 
+points out. I know there is a proper term for this stick, but I'm not 
+much into sailor jargon.
+
+# 6 - Also on the floating ship, this one is in the crow's nest (I knew 
+that one!).
+
+# 7 - Use the magic carpet, and when you have a choice of two, try the 
+right one. On the second blue cube, you will see some donut platforms 
+behind you...well, look at that! 
+
+# 8 - On the way to the floating ship, there will be a large, spinning 
+platform that will shoot blue fire at you. This mushroom is on the tip.
+
+SECRET SKY COURSE: 
+ 
+# 1 - On the platform with the Pink Bob-Omb Buddy is a pole, try going 
+up it.
+
+# 2 - There is a blue cloud with a Red Coin in it. On the opposite side 
+of the level is the exact same set-up, except the Red Coin is replaced 
+with a 1-up Mushroom.
+
+# 3 - On top of the cloud with the poles underneath it is a "!" 
+box...guess what's inside? No, come on, go on, take a wild guess...
+
+BOWSER IN THE SKY: 
+ 
+# 1 - On the spinning platform with an Ampz, near the beginning, is a 
+"!" box. 
+
+# 2 - Shortly after that you will come onto a mini-ferris wheel type 
+platform. Position yourself correctly and jump at the 'Shroom!
+
+# 3 - After getting number two, fall down to the lower area, then head 
+right to get back on the main path. When climbing the platforms, you can 
+get another 1-up behind a small pillar (right before the teeter-totter).
+
+# 4 - When traveling on the white and red platform, this 1-up will be 
+sitting on one of the platforms.
+
+# 5 - After the above situation you will be at a spinning platform with 
+two Ampz, and three coins are at the perimeter of the platform. If you 
+collect them all, a 1-up will materialize.
+
+# 6 - The last 1-up mushroom in the game is hidden rather nicely, in a 
+good situation. Get near the pipe that leads to the final Bowser, turn 
+around, and look at the area before it, you will see this one in front 
+of a pillar. I call this a "good situation" because if Bowser pummels 
+you into the ground, you can grab this little thing and never run out of 
+lives! Quite useful for you're first time.
+
+Whoo, that took a very long time to amass, I hope someone uses it in 
+some way. If you noticed any I missed, feel free to send it in to me.
+
+-----------------------
+8) Weird Things/Secrets
+-----------------------
+
+Yoshi:
+
+Remember being puzzled by the locked up canon in the front yard of the 
+castle? Well, collect 120 Stars (every Star in the entire game...no easy 
+feat!) and come back; it's unlocked! Fire yourself up to the roof of the 
+castle to find Yoshi, which will give you 100 (!) lives and a special 
+Triple Jump which will make you invincible for a short time. Too bad you 
+can't ride him =(
+
+Fat Penguins:
+
+Return to the racing Penguin after collecting 120 Stars and it appears 
+that he has...er...gained 500 pounds or so. This will make the race MUCH 
+more difficult, as he blocks your path and he's a lot faster. You won't 
+get anything for beating him, but it's fun!
+
+Magical Butterflies:
+
+Butterflies aren't there just for effect! If you can punch one directly, 
+it'll turn into a 1-up!
+
+Bowser Go Bye Bye:
+
+Beat Bowser in the Sky after collecting 120 Stars and he'll say a bit 
+more. It's not much, but it's neat.
+
+Strange:
+
+Get Bowser close to the side so his tail is sticking off the edge; if 
+you can grab it this way you will fall off the level with BOWSER IN YOUR 
+HANDS! Very cool looking, but hard to do.
+
+Major Glitch:
+
+Get the Wing Cap outside and then fly into the tower; you'll go into a 
+major glitch where you'll be inside the castle while outside, and inside 
+while outside. Confused? It is confusing! =)
+
+Clock Secrets:
+
+Before you enter Course 14, you will notice that the hands of the clock 
+move. The minute hand is what affects the way things move. Any hour on 
+the hour (minute hand on 12) the clock is stopped. Any hour at the half 
+hour (minute hand on 6) the clock stop/starts a lot and is screwy. Any 
+hour quarter after (minute hand on 3) the clock is slow. And any hour
+quarter till (minute hand on 9) the clock is pretty fast.
+
+Controlling the Ending:
+
+Plug a 2nd controller in the 2nd controller port and you can control the 
+ending camera!
+
+Shortcut:
+
+When racing the penguin, follow the coin line straight into the wall to 
+find a secret passage with three 1-ups! Too bad you can't use this 
+against the Penguin (he'll say you cheated and not give you the Star!)
+
+Nice Stick:
+
+Run around a post (like the one Chain Chomp is connected to) and five 
+coins will pop out!
+
+Bridge is a Grate:
+
+In the first course, at the first bridge, go under it and jump...you'll 
+hang on just like you would some grating!
+
+Running out of Names:
+
+On the Bowser's Sub course, collect 100 coins. Make sure the last coin 
+you collect is a red coin in the air among the ropes and not on a 
+platform. When the star appears catch it and you will find Mario 
+standing on the bottom of the lake! And just before you are exiting the 
+course Mario will pop up to the water surface!
+
+No Cap:
+
+When Mario does not have his cap, he takes twice the amount of damage!
+
+Bowser Can Not Die:
+
+On the first Bowser course, you can jump into the bombs, therefore 
+destroying them. If you blow them all up, it's impossible to destroy 
+Bowser unless you die and try again!
+
+
+
+-------------------------------
+9) Fun Things To Do
+-------------------------------
+
+On the first course, try playing around with Chain Chomp. Can you run 
+around his post to make five coins appear without getting hit?  
+ 
+Get on the island in the sky, get in the cannon with the Wing Cap, and 
+aim straight up. Then do a butt-stomp over a canyon. Look how far in the 
+sky you are! 
+ 
+When fighting the King Bob-omb, try throwing him off the mountain. He 
+will jump back up and tell you it's against the rules.
+
+In Jolly Roger Bay, do you know how much fun you can have by playing 
+around with Unagi? Since he hurts a lot, it always fun to get near to 
+see how daring you can be.
+
+Get in the underground cavern and get really low on health, then go into 
+the water and see if you can make it to the surface alive. 
+
+In Cool, Cool Mountain, when you give the mother penguin her penguin, 
+and she gives you a Star, try taking her baby back. Look what she does! 
+ 
+In Hazy Maze Cave, go to the Toxic Maze and get really low on health, 
+then see if you can get to the opposite side without using a Metal Cap! 
+
+In Shifting Sand Land, see if you can bop Klepto the Condor in mid-air 
+by using the cannon in the Tox-Box Maze, with you equipped as Wing Cap 
+Mario. Very fun! 
+
+In Tiny Huge Island, become small, and see how long you can swim around 
+Bubba aka Macho Cheep Cheep without dying. This is really fun because he 
+can kill you in one shot! 
+ 
+Also in Tiny Huge Island, see if you can collect all 178 coins. If you 
+can, pat yourself on the back.
+
+Fight the final Bowser and have tons of fun.
+
+
+-------------------------------
+10) Coin List
+-------------------------------
+
+This is reserved for future use by me. If I feel very bored in the 
+future, I will rush right back and complete this section. If I do not 
+become bored in the future, this will be empty forever, and I will look 
+like a jackass. I mean, more than normally :)
+
+-------------------------------
+11) Credits
+-------------------------------
+
+Companies
+= = = = = = = = = 
+
+Nintendo: 
+They produced and developed it. Duh.
+
+Internet Sites
+= = = = = = = = =
+
+Gamefaqs <www.gamefaqs.com>: As you should know, all 30+ of my FAQs are 
+there, and it is the best place on the Internet if you want to find 
+walkthroughs and FAQs. 
+
+Gamesages <www.gamesages.com>: Nice codes...
+
+------------------------
+12) Legal Stuff
+------------------------
+
+You may freely distribute this FAQ as long as the following terms are 
+met: 
+ 
+1) The version you are taking is from gamefaqs.com
+2) You give me credit
+3) It is shown in it's full version
+4) This fine print is included
+5) It will not be used to gain a profit by ways of selling or bartering
+6) You update it as I update it. I can not be bothered to send everyone 
+the newest version, it would simply take WAY too long. And besides, I'm 
+too busy (i.e. lazy). 
+
+You may put it into HTML if you wish, but the above conditions must be 
+met. It can be "broken into pieces" when in HTML as long as the text 
+remains untampered, unaltered, unpirated, and just plain left alone 
+(except for color stuff, bold, links, or whatever, but that's not 
+changing the meaning). 
+
+This document is copyrighted (c) 1999 marshmallow 
+All Rights Reserved
+
+--------------
+12) End
+--------------
+
+If you actually used this guide in ANY WAY AT ALL please tell me! It'd 
+be...interesting.
+
+Bye...No corrections, no typos...I am perfect! Foolish 
+mortals...Bwahaha. I need sleep desperately. G'night!
+
+                           - marshmallow -

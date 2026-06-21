@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>SM64 AI Player</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <div id="app">
+
+        <!-- Loading screen -->
+        <div id="loading-screen">
+            <div id="loading-inner">
+                <div id="loading-logo">🍄</div>
+                <h1 id="loading-title">SM64 AI Player</h1>
+                <div id="loading-bar-wrap"><div id="loading-bar"></div></div>
+                <p id="loading-msg">Loading game engine…</p>
+            </div>
+        </div>
+
+        <!-- Honesty warning (shown every load) -->
+        <div id="suck-warning">
+            <span class="suck-icon">⚠️</span>
+            <span class="suck-text">Warning: Current AI models absolutely <strong>SUCK</strong> at playing Mario</span>
+            <button id="suck-warning-close" aria-label="Dismiss">✕</button>
+        </div>
+
+        <!-- Game canvas -->
+        <canvas id="canvas" tabindex="0" aria-label="Super Mario 64 canvas"></canvas>
+
+        <!-- ── Top HUD bar ─────────────────────────────── -->
+        <div id="hud-bar">
+            <!-- Left: audio + speed + help + disconnect -->
+            <div id="hud-left">
+                <button id="mute-btn" title="Mute game audio">🔊</button>
+                <div class="hud-divider"></div>
+                <label class="hud-label">Speed
+                    <input type="range" id="speed-slider" min="0.5" max="3" step="0.5" value="1">
+                    <span id="speed-label">1×</span>
+                </label>
+                <div class="hud-divider"></div>
+                <button id="controls-toggle-btn" class="hud-icon-btn" title="Controls guide">🎮</button>
+                <button id="help-btn"            class="hud-icon-btn" title="Tutorial / Help">❓</button>
+                <button id="streamer-toggle-btn" class="hud-icon-btn" title="Streamer mode (Shift+S)">🎥</button>
+                <button id="energy-config-btn"   class="hud-icon-btn" title="AI energy bar settings">⚡</button>
+                <button id="turbo-btn"           class="hud-icon-btn" title="Consistent rapid fire / turbo">⚡⚡</button>
+                <button id="preplan-btn"         class="hud-icon-btn" title="Pre-plan mode (AI writes a multi-step script)">🧠</button>
+                <button id="agent-only-btn"      class="hud-icon-btn" title="Agent-Only mode: disable manual control + enable the instruction box">🤖</button>
+                <button id="disconnect-btn"      class="hud-icon-btn danger" title="Disconnect account" style="display:none">🔌</button>
+            </div>
+
+            <!-- Centre: model picker + paid toggle -->
+            <div id="hud-centre">
+                <span class="hud-label">Model</span>
+                <div id="model-select-wrap">
+                    <select id="model-select" title="AI vision model to use">
+                        <option value="">Loading models…</option>
+                    </select>
+                    <span id="model-status" title=""></span>
+                </div>
+                <label class="hud-toggle" title="Show paid-only models">
+                    <input type="checkbox" id="show-paid-toggle">
+                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    <span class="hud-label">Paid</span>
+                </label>
+                <div class="hud-divider"></div>
+                <button id="provider-btn" class="hud-icon-btn" title="API provider settings">⚙ API</button>
+                <span id="pollen-chip" class="hud-chip" title="Your Pollinations pollen balance" style="display:none"></span>
+            </div>
+
+            <!-- Right: AI action buttons -->
+            <div id="hud-right">
+                <button id="pregame-notes-btn" class="hud-btn cyan"   title="AI studies the SM64 guide">📚 Study</button>
+                <button id="view-memory-btn"   class="hud-btn purple" title="View AI memory & notes">🧠 Memory</button>
+                <button id="ai-buddy-btn"      class="hud-btn orange">🧡 Buddy</button>
+                <button id="ai-player-btn"     class="hud-btn green">🤖 AI Play</button>
+            </div>
+        </div>
+
+        <!-- AI status ticker -->
+        <div id="ai-status"></div>
+
+        <!-- AI state badges (camera2d / outside castle / location) -->
+        <div id="ai-state-badges" aria-label="AI detected state" style="display:none">
+            <span class="ai-badge" id="badge-location" title="AI-detected location">📍 —</span>
+            <span class="ai-badge" id="badge-camera2d" title="2D / front-facing camera">🎥 2D</span>
+            <span class="ai-badge" id="badge-outside" title="Outside castle — long travel mode">🏰 Outside</span>
+        </div>
+
+        <!-- Live game memory HUD chip (shown once WASM base is found) -->
+        <div id="memory-hud-chip" title="Live game state from WASM memory" style="display:none"></div>
+
+        <!-- Controls guide panel (toggleable, anchored bottom-left) -->
+        <div id="controls-panel"></div>
+
+        <!-- Buddy coach panel -->
+        <div id="buddy-panel">
+            <div id="buddy-text">👋 Hey! I'm watching your gameplay!</div>
+        </div>
+
+        <!-- Instruction input -->
+        <div id="instruction-panel">
+            <input type="text" id="ai-instruction" placeholder="Tell AI what to do… (e.g. go find a star)">
+            <button id="send-instruction">Send</button>
+        </div>
+
+        <!-- Memory modal -->
+        <div id="memory-panel" role="dialog" aria-modal="true" aria-label="AI Memory">
+            <h3>🧠 AI Memory &amp; Notes</h3>
+            <div id="memory-content"></div>
+            <button id="close-memory-btn">Close</button>
+        </div>
+        <div id="memory-backdrop" class="modal-backdrop"></div>
+
+        <!-- Provider / API settings modal -->
+        <div id="provider-modal" role="dialog" aria-modal="true" aria-label="API Provider Settings">
+            <div id="provider-panel-wrap">
+                <button id="close-provider-btn" class="modal-close-btn" aria-label="Close">✕</button>
+                <h3>⚙ API Provider Settings</h3>
+                <p class="provider-desc">Choose which AI service powers the player and buddy coach. Only vision-capable providers are supported.</p>
+                <div id="provider-panel"></div>
+            </div>
+        </div>
+        <div id="provider-backdrop" class="modal-backdrop"></div>
+
+        <!-- Tutorial modal -->
+        <div id="tutorial-modal" role="dialog" aria-modal="true" aria-label="Tutorial">
+            <div id="tutorial-panel">
+                <button id="tutorial-close-btn" aria-label="Close tutorial">✕</button>
+                <div id="tutorial-progress"></div>
+                <div id="tutorial-icon"></div>
+                <h2 id="tutorial-title"></h2>
+                <p id="tutorial-body"></p>
+                <div id="tutorial-nav">
+                    <button id="tutorial-prev-btn">← Back</button>
+                    <button id="tutorial-next-btn">Next →</button>
+                </div>
+                <div id="tutorial-audio-indicator" title="Narration playing">🔊</div>
+            </div>
+        </div>
+        <div id="tutorial-backdrop" class="modal-backdrop"></div>
+
+        <!-- Rapid-fire indicator (shown when AI is in rapid-fire mode) -->
+        <div id="rapid-fire-indicator" aria-live="assertive">
+            <span class="rf-bolt">⚡</span>
+            <span class="rf-label">RAPID FIRE</span>
+            <span class="rf-turns">0/30</span>
+            <button id="rf-exit-btn" title="Exit rapid fire mode">Exit</button>
+        </div>
+
+        <!-- Energy bar config -->
+        <div id="energy-modal" role="dialog" aria-modal="true" aria-label="AI Energy Settings">
+            <div id="energy-panel">
+                <button id="energy-close-btn" class="modal-close-btn" aria-label="Close">✕</button>
+                <h3>⚡ AI Energy Bar</h3>
+                <p class="provider-desc">The energy bar shows how much AI power (pollen) is left. Auto mode uses your balance at page load as "full". Set it manually if you've budgeted a fixed amount.</p>
+                <label class="energy-field">
+                    <span>Show amounts as</span>
+                    <select id="energy-unit">
+                        <option value="usd">💵 Dollars ($)</option>
+                        <option value="poll">🌸 Pollen</option>
+                        <option value="cu">⚙️ Compute Units</option>
+                    </select>
+                </label>
+                <label class="energy-field">
+                    <input type="checkbox" id="energy-auto">
+                    <span>Auto — use balance at page load as full</span>
+                </label>
+                <label class="energy-field">
+                    <span>Full (max pollen)</span>
+                    <input type="number" id="energy-max" step="0.01" min="0" placeholder="e.g. 10">
+                </label>
+                <label class="energy-field">
+                    <span>Empty (min pollen)</span>
+                    <input type="number" id="energy-min" step="0.01" min="0" value="0">
+                </label>
+                <div class="energy-btn-row">
+                    <button id="energy-reset-btn" class="hud-btn">↺ Re-baseline to now</button>
+                    <button id="energy-save-btn"  class="hud-btn green">✓ Save</button>
+                </div>
+            </div>
+        </div>
+        <div id="energy-backdrop" class="modal-backdrop"></div>
+
+        <!-- Turbo / consistent rapid-fire settings -->
+        <div id="turbo-modal" role="dialog" aria-modal="true" aria-label="Turbo Settings">
+            <div id="turbo-panel">
+                <button id="turbo-close-btn" class="modal-close-btn" aria-label="Close">✕</button>
+                <h3>⚡⚡ Consistent Rapid Fire</h3>
+                <p class="turbo-warn">⚠ This makes the AI think &amp; act as fast as it possibly can. It will <strong>burn pollen very quickly</strong>, and while it's ON the AI <strong>cannot turn it off itself</strong>. Only you can.</p>
+                <label class="energy-field turbo-master-field">
+                    <input type="checkbox" id="turbo-master">
+                    <span><strong>Enable consistent rapid fire</strong></span>
+                </label>
+                <div class="turbo-subs">
+                    <label class="energy-field">
+                        <input type="checkbox" id="turbo-multi">
+                        <span>🔀 Multi-request gameplay <em>(experimental)</em><br><small>One action per think, re-thinks constantly so it can correct mid-move</small></span>
+                    </label>
+                    <label class="energy-field">
+                        <input type="checkbox" id="turbo-live">
+                        <span>📺 Constant frame updates (live view)<br><small>The "what the AI sees" panel updates live; the AI always grabs the freshest frame at request time</small></span>
+                    </label>
+                    <label class="energy-field">
+                        <input type="checkbox" id="turbo-advanced">
+                        <span>🚀 Advanced — Max Overdrive<br><small>No frame-skip, no cooldowns, smallest action windows — fastest &amp; most expensive</small></span>
+                    </label>
+                </div>
+                <div class="energy-btn-row">
+                    <button id="turbo-save-btn" class="hud-btn green">✓ Save</button>
+                </div>
+            </div>
+        </div>
+        <div id="turbo-backdrop" class="modal-backdrop"></div>
+
+        <!-- Pre-plan (mini-TAS) modal -->
+        <div id="preplan-modal" role="dialog" aria-modal="true" aria-label="Pre-Plan Settings">
+            <div id="turbo-panel">
+                <button id="preplan-close-btn" class="modal-close-btn" aria-label="Close">✕</button>
+                <h3>🧠 Pre-Plan Mode</h3>
+                <p class="turbo-warn">Instead of one tiny move per turn, the AI studies the frame and writes a <strong>full multi-step script (a mini-TAS)</strong> that runs in a single turn. It auto-stops if you take control or the scene changes suddenly. The AI may also choose to pre-plan on its own when it sees a clear path.</p>
+                <label class="energy-field turbo-master-field">
+                    <input type="checkbox" id="preplan-master">
+                    <span><strong>Force pre-plan every turn</strong></span>
+                </label>
+                <div class="turbo-subs">
+                    <label class="energy-field" for="preplan-cap">
+                        <span>📏 Max steps per script<br><small>How many moves the AI may chain in one turn</small></span>
+                    </label>
+                    <select id="preplan-cap" class="provider-select">
+                        <option value="10">Soft cap — 10 steps</option>
+                        <option value="20">Soft cap — 20 steps</option>
+                        <option value="40">Soft cap — 40 steps</option>
+                        <option value="0">♾️ Unlimited (as many as the AI wants)</option>
+                    </select>
+                </div>
+                <div class="energy-btn-row">
+                    <button id="preplan-save-btn" class="hud-btn green">✓ Save</button>
+                </div>
+            </div>
+        </div>
+        <div id="preplan-backdrop" class="modal-backdrop"></div>
+
+        <!-- Auth overlay -->
+        <div id="auth-overlay">
+            <div id="auth-panel">
+                <div id="auth-logo">🍄</div>
+                <h2>SM64 AI Player</h2>
+                <p id="auth-desc">Watch an AI play Super Mario 64 in real time, get coached by your AI buddy, and give live instructions — powered by Pollinations AI.</p>
+                <button id="auth-btn">🔑 Connect Pollinations Account</button>
+                <div id="auth-status"></div>
+                <p id="auth-note">You'll be redirected to Pollinations to authorize. Your key is stored only in this browser.</p>
+                <div id="auth-alt-row">
+                    <button id="auth-tutorial-btn">❓ How does this work?</button>
+                </div>
+                <p id="auth-credit">
+                    Based on the original
+                    <a href="https://websim.com/@Tenslant/super-mario-64-web" target="_blank" rel="noopener">Super Mario 64 Web</a>
+                    by <strong>Tenslant</strong> on websim. AI player by Endoxidev/MetaMysteries8.
+                </p>
+            </div>
+        </div>
+
+        <!-- Persistent project credits (bottom-right, non-streamer mode) -->
+        <div id="origin-credits">
+            <span id="improved-credit" title="This Pollinations-powered build">SM64AI Improved</span>
+            <a id="origin-credit" href="https://websim.com/@Tenslant/super-mario-64-web" target="_blank" rel="noopener"
+               title="Original SM64 Web project by Tenslant on websim">SM64AI Original ↗</a>
+        </div>
+
+        <!-- ── Streamer mode: broadcast overlay + AI vision view ─────── -->
+        <div id="streamer-overlay">
+            <div id="so-statbar">
+                <div class="so-stat"><span class="so-ico">⭐</span><span id="so-stars">0</span></div>
+                <div class="so-stat"><span class="so-ico">🪙</span><span id="so-coins">0</span></div>
+                <div class="so-stat"><span class="so-ico">🍄</span><span id="so-lives">0</span></div>
+                <div class="so-health-wrap"><div id="so-health"></div></div>
+                <div class="so-stat so-level-stat"><span id="so-level">—</span></div>
+                <div id="so-ai-badge" class="so-badge">🎮 MANUAL</div>
+            </div>
+            <div id="so-meta">
+                <span id="so-action">—</span>
+                <span class="so-sep">·</span>
+                <span>speed <b id="so-speed">0</b></span>
+                <span class="so-sep">·</span>
+                <span id="so-pos">X 0   Y 0   Z 0</span>
+            </div>
+
+            <!-- What the AI actually sees (prev|current composite) -->
+            <div id="so-vision">
+                <div class="so-vision-title">👁️ WHAT THE AI SEES</div>
+                <img id="so-vision-img" alt="AI vision frame">
+                <div id="so-vision-ph">Waiting for the AI to look…</div>
+            </div>
+
+            <!-- AI energy bar + live usage log -->
+            <div id="so-energy">
+                <div class="so-energy-head">
+                    <span>Current Model: <span id="so-energy-model">—</span></span>
+                    <button id="so-energy-cfg-btn" title="Energy / unit settings">⚙</button>
+                </div>
+                <div class="so-energy-bar-wrap"><div id="so-energy-bar"></div></div>
+                <div class="so-energy-row"><span>Total AI Usage</span><span id="so-energy-total">—</span></div>
+                <div id="so-energy-log"></div>
+                <div class="so-energy-row strong"><span>AI Usage Left</span><span id="so-energy-left">—</span></div>
+            </div>
+
+            <!-- AI controls (usable while the rest of the chrome is hidden) -->
+            <div id="so-controls">
+                <button id="so-ai-btn"    class="so-ctrl green"  title="Start/stop the AI player">🤖 AI Play</button>
+                <button id="so-buddy-btn" class="so-ctrl orange" title="Start/stop the AI buddy coach">🧡 Buddy</button>
+                <button id="so-study-btn" class="so-ctrl cyan"   title="AI studies the SM64 guide">📚 Study</button>
+                <button id="so-memory-btn" class="so-ctrl purple" title="View AI memory & notes">🧠 Memory</button>
+                <button id="so-turbo-btn" class="so-ctrl" title="Consistent rapid fire (AI can't disable it)">⚡ Turbo</button>
+                <button id="so-preplan-btn" class="so-ctrl" title="Pre-plan mode (AI writes a multi-step script)">🧠 Pre-Plan</button>
+                <button id="so-agent-btn" class="so-ctrl" title="Agent-Only mode (no manual control; type to instruct)">🤖 Agent-Only</button>
+                <button id="so-mute-btn"  class="so-ctrl" title="Mute game audio">🔊</button>
+            </div>
+        </div>
+
+        <!-- AI thought stream (streamer mode, top-right): reasoning left, tool calls right -->
+        <div id="ai-chatlog">
+            <div id="ai-chatlog-head">🧠 AI THOUGHT STREAM</div>
+            <div id="ai-chatlog-body"></div>
+        </div>
+
+        <!-- Watermark — also the exit-streamer-mode button -->
+        <button id="streamer-watermark" title="Exit streamer mode">Made by Endoxidev/MetaMysteries8</button>
+
+    </div><!-- #app -->
+
+    <script>
+      window.Module = window.Module || {};
+      Module.canvas = document.getElementById('canvas');
+      Module.locateFile = (path) => (path.endsWith('.wasm') ? './sm64.wasm' : path);
+      Module.preRun  = Module.preRun  || [];
+      Module.postRun = Module.postRun || [];
+
+      Module.setStatus = function(text) {
+          const msg = document.getElementById('loading-msg');
+          const bar = document.getElementById('loading-bar');
+          if (!msg) return;
+          if (text) {
+              msg.textContent = text;
+              const m = text.match(/(\d+)\/(\d+)/);
+              if (m) bar.style.width = Math.round(parseInt(m[1]) / parseInt(m[2]) * 100) + '%';
+          } else {
+              const ls = document.getElementById('loading-screen');
+              if (ls) { ls.style.opacity = '0'; setTimeout(() => ls.remove(), 600); }
+          }
+      };
+      Module.print    = (t) => console.log(t);
+      Module.printErr = (t) => console.warn(t);
+    </script>
+    <script src="./sm64.js"></script>
+    <script type="module" src="./main.js"></script>
+</body>
+</html>
