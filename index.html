@@ -90,6 +90,12 @@
         <!-- AI status ticker -->
         <div id="ai-status"></div>
 
+        <!-- AI state badges (region / 2D camera) -->
+        <div id="ai-state-badges" aria-label="AI detected state" style="display:none">
+            <span class="ai-badge" id="badge-location" title="AI-detected region">📍 —</span>
+            <span class="ai-badge" id="badge-camera2d" title="2D / front-facing camera">🎥 2D</span>
+        </div>
+
         <!-- Live game memory HUD chip (shown once WASM base is found) -->
         <div id="memory-hud-chip" title="Live game state from WASM memory" style="display:none"></div>
 

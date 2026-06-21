@@ -1512,6 +1512,7 @@ let _queueRunning    = false;   // prevent overlapping queue runs
 // forgetting it already entered the castle / which area it's in.
 let _region   = 'unknown';      // outside-castle | castle-foyer | in-level:<name> | unknown
 let _regionAge = 0;             // turns spent in the current region
+let _camera2d  = false;         // true when AI detects a front-facing / 2D camera angle
 let _progressLog = [];          // milestones achieved, newest last ("entered castle", …)
 let _checklist = [];            // [{ text, done }] short-term to-do the AI manages
 let _brainmapEvents = [];       // visual timeline: [{ t, kind, text }]
@@ -1521,7 +1522,7 @@ function _resetBrainmap() {
     _sceneCutCount = 0;
     // When persistence is ON we KEEP the accumulated map across AI restarts/reloads.
     if (_persistBrainmap) { updateBrainmapViz?.(); return; }
-    _region = 'unknown'; _regionAge = 0; _progressLog = []; _checklist = []; _brainmapEvents = [];
+    _region = 'unknown'; _regionAge = 0; _camera2d = false; _progressLog = []; _checklist = []; _brainmapEvents = [];
     updateBrainmapViz?.();
 }
 function _bmEvent(kind, text) {
@@ -2665,6 +2666,28 @@ function updateAIStatus(message) {
     aiStatus.textContent   = message;
 }
 
+// Render small visible badges for AI-detected state so the user can verify
+// the region / camera2d / outside-castle logic is working.
+function updateAIStateBadges() {
+    const wrap = document.getElementById('ai-state-badges');
+    if (!wrap) return;
+
+    const locBadge = document.getElementById('badge-location');
+    const camBadge = document.getElementById('badge-camera2d');
+
+    if (_region && _region !== 'unknown') {
+        locBadge.textContent = `📍 ${_region.replace(/-/g, ' ')}`;
+        locBadge.classList.add('active');
+    } else {
+        locBadge.classList.remove('active');
+    }
+
+    camBadge.classList.toggle('active', _camera2d);
+
+    const any = (_region && _region !== 'unknown') || _camera2d;
+    wrap.style.display = any ? 'flex' : 'none';
+}
+
 // ────────────────────────────────────────────────────────────
 // 15. AI THINK  (with throttle + frame-skip)
 // ────────────────────────────────────────────────────────────
@@ -2824,6 +2847,9 @@ async function aiThink() {
             (_progressLog.length ? `- DONE SO FAR: ${_progressLog.slice(-8).join(' → ')}.\n` : '') +
             (_checklist.length ? `- CHECKLIST: ${_checklist.map(c => `${c.done ? '✅' : '⬜'} ${c.text || c}`).join(' | ')}.\n` : '') +
             `- Update "region" every turn from what you SEE. If you just walked through the castle's front doors, your region is now "castle-foyer" — you are INSIDE; do not turn around and leave.`;
+        const cameraCtx = _camera2d
+            ? '\n\nCAMERA PERSPECTIVE: The previous frame was detected as a 2D/front-facing or side-view camera. In this mode LEFT/RIGHT move Mario across the screen (hold them like forward travel); UP/DOWN move him toward/away from the camera and are usually NOT the way to progress. Do NOT "turn then go forward" in 2D mode.'
+            : '';
         // Calibration grounding (measured: what "forward" actually did on screen)
         const planCtx = _aiGoal
             ? `\n\nYOUR CURRENT PLAN (you set this ${_aiGoalAge} turn(s) ago — KEEP pursuing it unless the screen clearly shows it's done, impossible, or wrong): ${_aiGoal}`
@@ -2870,9 +2896,10 @@ TEST FOR CONTROL: if you're unsure whether it's a demo, the brainmap region is "
 At session start you are almost always on the TITLE or a DEMO, not in gameplay — get to FILE SELECT → gameplay first.
 
 WHERE AM I? — figure this out EVERY turn and put it in "region". You keep mixing these up:
-- OUTSIDE-CASTLE: you can see OPEN SKY, green grass, the moat/water, the stone BRIDGE, and the castle's exterior walls/towers ahead. Goal here: cross to the big front DOORS and go in. (Grass alone does NOT mean "near the entrance" — lots of places have grass.)
+- OUTSIDE-CASTLE: you can see OPEN SKY, green grass, the moat/water, the stone BRIDGE, and the castle's exterior walls/towers ahead. NO paintings on walls, NO Chain Chomp, NO cannons, NO mountain with a flag. Goal here: cross to the big front DOORS and go in. (Grass alone does NOT mean "near the entrance" — lots of places have grass.)
 - CASTLE-FOYER: you are INDOORS — an enclosed room, NO sky, stone/checkered floor, PAINTINGS hanging on the walls, staircases, warm indoor lighting. If you see this you ALREADY WENT INSIDE — do NOT walk back out the front door behind you. Goal: reach a painting and jump in.
-- IN-LEVEL: you're inside a course with its own theme (grassy hills+mountain = Bob-omb Battlefield, snow = Cool Cool Mountain, water = a water level, lava = a fire level…). Goal: head to the obvious objective (usually up/forward).
+- IN-LEVEL: you're inside a course with its own theme. Bob-omb Battlefield = open field with cannons, Chain Chomp, mountain with flag, NO castle entrance building. You can ONLY reach a level by going inside the castle and jumping into a painting — if you have not done that, you are NOT in-level.
+- ANTI-HALLUCINATION RULE: If you just started/loaded the game, you MUST be outside-castle. You cannot be in Bob-omb Battlefield without first entering the castle and jumping into the painting. If you see the castle building, bridge, or moat, you are outside-castle, NOT in-level.
 Use the BRAINMAP below: if it says you're castle-foyer, you're INSIDE even if part of the room looks open — don't go back outside.
 
 GAME OBJECTIVE (once you control Mario):
@@ -2920,6 +2947,12 @@ WATER — you get this BACKWARDS, so read carefully:
 - To GET OUT of water: hold ArrowDown (to aim UP) + tap jump repeatedly to rise to the surface, then swim toward the nearest shore and up onto land.
 - If Mario is clearly ON DRY LAND he is NOT swimming — just walk normally.
 
+2D / FRONT-FACING / SIDE-VIEW CAMERA (critical):
+- Sometimes the camera shows Mario's face (he is looking at you) or locks into a side-scrolling / 2D-like angle.
+- In that mode the world is FLATTENED: ArrowLeft and ArrowRight move Mario across the screen and are your MAIN way to travel. ArrowUp/Down move him toward/away from the camera (into/out of the screen), which is usually NOT the path forward.
+- When you see this, set "camera2d": true in your response and navigate horizontally — do NOT "turn then go forward".
+- In 2D mode hold ArrowLeft/ArrowRight for 1200–2500ms to travel, just like you hold ArrowUp in normal mode.
+
 DELAYED / SEQUENCED ACTIONS:
 - The AI can now execute actions with DELAYS between them. This is crucial for: waiting for moving platforms, timing jumps after a run-up, or adding breathing room between complex moves.
 - In JSON format: add "delay_before_ms": N to any action group. Example: [{"keys":["ArrowUp"],"hold_ms":2000},{"keys":["jump"],"hold_ms":250,"delay_before_ms":500}] — runs forward 2s, waits 0.5s, then jumps.
@@ -2959,7 +2992,7 @@ RULES:
 - ${memOn
     ? 'You may use tools (get_game_state, set_game_speed for tricky jumps, save_move/play_move for reusable sequences) when helpful, but don\'t call tools every turn.'
     : 'There is no reliable game memory — judge everything from the image. You may use set_game_speed, is_stuck/is_trapped, or save_move/play_move when helpful, but don\'t call tools every turn.'}
-${brainmapCtx}${brainCtx}${trustCtx}${rewardCtx}${depthCtx}${movementCtx}${planCtx}${lastActCtx}${preplanCtx}${memStateCtx}${motionCtx}${memoryCtx}${notesCtx}${instrCtx}${teachCtx}
+${brainmapCtx}${cameraCtx}${brainCtx}${trustCtx}${rewardCtx}${depthCtx}${movementCtx}${planCtx}${lastActCtx}${preplanCtx}${memStateCtx}${motionCtx}${memoryCtx}${notesCtx}${instrCtx}${teachCtx}
 
 ${_cmdFormat === 'simple'
 ? `Reply in this SIMPLE LINE FORMAT (one field per line, NO JSON, NO markdown):
@@ -2990,12 +3023,13 @@ SAY: heading into my first level!`
   "done": "a milestone I just completed, or null (e.g. 'entered castle')",
   "mistake": "error noticed or null",
   "notes": ["optional NEW insight — omit or [] if none"],
+  "camera2d": false,
   "child_trust": "0-100, optional — how much you trust the RL apprentice to take steps for you; RAISE as it proves it can play, LOWER if it flails",
   "preplan": false,
   "rapid_fire": false
 }`}
 
-A "step"/group is {"keys":[...simultaneous...], "hold_ms": N} OR a macro word ("run_jump","enter_painting","long_jump","dive","triple_jump","ground_pound","wall_kick","back_up","turn_around","swim_up","backflip","wait","observe"). The "wait"/"observe" macro presses NOTHING — use it to hold still and watch a moving platform/lift before committing. Hold guide: FORWARD/BACKWARD 1200–2500ms; TURN 250–500ms (short!); jump/dialog 150–350ms. ${_preplanMode ? `PRE-PLAN: give a full ${capTxt}-step script.` : 'Normally 1–5 steps (more only if preplan:true).'}
+A "step"/group is {"keys":[...simultaneous...], "hold_ms": N} OR a macro word ("run_jump","enter_painting","long_jump","dive","triple_jump","ground_pound","wall_kick","back_up","turn_around","swim_up","backflip","wait","observe"). The "wait"/"observe" macro presses NOTHING — use it to hold still and watch a moving platform/lift before committing. Hold guide: FORWARD/BACKWARD 1200–2500ms; TURN 250–500ms (short!); jump/dialog 150–350ms. In 2D/front-facing camera mode, treat ArrowLeft/ArrowRight as FORWARD travel (1200–2500ms), not turns. ${_preplanMode ? `PRE-PLAN: give a full ${capTxt}-step script.` : 'Normally 1–5 steps (more only if preplan:true).'}
 Valid keys (THESE ARE THE ONLY ONES — there is no camera key): ArrowUp(forward), ArrowDown(BACKWARD — opposite of forward, USE IT), ArrowLeft(turn left), ArrowRight(turn right), jump(=A), action(=B: dive/punch/grab), crouch(=Z: ground-pound in air / long-jump), start(pause/confirm only). Combine arrows for diagonals.`;
 
         // Single-frame perception: the AI acts on ONE current frame, annotated
@@ -3003,7 +3037,7 @@ Valid keys (THESE ARE THE ONLY ONES — there is no camera key): ArrowUp(forward
         // it confused the model into acting on the old frame; an objective motion
         // % is fed in TEXT instead, which is clearer and cheaper.)
         let visionImg = screenshot;
-        const promptText = 'This is the CURRENT live frame, overlaid with a faint 3×3 navigation grid (cells TL/T/TR · L/C/R · BL/B/BR) and a camera-relative compass marking which arrow key moves Mario which way on screen. First name the grid cell your target is in and which way you must turn to face it, then choose your actions.';
+        const promptText = 'This is the CURRENT live frame, overlaid with a faint 3×3 navigation grid (cells TL/T/TR · L/C/R · BL/B/BR) and a camera-relative compass marking which arrow key moves Mario which way on screen. First identify the region (outside-castle / castle-foyer / in-level:<name>) and camera mode (normal vs 2D/front-facing/side-view). If it is 2D, set camera2d:true and use ArrowLeft/ArrowRight as your main travel directions. Then name the grid cell your target is in and choose your actions.';
         try {
             visionImg = await annotateCurrentFrame(screenshot);
         } catch (e) {
@@ -3125,6 +3159,13 @@ Valid keys (THESE ARE THE ONLY ONES — there is no camera key): ArrowUp(forward
             if (d && !_progressLog.includes(d)) { _progressLog.push(String(d)); _bmEvent('done', String(d)); }
         }
         while (_progressLog.length > 12) _progressLog.shift();
+
+        // ── Camera-perspective updates: 2D / front-facing / side-view ──
+        if (typeof response.camera2d === 'boolean') {
+            if (response.camera2d && !_camera2d) updateAIStatus('🎥 2D camera detected — switching to left/right movement');
+            _camera2d = response.camera2d;
+        }
+        updateAIStateBadges();
         // Optional checklist the model maintains
         if (Array.isArray(response.checklist)) _checklist = response.checklist.slice(0, 8);
         saveBrainmap();        // persist if enabled
@@ -3207,7 +3248,7 @@ const MOVE_KEYS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
 // simultaneous keys AND control how LONG each is held. Sustained holds are the
 // single biggest reason the original version travelled further — brief taps
 // barely move Mario, so movement defaults to a long hold.
-function _normalizeGroup(g, fast) {
+function _normalizeGroup(g, fast, camera2d = false) {
     let keys = [], ms = null;
     if (Array.isArray(g)) keys = g;
     else if (g && typeof g === 'object') { keys = g.keys || g.actions || []; ms = g.hold_ms ?? g.ms ?? g.duration ?? null; }
@@ -3227,12 +3268,16 @@ function _normalizeGroup(g, fast) {
     //  • FORWARD/back travel → long hold so Mario actually covers ground.
     //  • TURN-ONLY (Left/Right, no Up/Down) → short tap so he re-aims without
     //    spinning past the target.   • jumps / actions → brief press.
-    const hasForward = codes.includes('ArrowUp') || codes.includes('ArrowDown');
-    const isTurnOnly = !hasForward && (codes.includes('ArrowLeft') || codes.includes('ArrowRight'));
+    //  • In 2D/front-facing camera mode, Left/Right ARE the travel directions,
+    //    so they get long holds just like forward in normal mode.
+    const hasVertical = codes.includes('ArrowUp') || codes.includes('ArrowDown');
+    const hasLeftRight = codes.includes('ArrowLeft') || codes.includes('ArrowRight');
+    const is2DTravel = camera2d && hasLeftRight && !hasVertical;
+    const isTurnOnly = !hasVertical && !is2DTravel && hasLeftRight;
     if (ms == null) {
-        if (hasForward)      ms = fast ? 750 : 1400;
-        else if (isTurnOnly) ms = fast ? 240 : 380;
-        else                 ms = fast ? 150 : 240;
+        if (hasVertical || is2DTravel) ms = fast ? 750 : 1400;
+        else if (isTurnOnly)           ms = fast ? 240 : 380;
+        else                           ms = fast ? 150 : 240;
     }
     // Clamp: turns get a tighter ceiling so the AI can't accidentally spin in circles.
     // Forward/back travel gets a generous ceiling — the AI needs time to cross open ground.
@@ -3415,7 +3460,7 @@ async function aiExecute(response) {
         updateAIStatus('🔄 Auto-recovery: AI is stuck — running recovery sequence');
         const recoverGroups = _expandGroups(['recover']);
         for (const rg of recoverGroups) {
-            const { keys, ms, wait } = _normalizeGroup(rg, fast);
+            const { keys, ms, wait } = _normalizeGroup(rg, fast, _camera2d);
             if (!wait && !keys.length) continue;
             for (const action of keys) {
                 const keyCode = keyMap[action];
@@ -3440,7 +3485,7 @@ async function aiExecute(response) {
             updateAIStatus('🎮 Auto-start: detected title/demo — running full bootstrap');
             const startGroups = _expandGroups(['start_game']);
             for (const sg of startGroups) {
-                const { keys, ms, wait } = _normalizeGroup(sg, fast);
+                const { keys, ms, wait } = _normalizeGroup(sg, fast, _camera2d);
                 if (!wait && !keys.length) continue;
                 for (const action of keys) {
                     const keyCode = keyMap[action];
@@ -3466,7 +3511,7 @@ async function aiExecute(response) {
         const g = groups[i];
         // Support delay_before_ms on individual action groups
         const delayBefore = (g && typeof g === 'object' && !Array.isArray(g)) ? (g.delay_before_ms || 0) : 0;
-        const { keys, ms, wait } = _normalizeGroup(g, fast);
+        const { keys, ms, wait } = _normalizeGroup(g, fast, _camera2d);
         if (!wait && !keys.length) continue;
         
         // Enqueue this action with its delay
@@ -3652,6 +3697,7 @@ async function toggleAIPlayer() {
         if (_adaptiveBrain) { _trainStats.episodes++; _saveTrainStats(); }
         startElderWatch();          // child watches when YOU (the elder) take over
         _resetBrainmap();
+        updateAIStateBadges();
         _frameHistory   = [];
         _escapeArmed      = false;
         _escapeExtraTurns = 0;
@@ -3785,6 +3831,7 @@ function stopAIPlayer() {
     aiBtn.classList.remove('active');
     aiBtn.disabled    = false;
     aiStatus.style.display = 'none';
+    updateAIStateBadges();
     tts.speak('AI player stopped.');
 }
 

@@ -200,6 +200,35 @@ body {
     color: rgba(255,255,255,0.88); line-height: 1.5; word-break: break-word;
 }
 
+/* ── AI state badges (region / 2D camera) ─ */
+#ai-state-badges {
+    position: fixed;
+    top: calc(var(--hud-h) + 8px); left: 12px;
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    z-index: 10; max-width: min(360px, calc(100vw - 24px));
+    pointer-events: none;
+}
+.ai-badge {
+    display: none;
+    align-items: center; gap: 4px;
+    padding: 4px 9px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 99px;
+    font-size: 11px; font-weight: 600;
+    color: rgba(255,255,255,0.72);
+    box-shadow: var(--shadow); backdrop-filter: blur(8px);
+    transition: opacity 0.2s, transform 0.15s;
+    animation: badgePop 0.25s ease;
+}
+.ai-badge.active { display: inline-flex; }
+.ai-badge#badge-location { border-color: rgba(30,136,229,0.45); color: #90caf9; }
+.ai-badge#badge-camera2d { border-color: rgba(142,36,170,0.45); color: #ce93d8; }
+@keyframes badgePop {
+    from { opacity: 0; transform: scale(0.85); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
 /* ── Controls guide panel ───────────────────────────────── */
 #controls-panel {
     position: fixed;
