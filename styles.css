@@ -73,7 +73,8 @@ body {
     display: block; z-index: 1;
     touch-action: none;
 }
-#emulatorjs-container { z-index: 2; }
+#emulatorjs-container { z-index: 2; overflow: hidden; }
+#emulatorjs-container canvas { width: 100% !important; height: 100% !important; }
 #original-game-container { position: fixed; top: var(--hud-h); left: 0; width: 100vw; height: calc(100vh - var(--hud-h)); z-index: 1; }
 
 /* ── HUD bar ─────────────────────────────────────────────── */
