@@ -4,7 +4,7 @@ This app is a static site. Host it on **GitHub Pages**, then point Discord at th
 
 ## 1. GitHub Pages
 
-Repo Settings → Pages → Source: **GitHub Actions**.
+Repo Settings → Pages → Source: **Deploy from a branch** → `main` / `/` (root).
 
 After a push to `main`, the site is:
 
