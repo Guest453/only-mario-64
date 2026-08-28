@@ -1,5 +1,5 @@
-import { initDiscordActivity } from './discord-activity.js';
-import { initMultiplayer } from './multiplayer.js';
+import { initDiscordActivity } from './discord-activity.js?v=1.1';
+import { initMultiplayer } from './multiplayer.js?v=1.1';
 
 // ============================================================
 // Super Mario 64 Web – AI Player  (v4 — Pollinations-exclusive)
@@ -3250,19 +3250,36 @@ function _isEditable(el) {
     const tag = el.tagName;
     return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
 }
+// Any interactive UI control (not just text fields). This is the core fix for
+// the Discord bug where the game engine swallows every keystroke and the UI
+// becomes unnavigatable: buttons, dropdowns, checkboxes, sliders, links and
+// role="button" elements all need their keys shielded from the wasm SDL2
+// handler, which sits on document/window and preventDefaults arrows / Space /
+// Enter. Without this, pressing Space or the arrow keys while a button or the
+// play-mode dropdown is focused gets eaten by the game.
+function _isUiControl(el) {
+    if (!el || !el.tagName) return false;
+    if (_isEditable(el)) return true;              // INPUT / TEXTAREA / SELECT / contentEditable
+    const tag = el.tagName;
+    if (tag === 'BUTTON' || tag === 'A' || tag === 'SUMMARY' || tag === 'LABEL') return true;
+    if (el.getAttribute && el.getAttribute('role')) {
+        if (['button', 'option', 'menuitem', 'switch', 'checkbox', 'radio', 'tab', 'slider', 'combobox', 'listbox'].includes(el.getAttribute('role'))) return true;
+    }
+    return false;
+}
 function _agentKeyGuard(e) {
     if (!e.isTrusted) return;   // AI's synthetic keys pass through
-    // Typing in ANY form field: stop the key reaching the game, but DON'T
-    // preventDefault — that lets native text editing (chars/Backspace/caret) work.
-    // stopPropagation doesn't cancel the default action.
-    //
-    // This is ALWAYS on (not just agent-only): the wasm SDL2 keyboard handler
-    // sits on document and would otherwise see every keystroke typed in a
-    // field — and inside Discord's activity iframe it can even preventDefault
-    // them, which is exactly why typing "does nothing" there. Stopping
-    // propagation at window capture means the game never sees the key, so it
-    // can never cancel the text insertion.
-    if (_isEditable(e.target) || _isEditable(document.activeElement)) {
+    // Interacting with ANY UI control (text field, button, dropdown, slider,
+    // checkbox, link…): stop the key reaching the game, but DON'T preventDefault
+    // so native behavior still works (text entry, button activation via
+    // Space/Enter, dropdown arrow navigation, slider adjust). This is ALWAYS on
+    // (not just agent-only): the wasm SDL2 keyboard handler sits on
+    // document/window and would otherwise see every keystroke pressed while a
+    // control is focused — and inside Discord's activity iframe it can even
+    // preventDefault them, which is why typing "does nothing" and the UI feels
+    // frozen there. Stopping propagation at window capture means the game never
+    // sees the key, so it can never cancel or eat the input.
+    if (_isUiControl(e.target) || _isUiControl(document.activeElement)) {
         e.stopImmediatePropagation();
         // Replicate the per-field Enter handlers here: they're attached to the
         // inputs themselves and never fire once we stop propagation at window

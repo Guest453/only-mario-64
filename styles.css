@@ -1475,11 +1475,63 @@ html.discord-activity #auth-panel { max-height: 90vh; overflow-y: auto; }
     grid-template-columns: 1fr;
 }
 #remote-stage:not([hidden]) { display: grid; }
-.remote-pane { position: relative; min-height: 0; background: #000; }
+.remote-pane { position: relative; min-height: 0; background: #000; overflow: hidden; }
 .remote-pane video, .remote-pane img {
     width: 100%; height: 100%; object-fit: contain; background: #000; display: block;
 }
 .remote-pane .nametag { left: 10px; bottom: 10px; }
+
+/* ── Broadcast-style split-screen pane (streaming) ───────────── */
+.remote-pane .rp-thumb {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; background: #06070b; opacity: 0.92;
+}
+.remote-pane .rp-live {
+    position: absolute; top: 8px; left: 8px; z-index: 6;
+    font-size: 9px; font-weight: 900; letter-spacing: 0.12em; padding: 2px 8px;
+    border-radius: 99px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    background: linear-gradient(180deg, #e53935, #b71c1c);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+.remote-pane .rp-live.connecting {
+    background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.75);
+    font-weight: 800;
+}
+.remote-pane .rp-hud {
+    position: absolute; top: 6px; right: 6px; left: auto; z-index: 6;
+    display: flex; align-items: center; gap: 6px; justify-content: flex-end;
+    pointer-events: none; max-width: 70%;
+}
+.remote-pane .rp-name {
+    font-size: 13px; font-weight: 800; color: #fff;
+    background: rgba(8,8,14,0.78); border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 99px; padding: 3px 10px; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px #000;
+}
+.remote-pane .rp-name.discord::after { content: ' 💬'; opacity: 0.7; }
+.remote-pane .rp-tag {
+    font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 99px;
+    background: rgba(255,255,255,0.12); color: #fff; white-space: nowrap;
+    border: 1px solid rgba(255,255,255,0.12);
+}
+.remote-pane .rp-tag.ai { background: rgba(25,195,125,0.25); border-color: rgba(25,195,125,0.45); }
+.remote-pane .rp-foot {
+    position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 6;
+    display: flex; flex-direction: column; gap: 2px; pointer-events: none;
+}
+.remote-pane .rp-stats {
+    font-size: 11px; font-weight: 700; color: #ffe082;
+    background: rgba(8,8,14,0.72); border-radius: 7px; padding: 3px 8px;
+    align-self: flex-start; letter-spacing: 0.02em;
+}
+.remote-pane .rp-thought {
+    font-size: 11px; color: rgba(255,255,255,0.92); line-height: 1.3;
+    background: rgba(8,8,14,0.66); border-left: 2px solid var(--cyan, #00acc1);
+    border-radius: 0 6px 6px 0; padding: 3px 8px;
+    max-height: 3.6em; overflow: hidden; display: -webkit-box;
+    -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+}
+.remote-pane.live .rp-live.connecting { display: none; }
 
 #app.mp-split #original-game-container {
     width: 50vw; right: auto;

@@ -284,6 +284,7 @@ export function initMultiplayer({ discord } = {}) {
             const prev = others.get(msg.id) || { id: msg.id };
             others.set(msg.id, { ...prev, frame: msg.frame, updated: Date.now() });
             render();
+            renderStage();
             return;
         }
         if (msg.t === 'bye' && msg.id) {
@@ -414,7 +415,10 @@ export function initMultiplayer({ discord } = {}) {
     function renderStage() {
         const stage = $('remote-stage');
         const app = document.getElementById('app');
-        const remotes = [...others.values()].filter(p => p.stream);
+        // Show a pane for EVERY remote peer, so the spectate view is usable even
+        // before a live WebRTC stream arrives — the broadcast thumbnail frame
+        // fills in as a poster until the live video connects.
+        const remotes = [...others.values()];
         const split = remotes.length > 0;
         app?.classList.toggle('mp-split', split);
         if (!stage) return;
@@ -434,12 +438,49 @@ export function initMultiplayer({ discord } = {}) {
                 pane = document.createElement('div');
                 pane.className = 'remote-pane';
                 pane.dataset.pid = p.id;
-                pane.innerHTML = `<div class="nametag"></div><video autoplay playsinline muted></video><img alt="">`;
+                pane.innerHTML = [
+                    '<div class="rp-live">LIVE</div>',
+                    '<div class="rp-hud">',
+                    '  <span class="rp-name"></span>',
+                    '  <span class="rp-tag"></span>',
+                    '</div>',
+                    '<video autoplay playsinline muted></video>',
+                    '<img class="rp-thumb" alt="">',
+                    '<div class="rp-foot">',
+                    '  <span class="rp-stats"></span>',
+                    '  <span class="rp-thought"></span>',
+                    '</div>',
+                ].join('');
                 stage.appendChild(pane);
             }
-            pane.querySelector('.nametag').textContent = p.name || '???';
+            const hasStream = !!p.stream;
+            pane.classList.toggle('live', hasStream);
+
+            // Name — a 💬 prefix marks names that came from the Discord SDK.
+            const nameEl = pane.querySelector('.rp-name');
+            nameEl.textContent = p.name || '???';
+            nameEl.classList.toggle('discord', !!p.discord);
+
+            const tagEl = pane.querySelector('.rp-tag');
+            tagEl.textContent = p.playing ? '🤖 AI' : '🎮';
+            tagEl.classList.toggle('ai', !!p.playing);
+
+            const stats = [
+                p.stars != null ? `⭐ ${p.stars}` : null,
+                p.coins != null ? `🪙 ${p.coins}` : null,
+                p.lives != null ? `🍄 ${p.lives}` : null,
+            ].filter(Boolean).join('  ');
+            pane.querySelector('.rp-stats').textContent = stats;
+
+            const region = p.region && p.region !== 'unknown' ? ` · ${p.region}` : '';
+            pane.querySelector('.rp-thought').textContent = (p.thought || '—') + region;
+
+            const liveEl = pane.querySelector('.rp-live');
+            liveEl.textContent = hasStream ? 'LIVE' : 'CONNECT';
+            liveEl.classList.toggle('connecting', !hasStream);
+
             const vid = pane.querySelector('video');
-            const img = pane.querySelector('img');
+            const img = pane.querySelector('.rp-thumb');
             vid.muted = true;
             vid.autoplay = true;
             vid.playsInline = true;
@@ -449,6 +490,10 @@ export function initMultiplayer({ discord } = {}) {
                 vid.style.display = 'block';
                 img.style.display = 'none';
                 vid.play?.().catch(() => {});
+            } else if (!hasStream) {
+                vid.style.display = 'none';
+                if (p.frame) { img.src = p.frame; img.style.display = 'block'; }
+                else { img.removeAttribute('src'); img.style.display = 'block'; }
             }
         }
         for (const pane of [...stage.querySelectorAll('.remote-pane')]) {
