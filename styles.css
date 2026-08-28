@@ -1389,9 +1389,102 @@ body {
 #app.streamer-mode #mp-dock,
 #app.streamer-mode #mp-toggle-btn { display: none !important; }
 
-html.discord-activity { --hud-h: 42px; }
+/* ── Discord Activity: fit the chrome to a small embedded iframe ────────────
+   The game canvas already fills 100vw/vh, so the ONLY thing that overflows in
+   Discord's little activity window is the HUD + overlay panels. These rules
+   shrink that chrome. `discord-layout-pip` / `discord-layout-grid` are added by
+   the SDK's ACTIVITY_LAYOUT_MODE_UPDATE event (Popup-out tile / grid of apps);
+   `discord-compact` is a viewport-size fallback for when Discord never fires it. */
+html.discord-activity {
+    --hud-h: 38px;
+    font-size: 13px;
+}
 html.discord-activity #hud-centre { overflow-x: auto; }
 html.discord-activity #auth-panel { max-height: 90vh; overflow-y: auto; }
+
+/* HUD bar */
+html.discord-activity .hud-btn { font-size: 10px; padding: 3px 6px; border-radius: 6px; }
+html.discord-activity .hud-icon-btn { font-size: 11px; padding: 3px 6px; }
+html.discord-activity #mute-btn { font-size: 14px; padding: 3px 4px; }
+html.discord-activity .hud-label { font-size: 10px; }
+html.discord-activity #speed-slider { width: 52px; }
+html.discord-activity #speed-label { font-size: 11px; min-width: 20px; }
+html.discord-activity #play-mode { font-size: 11px; padding: 3px 6px; }
+html.discord-activity #model-select { max-width: 120px; font-size: 11px; padding: 3px 6px; }
+html.discord-activity .hud-toggle { gap: 4px; }
+html.discord-activity .hud-toggle .toggle-track { width: 28px; height: 15px; }
+html.discord-activity .hud-toggle input:checked + .toggle-track .toggle-thumb { left: 13px; }
+html.discord-activity .hud-toggle .toggle-thumb { width: 11px; height: 11px; }
+html.discord-activity #pollen-chip { font-size: 10px; }
+
+/* HUD drop-down menu */
+html.discord-activity #more-menu { font-size: 12px; }
+html.discord-activity #more-menu .more-item { font-size: 11px; padding: 5px 10px; }
+
+/* Corner banners */
+html.discord-activity #ai-status { font-size: 11px; padding: 6px 9px; max-width: 240px; }
+html.discord-activity .ai-badge { font-size: 10px; padding: 3px 7px; }
+html.discord-activity #suck-warning { font-size: 12px; padding: 7px 11px; gap: 7px; border-radius: 8px; }
+
+/* Panels & modals */
+html.discord-activity #controls-panel { width: 200px; }
+html.discord-activity #controls-panel.open { max-height: 360px; }
+html.discord-activity .controls-item { font-size: 11px; padding: 4px 12px; }
+html.discord-activity #buddy-panel { max-width: 240px; padding: 9px 12px; font-size: 12px; }
+html.discord-activity #instruction-panel { width: min(380px, calc(100vw - 20px)); gap: 6px; }
+html.discord-activity #ai-instruction { font-size: 12px; padding: 7px 10px; }
+html.discord-activity #send-instruction { font-size: 12px; padding: 7px 12px; }
+html.discord-activity #mp-panel { width: min(380px, calc(100vw - 20px)); max-height: min(70vh, 560px); padding: 9px; }
+html.discord-activity #mp-head { font-size: 12px; }
+html.discord-activity .mp-card { padding: 8px; }
+html.discord-activity .remote-pane .rp-foot { font-size: 11px; }
+html.discord-activity #memory-panel { width: min(480px, 92vw); padding: 16px; }
+html.discord-activity #memory-panel h3 { font-size: 15px; margin-bottom: 10px; }
+html.discord-activity #memory-content { font-size: 12px; max-height: 48vh; }
+html.discord-activity #provider-panel-wrap { padding: 22px 22px 20px; width: min(400px, 92vw); }
+html.discord-activity #tutorial-panel { padding: 22px 24px 20px; width: min(440px, 92vw); }
+html.discord-activity #tutorial-icon { font-size: 38px; }
+html.discord-activity #tutorial-title { font-size: 16px; margin-bottom: 8px; }
+html.discord-activity #tutorial-body { font-size: 12px; line-height: 1.6; margin-bottom: 16px; }
+html.discord-activity #tutorial-prev-btn, html.discord-activity #tutorial-next-btn { padding: 7px 16px; font-size: 12px; }
+html.discord-activity #auth-panel { padding: 26px 22px; max-width: 380px; }
+html.discord-activity #auth-logo { font-size: 42px; margin-bottom: 6px; }
+html.discord-activity #auth-panel h2 { font-size: 20px; margin-bottom: 10px; }
+html.discord-activity #auth-desc { font-size: 12px; margin-bottom: 16px; }
+html.discord-activity #auth-btn { padding: 10px 16px; font-size: 13px; }
+html.discord-activity #auth-nick, html.discord-activity #auth-apikey { padding: 8px 10px; font-size: 12px; }
+html.discord-activity #auth-key-btn { padding: 8px 12px; }
+html.discord-activity #auth-status { font-size: 12px; }
+html.discord-activity #tutorial-panel .modal-close-btn,
+html.discord-activity #provider-panel-wrap .modal-close-btn { font-size: 16px; top: 10px; right: 12px; }
+
+/* Tightest tier: picture-in-picture / grid / small portrait */
+html.discord-activity.discord-layout-pip,
+html.discord-activity.discord-layout-grid,
+html.discord-activity.discord-compact {
+    --hud-h: 30px;
+}
+html.discord-activity.discord-compact #hud-bar { gap: 5px; }
+html.discord-activity.discord-compact #mute-btn { display: none; }
+html.discord-activity.discord-compact #speed-slider { width: 42px; }
+html.discord-activity.discord-compact #model-select { max-width: 96px; }
+html.discord-activity.discord-compact #hud-centre .hud-label,
+html.discord-activity.discord-compact #hud-centre .hud-toggle,
+html.discord-activity.discord-compact #pollen-chip { display: none; }
+html.discord-activity.discord-compact .hud-btn { font-size: 10px; padding: 3px 5px; }
+html.discord-activity.discord-compact #ai-status { max-width: 200px; }
+html.discord-activity.discord-compact #mp-panel { max-height: 60vh; }
+html.discord-activity.discord-compact .remote-pane .rp-hud span,
+html.discord-activity.discord-compact .remote-pane .rp-foot { font-size: 10px; }
+
+@media (max-width: 720px) {
+    html.discord-activity #memory-panel { padding: 12px; }
+    html.discord-activity #tutorial-panel, html.discord-activity #provider-panel-wrap { padding: 18px; }
+}
+@media (max-height: 460px) {
+    html.discord-activity #suck-warning { display: none; }
+    html.discord-activity #controls-panel.open { max-height: 60vh; }
+}
 
 @media (max-width: 560px) {
     #mp-grid { grid-template-columns: 1fr; }

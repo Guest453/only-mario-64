@@ -36,6 +36,14 @@ function esc(s) {
     }[c]));
 }
 
+// PeerJS already ships a sensible default STUN+TURN (the peerjs cloud). We must
+// NOT pass `config.iceServers`, because that REPLACES PeerJS's whole set and
+// would drop its cloud TURN servers — that makes NAT traversal worse, not
+// better. Keep debug log level low; keep everything else peerjs-default.
+function peerOpts() {
+    return { debug: 0 };
+}
+
 function shrinkFrame(dataUrl) {
     return new Promise((resolve) => {
         if (!dataUrl) { resolve(null); return; }
@@ -96,6 +104,32 @@ function acceptThumb(dataUrl) {
     return true;
 }
 
+// Discord Activities run inside a sandboxed iframe at <app>.discordsays.com.
+// Their CSP only lets network requests out through Discord's proxy. PeerJS
+// reaches the public broker over a raw WebSocket, which the proxy must route.
+// The SDK exposes `patchUrlMappings` for exactly this. To enable it, register
+// a "URL mapping" for your PeerJS/TURN broker in the Discord Developer Portal
+// (e.g. prefix `/peerjs` -> `https://0.peerjs.com`), then set:
+//     window.__SM64_PEERJS_PROXY = { prefix: '/peerjs', target: '0.peerjs.com' };
+// Without that mapping PeerJS still works in a normal browser tab; inside
+// Discord it degrades to the participant-presence roster below.
+async function wireDiscordProxy(discord) {
+    if (!discord?.active || !discord?.sdk) return;
+    const cfg = window.__SM64_PEERJS_PROXY;
+    if (!cfg || !cfg.prefix || !cfg.target) return;
+    try {
+        const mod = await import('./lib/discord-embedded-sdk.js');
+        if (typeof mod.patchUrlMappings !== 'function') return;
+        mod.patchUrlMappings(
+            [{ prefix: cfg.prefix, target: cfg.target, prefixHost: window.location.host }],
+            { patchWebSocket: true, patchFetch: true, patchXhr: true },
+        );
+        console.log('[MP] PeerJS signaling routed through Discord proxy', cfg);
+    } catch (err) {
+        console.warn('[MP] Discord proxy wiring failed', err);
+    }
+}
+
 export function initMultiplayer({ discord } = {}) {
     const peers = new Map();
     const others = new Map();
@@ -110,9 +144,14 @@ export function initMultiplayer({ discord } = {}) {
     let localStream = null;
     let streamRetry = null;
 
-    const discordName = discord?.user?.global_name || discord?.user?.username || null;
+    // The Discord display name. Prefer the CURRENT_USER_UPDATE user object; also
+    // fall back to the buffered detectedName so we never show a random nick in
+    // Discord, even if the event fired before this module mounted.
+    const discordName = discord?.user?.global_name || discord?.user?.username || discord?.detectedName || null;
+    let discordParticipants = Array.isArray(discord?.participants) ? discord.participants : [];
     const me = {
         name: discordName || nickDefault(),
+        userId: discord?.userId || (discord?.user && (discord.user.id || null)) || null,
         thought: '',
         region: 'unknown',
         playing: false,
@@ -333,13 +372,21 @@ export function initMultiplayer({ discord } = {}) {
     function becomeHost(roomName) {
         return new Promise((resolve, reject) => {
             const hid = hostPeerId(roomName);
-            const p = new window.Peer(hid, { debug: 0 });
-            const fail = (err) => { try { p.destroy(); } catch {} reject(err); };
+            const p = new window.Peer(hid, peerOpts());
+            const fail = (err) => { clearTimeout(timer); try { p.destroy(); } catch {} reject(err); };
+            // Never let an unreachable broker keep us "Joining" forever: if the
+            // id isn't available, or the socket never opens, fall back to client
+            // (or surface the error) rather than hanging.
+            const timer = setTimeout(() => fail(new Error('broker timed out')), 6000);
             p.on('error', (err) => {
-                if (err?.type === 'unavailable-id') fail(err);
-                else console.warn('[MP] host peer', err);
+                // unavailable-id just means someone else hosts — fall back.
+                if (err?.type === 'unavailable-id') { fail(err); return; }
+                // Any other error (network/CSP/rejected) is fatal for hosting.
+                console.warn('[MP] host peer', err);
+                fail(err);
             });
             p.on('open', (id) => {
+                clearTimeout(timer);
                 peer = p;
                 myId = id;
                 role = 'host';
@@ -354,17 +401,21 @@ export function initMultiplayer({ discord } = {}) {
                 render();
                 resolve('host');
             });
+            p.on('disconnected', () => console.warn('[MP] broker disconnected'));
         });
     }
 
     function becomeClient(roomName) {
         return new Promise((resolve, reject) => {
-            const p = new window.Peer(undefined, { debug: 0 });
+            const p = new window.Peer(undefined, peerOpts());
+            const timer = setTimeout(() => { try { p.destroy(); } catch {} reject(new Error('broker timed out')); }, 6000);
             p.on('error', (err) => {
+                clearTimeout(timer);
                 console.warn('[MP] client peer', err);
                 reject(err);
             });
             p.on('open', (id) => {
+                clearTimeout(timer);
                 peer = p;
                 myId = id;
                 role = 'client';
@@ -374,9 +425,29 @@ export function initMultiplayer({ discord } = {}) {
                     call.answer(stream || undefined);
                     setupCall(call, call.peer);
                 });
-                const conn = p.connect(hostPeerId(roomName), { reliable: true });
-                attach(conn);
-                setStatus(`Joined “${room}”`);
+                // The host registers its PeerJS id at broker connect time; if we
+                // arrive first we get peer-unavailable. Retry a few times so both
+                // auto-joining users reliably pair up.
+                const hostId = hostPeerId(roomName);
+                let conn = null;
+                let attempts = 0;
+                const tryConnect = () => {
+                    const c = p.connect(hostId, { reliable: true });
+                    conn = c;
+                    attach(c);
+                    c.on('error', (err) => {
+                        if (err?.type === 'peer-unavailable' && attempts < 6) {
+                            attempts++;
+                            peers.delete(hostId);
+                            try { c.close(); } catch {}
+                            setTimeout(tryConnect, 800 * attempts);
+                        } else {
+                            console.warn('[MP] could not reach host', err);
+                        }
+                    });
+                };
+                tryConnect();
+                setStatus(`Joined “${room}” (looking for host…)`);
                 render();
                 resolve('client');
             });
@@ -388,6 +459,7 @@ export function initMultiplayer({ discord } = {}) {
             setStatus('PeerJS failed to load — refresh?');
             return;
         }
+        if (discord?.active) await wireDiscordProxy(discord);
         roomName = roomSlug(roomName);
         const input = $('mp-room');
         if (input) input.value = roomName;
@@ -401,7 +473,12 @@ export function initMultiplayer({ discord } = {}) {
             try {
                 await becomeClient(roomName);
             } catch (err) {
-                setStatus('Could not connect lobby: ' + (err?.message || err));
+                // Inside Discord the public PeerJS broker is usually unreachable
+                // without a registered proxy URL mapping; give a helpful hint.
+                setStatus(discord?.active
+                    ? 'Could not reach the room broker — inside Discord, register a PeerJS proxy URL mapping (see console).'
+                    : 'Could not connect lobby: ' + (err?.message || err));
+                console.warn('[MP] join failed', err);
             }
         }
         updateNametag();
@@ -544,8 +621,13 @@ export function initMultiplayer({ discord } = {}) {
         const n = String(others.size);
         const count = $('mp-count');
         if (count) count.textContent = n;
-        if (role === 'host') setStatus(`Room “${room}” · ${others.size + 1} Mario${others.size ? 's' : ''} — streaming`);
-        else if (role === 'client') setStatus(`In “${room}” · ${others.size + 1} Marios`);
+        // While nobody is peer-connected yet but Discord says friends share the
+        // activity, surface that so the lobby doesn't look dead.
+        const here = (!others.size && discordParticipants.length > 1)
+            ? ` · ${discordParticipants.length} in activity`
+            : '';
+        if (role === 'host') setStatus(`Room “${room}” · ${others.size + 1} Mario${others.size ? 's' : ''} — streaming${here}`);
+        else if (role === 'client') setStatus(`In “${room}” · ${others.size + 1} Marios${here}`);
         updateNametag();
     }
 
@@ -639,9 +721,22 @@ export function initMultiplayer({ discord } = {}) {
         setPlaying(on) { me.playing = !!on; broadcast(snapshot()); render(); },
         setName(n) {
             me.name = String(n || me.name).slice(0, 24);
+            // Keep the Discord user id in sync so it rides along in the snapshot.
+            if (discord?.userId) me.userId = discord.userId;
+            else if (discord?.user?.id) me.userId = discord.user.id;
             try { localStorage.setItem('sm64_nick', me.name); } catch {}
             broadcast(snapshot());
             updateNametag();
+            render();
+        },
+        // Called by discord-activity.js whenever the participant roster changes.
+        // We record it and, while nobody is peer-connected yet, surface who
+        // shares the activity so the lobby doesn't look empty.
+        onParticipants(list) {
+            if (!Array.isArray(list)) return;
+            discordParticipants = list;
+            try { localStorage.setItem('sm64_discord_participants', JSON.stringify(list.map(p => ({ id: p?.id, name: p?.global_name || p?.username })))); } catch {}
+            if (others.size === 0) render();
         },
         join: joinRoom,
         open: openLobby,
@@ -652,12 +747,36 @@ export function initMultiplayer({ discord } = {}) {
     updateNametag();
     render();
 
+    // Seed the lobby roster from the Discord SDK and apply the detected Discord
+    // display name. The participant list / user may have already populated before
+    // multiplayer finished booting, so re-sync now; later updates arrive via the
+    // subscription handlers.
+    if (discord?.active) {
+        (async () => {
+            try {
+                const found = discord.detectedName
+                    || discord?.user?.global_name
+                    || discord?.user?.username;
+                if (found) api.setName(found);
+                if (discord.participants?.length) api.onParticipants(discord.participants);
+                if (typeof discord.refreshParticipants === 'function') {
+                    const list = await discord.refreshParticipants();
+                    if (list?.length) api.onParticipants(list);
+                }
+            } catch {}
+        })();
+    }
+
     const savedRoom = (() => { try { return localStorage.getItem('sm64_mp_room'); } catch { return null; } })();
     const autoRoom = discord?.instanceId
         ? 'dc' + roomSlug(discord.instanceId)
         : (savedRoom || randomRoom());
     const roomInput = $('mp-room');
     if (roomInput) roomInput.value = autoRoom;
+    if (discord?.instanceId) {
+        // Report auto-joining the Discord activity instance.
+        setStatus(`Auto-joining “${autoRoom}” (Discord activity)`);
+    }
 
     setTimeout(() => {
         joinRoom(autoRoom);
@@ -672,7 +791,7 @@ export function initMultiplayer({ discord } = {}) {
             if (!c || c.width < 8) return;
             try { api.onFrame(c.toDataURL('image/jpeg', 0.45)); } catch {}
         }, 2800);
-    }, 500);
+    }, 200);
 
     window.addEventListener('beforeunload', () => {
         broadcast({ t: 'bye', id: myId });
