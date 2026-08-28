@@ -1,1 +1,14 @@
-tas/**/*.m64
+# No production dependencies: the site is static and the relay is
+# dependency-free. node_modules only appears if you install jsdom,
+# which the DOM tests use (and skip without).
+node_modules/
+
+# Local scratch / tooling
+*.log
+.nyc_output/
+coverage/
+.DS_Store
+
+# Local overrides for running the relay or a tunnel on a custom port
+.env
+.env.local

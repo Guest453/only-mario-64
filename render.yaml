@@ -1,0 +1,18 @@
+# One-command deploy for the only server this Activity needs.
+#   Render → New → Blueprint Repository → pick this repo.
+# Then put the resulting host (no scheme) in the Discord portal as the target of
+# the `/relay` URL mapping. See docs/RELAY.md.
+services:
+  - type: web
+    name: sm64-relay
+    runtime: node
+    plan: free
+    # Zero dependencies: nothing to install, nothing to build.
+    buildCommand: echo 'static relay, no build'
+    startCommand: node relay/server.js
+    healthCheckPath: /status
+    envVars:
+      - key: MAX_PLAYERS
+        value: "8"
+      - key: VERBOSE
+        value: "1"
