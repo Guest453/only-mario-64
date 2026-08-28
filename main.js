@@ -1,5 +1,5 @@
-import { initDiscordActivity } from './discord-activity.js?v=1.1';
-import { initMultiplayer } from './multiplayer.js?v=1.1';
+import { initDiscordActivity } from './discord-activity.js?v=1.4';
+import { initMultiplayer } from './multiplayer.js?v=1.4';
 
 // ============================================================
 // Super Mario 64 Web – AI Player  (v4 — Pollinations-exclusive)
@@ -32,7 +32,10 @@ const POLLINATIONS_APP_KEY    = 'pk_E5ujItrbHDDYv2ri';
 const STORAGE_KEY        = 'pollinations_api_key';
 const MODEL_STORAGE_KEY  = 'sm64_selected_model';
 const CONTROLS_CACHE_KEY = 'sm64_controls_guide';
-const DEFAULT_MODEL      = 'openai-large';
+// Default model = gemma (it supports vision, and the UI lists all Pollinations
+// models so it's always selectable). Falls back to the saved model if the user
+// picked one previously.
+const DEFAULT_MODEL      = 'gemma';
 
 // Minimum ms between AI inference calls (prevents runaway spending)
 const MIN_THINK_INTERVAL_MS = 5000;
@@ -948,7 +951,9 @@ function switchToEmulatorJS(romBlob) {
 // 6. LIVE MODEL FETCHING (Pollinations)
 // ────────────────────────────────────────────────────────────
 let allVisionModels = [];
-let showPaidModels  = false;
+// Show the FULL Pollinations model listing by default (was: false). Hiding paid
+// models behind the "Paid" toggle made the listing look stripped down / removed.
+let showPaidModels  = true;
 
 async function fetchVisionModels() {
     const select     = document.getElementById('model-select');
@@ -961,13 +966,23 @@ async function fetchVisionModels() {
         const res  = await fetch(POLLINATIONS_MODELS_URL);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        allVisionModels = data.filter(m =>
-            Array.isArray(m.input_modalities) && m.input_modalities.includes('image')
-        );
+        // Restore the full Pollinations model listing. The old filter kept only
+        // models whose metadata declared image input (input_modalities), which made
+        // the dropdown look empty/removed. gemma HAS vision, and not every model
+        // advertises its modalities — since this app is vision-based
+        // (providerHasVision() is always true) we list every model the endpoint
+        // returns rather than dropping any.
+        allVisionModels = (Array.isArray(data) ? data : []).filter(m => m && typeof m === 'object');
+
+        // Guarantee the default model is always present & selectable, even if the
+        // endpoint omits it (or marks it paid-only and paid models are hidden).
+        if (!allVisionModels.some(m => m.name === DEFAULT_MODEL)) {
+            allVisionModels.unshift({ name: DEFAULT_MODEL, title: 'Gemma (vision)', paid_only: false });
+        }
         populateModelDropdown();
     } catch (err) {
         console.error('Failed to fetch models:', err);
-        allVisionModels = [{ name: DEFAULT_MODEL, title: 'GPT-5.4 (fallback)', paid_only: false }];
+        allVisionModels = [{ name: DEFAULT_MODEL, title: 'Gemma (offline fallback)', paid_only: false }];
         populateModelDropdown();
         if (statusSpan) statusSpan.textContent = '⚠ offline';
     }
