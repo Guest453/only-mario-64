@@ -32,6 +32,11 @@ const MIME = {
     '.txt': 'text/plain; charset=utf-8',
 };
 
+let relay = null;
+
+/** Relay routes that live on this origin too (`/` stays the game itself). */
+const RELAY_HTTP = new Set(['/status', '/api/status', '/relay', '/relay/status']);
+
 const server = http.createServer((req, res) => {
     if (req.method === 'OPTIONS') {
         res.writeHead(204, {
@@ -42,6 +47,10 @@ const server = http.createServer((req, res) => {
         return res.end();
     }
     let url = decodeURIComponent((req.url || '/').split('?')[0]);
+    // Mounted mode: the relay's own routes answer on the same origin, so one
+    // process is enough for a two-tab party and the client can dial a relative
+    // /ws (the only shape that survives Discord's proxy).
+    if (relay && RELAY_HTTP.has(url) && relay.handleHttp(req, res)) return;
     if (url === '/') url = '/index.html';
     const target = path.normalize(path.join(ROOT, url));
     if (!target.startsWith(ROOT)) {
@@ -76,16 +85,19 @@ const server = http.createServer((req, res) => {
 //     only shape that survives Discord's proxy (WebRTC does not).
 // Set NO_RELAY=1 to serve the static site only.
 if (process.env.NO_RELAY !== '1') {
-    const relay = createRelay({ server, log: process.env.QUIET !== '1' });
-    relay.attach(server);
+    relay = createRelay({ server, log: process.env.QUIET !== '1' });
+    relay.attach(server);        // idempotent: only one 'upgrade' listener
     process.on('SIGTERM', () => relay.close());
 }
 
 server.listen(PORT, HOST, () => {
-    console.log(`🍄 sm64-mp on http://${HOST}:${PORT}`);
-    console.log(`   game:    http://localhost:${PORT}`);
+    // Read the socket, not PORT: PORT=0 is a real deployment config (containers,
+    // CI), and a banner that says :0 is worse than no banner.
+    const port = server.address()?.port || PORT;
+    console.log(`🍄 sm64-mp on http://${HOST}:${port}`);
+    console.log(`   game:    http://localhost:${port}`);
     if (process.env.NO_RELAY !== '1') {
-        console.log(`   relay:   ws://localhost:${PORT}/ws?room=lobby  (same origin, so two tabs = two players)`);
-        console.log(`   status:  http://localhost:${PORT}/status`);
+        console.log(`   relay:   ws://localhost:${port}/ws?room=lobby  (same origin, so two tabs = two players)`);
+        console.log(`   status:  http://localhost:${port}/status`);
     }
 });

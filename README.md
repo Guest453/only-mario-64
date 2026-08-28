@@ -6,7 +6,9 @@ controller.**
 It runs as a [Discord Activity](https://docs.discord.com/developers/activities/overview):
 right-click a voice channel → *Start an Activity* → pick the app, and your whole
 channel lands in the same session. Your name, avatar and the roster come from
-Discord itself — no account, no login, no API key, no nickname field.
+Discord itself — no account, no login, no API key, and no "choose a nickname"
+field inside the client (that box only appears in a plain browser tab, where
+there is no activity instance to read an identity from).
 
 ```
 node server.js          # http://localhost:3823  (game + relay on one port)
@@ -78,7 +80,8 @@ src/discord-mock.js     `?mock=1` stand-in client, so the Discord path runs in a
 scripts/check.js        `npm run check` — node --check every module
 sm64.js + sm64.wasm     the engine (vendored, unmodified)
 docs/                   SDK notes, protocol, relay hosting, auth, design
-test/                   21 tests: arbitration, relay over real sockets, two jsdom end-to-end runs
+test/                   22 tests: arbitration, relay over real sockets, a served-origin
+                        smoke test, two jsdom end-to-end runs
 ```
 
 ## Run it
@@ -94,7 +97,9 @@ open "http://localhost:3823/?mock=1"   # fake Discord identity, no portal needed
 Open `http://localhost:3823` twice, set both tabs to room `lobby`, pick
 🎊 Mash, and both keyboards move the same Mario. Two browser tabs on one
 machine is also the fastest way to feel the PIP/latency behaviour before touching
-Discord.
+Discord. `?mock=1` on both fakes the Discord identity layer (see
+[`src/discord-mock.js`](./src/discord-mock.js)), so names, avatars, mic state and
+layout events behave as they do inside the client without needing the portal.
 
 ## Put it in Discord
 
