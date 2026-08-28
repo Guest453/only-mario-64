@@ -33,9 +33,14 @@ node server.js
 
 ## Discord Activity
 
+Install URL (paste into Discord / install into your server): **https://guest453.github.io/only-mario-64/**
+
+Launch: right-click a voice channel → **Start an Activity** → pick the app.
+
 1. Create an app at https://discord.com/developers/applications
 2. Enable **Activities**
-3. URL mappings (prefix → target):
+3. Set **Installation → Install Link** to **Guild Install only**, then copy the install link and add the app to your server
+4. URL mappings (prefix → target):
 
 | Prefix | Target |
 | --- | --- |

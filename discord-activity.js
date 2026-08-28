@@ -38,6 +38,54 @@ export async function initDiscordActivity() {
 
     if (!active) return info;
 
+    // Discord's activity iframe starts out without keyboard focus, and the
+    // client only routes keystrokes into the frame while it owns focus. The
+    // app's own `canvas.focus()` call runs before the game canvas exists, so
+    // focus lands nowhere and typing in inputs does nothing. Grab focus on a
+    // REAL, visible element (focus() on a hidden element is a no-op) at boot,
+    // and whenever Discord's client steals focus WHILE the user is interacting
+    // with the activity. We never steal focus while the user is doing
+    // something else (e.g. typing in Discord's own chat box).
+    let _lastInFrame = 0;
+    let _lastField = null;
+    document.addEventListener('pointerdown', () => { _lastInFrame = Date.now(); }, true);
+    document.addEventListener('keydown',    () => { _lastInFrame = Date.now(); }, true);
+    // Remember the last field the user was typing in, so a focus reclaim
+    // lands back in THAT field instead of a hardcoded one.
+    document.addEventListener('focusin', (e) => {
+        const el = e.target;
+        if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT')) {
+            _lastField = el;
+            _lastInFrame = Date.now();
+        }
+    }, true);
+    function authGateOpen() {
+        const overlay = document.getElementById('auth-overlay');
+        return !!(overlay && !overlay.classList.contains('hidden'));
+    }
+    function grabFrameFocus(force) {
+        if (authGateOpen()) {
+            const authKey = document.getElementById('auth-apikey');
+            if (authKey && authKey.offsetParent !== null) {
+                try { authKey.focus({ preventScroll: true }); } catch { try { authKey.focus(); } catch {} }
+                return;
+            }
+        }
+        if (!force) return;   // at boot: leave focus on the game canvas
+        const target = (_lastField && _lastField.isConnected) ? _lastField
+            : (document.getElementById('ai-instruction') || document.body);
+        try { target.focus({ preventScroll: true }); } catch { try { target.focus(); } catch {} }
+    }
+    try {
+        grabFrameFocus(false);
+        window.addEventListener('blur', () => {
+            // Only reclaim focus right after the user was using THIS app
+            // (click or key inside the frame in the last ~2s) — never when
+            // they've switched away to Discord's UI for longer.
+            if (Date.now() - _lastInFrame < 2000) grabFrameFocus(true);
+        }, true);
+    } catch {}
+
     const q = new URLSearchParams(location.search);
     info.instanceId = q.get('instance_id') || null;
     info.platform = q.get('platform') || null;
