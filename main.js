@@ -1,3 +1,6 @@
+import { initDiscordActivity } from './discord-activity.js';
+import { initMultiplayer } from './multiplayer.js';
+
 // ============================================================
 // Super Mario 64 Web – AI Player  (v4 — Pollinations-exclusive)
 //
@@ -191,6 +194,7 @@ function readGameState() {
         };
         _gameState = state;
         updateMemoryHUD(state);
+        try { window.__sm64mp?.onGameState?.(state); } catch {}
         return state;
     } catch (err) {
         console.warn('[SM64] read error:', err);
@@ -324,9 +328,9 @@ const PROVIDERS = {
         label: 'Pollinations AI',
         icon:  '🌸',
         hasVision: true,   // verified per-model at model-fetch time
-        keyLabel: 'Pollinations Key (via OAuth)',
-        keyPlaceholder: 'Connect via OAuth below',
-        oauthOnly: true,
+        keyLabel: 'Pollinations API key',
+        keyPlaceholder: 'Paste key or connect with OAuth',
+        oauthOnly: false,
         modelsUrl: POLLINATIONS_MODELS_URL,
         buildRequest(messages, model, key, opts) {
             return {
@@ -690,39 +694,83 @@ function grabKeyFromHash() {
     return key || null;
 }
 
+function applyPollinationsKey(key, { speak = true } = {}) {
+    const k = String(key || '').trim();
+    if (k.length < 8) return false;
+    storeKey(k);
+    pollinationsKey = k;
+    providerKeys.pollinations = k;
+    const overlay = document.getElementById('auth-overlay');
+    overlay?.classList.add('hidden');
+    const disc = document.getElementById('disconnect-btn');
+    if (disc) disc.style.display = '';
+    const st = document.getElementById('auth-status');
+    if (st) st.textContent = '✅ Connected.';
+    if (speak) tts.interrupt('Connected. Your Pollinations key is saved in this browser.');
+    refreshPollenBalance?.();
+    return true;
+}
+window.applyPollinationsKey = applyPollinationsKey;
+
 function initAuth() {
     const overlay    = document.getElementById('auth-overlay');
     const authBtn    = document.getElementById('auth-btn');
     const authStatus = document.getElementById('auth-status');
+    const keyInput   = document.getElementById('auth-apikey');
+    const keyBtn     = document.getElementById('auth-key-btn');
+    const skipBtn    = document.getElementById('auth-skip-btn');
+    const nickInput  = document.getElementById('auth-nick');
+
+    try {
+        const nick = localStorage.getItem('sm64_nick');
+        if (nick && nickInput) nickInput.value = nick;
+    } catch {}
+    nickInput?.addEventListener('change', () => {
+        const n = nickInput.value.trim().slice(0, 24);
+        try { localStorage.setItem('sm64_nick', n); } catch {}
+        window.__sm64mp?.setName?.(n);
+    });
 
     const hashKey = grabKeyFromHash();
-    if (hashKey) {
-        storeKey(hashKey);
-        pollinationsKey = hashKey;
-        providerKeys.pollinations = hashKey;
-        authStatus.textContent = '✅ Authorized! Loading game…';
-        overlay.classList.add('hidden');
-        document.getElementById('disconnect-btn').style.display = '';
-        tts.interrupt('Connected! Your Pollinations account is linked. The game is ready.');
-        return;
-    }
+    if (hashKey && applyPollinationsKey(hashKey, { speak: true })) return;
 
     const stored = getStoredKey();
     if (stored) {
-        pollinationsKey = stored;
-        providerKeys.pollinations = stored;
-        overlay.classList.add('hidden');
-        document.getElementById('disconnect-btn').style.display = '';
+        applyPollinationsKey(stored, { speak: false });
         return;
     }
 
     overlay.classList.remove('hidden');
-    tts.speak('Welcome to SM64 AI Player! Connect your Pollinations account to get started.');
+    tts.speak('Welcome! Paste a Pollinations API key, or connect with OAuth.');
+
+    const submitKey = () => {
+        const k = keyInput?.value || '';
+        if (!applyPollinationsKey(k)) {
+            if (authStatus) authStatus.textContent = '⚠ That key looks too short. Paste the full API key.';
+            return;
+        }
+    };
+    keyBtn?.addEventListener('click', submitKey);
+    keyInput?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); submitKey(); }
+    });
 
     authBtn.addEventListener('click', () => {
+        const url = buildAuthUrl();
+        const dc = window.__sm64discord;
+        if (dc?.active) {
+            authStatus.textContent = 'OAuth opens outside Discord — after you finish, come back and paste the API key.';
+            dc.openExternal(url);
+            return;
+        }
         authStatus.textContent = '🔄 Redirecting to Pollinations…';
         authBtn.disabled = true;
-        setTimeout(() => { window.location.href = buildAuthUrl(); }, 300);
+        setTimeout(() => { window.location.href = url; }, 300);
+    });
+
+    skipBtn?.addEventListener('click', () => {
+        overlay.classList.add('hidden');
+        tts.interrupt('Playing locally. Cloud AI stays off until you add a key.');
     });
 
     document.getElementById('auth-tutorial-btn').addEventListener('click', () => openTutorial());
@@ -1008,6 +1056,33 @@ function buildProviderPanel() {
     connRow.appendChild(connLabel);
     connRow.appendChild(connStatus);
     panel.appendChild(connRow);
+
+    const keyRow = document.createElement('div');
+    keyRow.className = 'provider-row';
+    const keyLab = document.createElement('label');
+    keyLab.className = 'provider-label';
+    keyLab.textContent = 'Paste API key';
+    const keyInp = document.createElement('input');
+    keyInp.type = 'password';
+    keyInp.className = 'provider-key-input';
+    keyInp.placeholder = 'sk_… or pk_…';
+    keyInp.value = pollinationsKey || '';
+    const keySave = document.createElement('button');
+    keySave.className = 'provider-save-btn';
+    keySave.textContent = '💾 Save key';
+    keySave.addEventListener('click', () => {
+        if (applyPollinationsKey(keyInp.value)) {
+            keySave.textContent = '✓ Saved';
+            connStatus.textContent = '✅ Connected';
+            setTimeout(() => { keySave.textContent = '💾 Save key'; }, 1200);
+        } else {
+            keySave.textContent = '⚠ Too short';
+        }
+    });
+    keyRow.appendChild(keyLab);
+    keyRow.appendChild(keyInp);
+    panel.appendChild(keyRow);
+    panel.appendChild(keySave);
 
     // Vision source row — direct canvas grab vs screen-share
     const visRow = document.createElement('div');
@@ -1299,8 +1374,8 @@ const TUTORIAL_STEPS = [
     },
     {
         icon: '🔑', title: 'Step 1 — Connect Your Account',
-        body: 'Click the green Connect button to link your Pollinations account via OAuth, then pick any vision model from the model dropdown. No other API keys needed.',
-        narration: 'Connect your Pollinations account with the green button, then pick a vision model from the dropdown.',
+        body: 'Paste a Pollinations API key, or click Connect to sign in with OAuth. Inside Discord, paste a key (OAuth cannot run in the iframe). Then pick a vision model from the dropdown. Click Watch to see other people\'s AIs in the same room.',
+        narration: 'Paste a Pollinations API key, or connect with OAuth. Then pick a vision model. Open Watch to see other AIs.',
     },
     {
         icon: '🎮', title: 'Step 2 — Play It Yourself',
@@ -3281,6 +3356,7 @@ function simulateKeyPress(key, duration = 100) {
 function updateAIStatus(message) {
     aiStatus.style.display = 'block';
     aiStatus.textContent   = message;
+    try { window.__sm64mp?.onStatus?.(message); } catch {}
 }
 
 // Render small visible badges for AI-detected state so the user can verify
@@ -4330,6 +4406,7 @@ async function toggleAIPlayer() {
         }
 
         aiPlayerActive = true;
+        try { window.__sm64mp?.setPlaying?.(true); } catch {}
         _consecutiveErrors = 0;
         _lastFrameHash = null;
         _identicalFrameCount = 0;
@@ -4457,6 +4534,7 @@ async function handleManualModeClick() {
 
 function stopAIPlayer() {
     aiPlayerActive = false;
+    try { window.__sm64mp?.setPlaying?.(false); } catch {}
     _isThinking    = false;
 
     // Clean up rapid-fire mode
@@ -4829,6 +4907,7 @@ function updateStreamerOverlay(state) {
 // Mirror exactly what the AI "sees" into the streamer overlay
 function setAIVisionFrame(dataUrl) {
     _aiVisionFrame = dataUrl;
+    try { window.__sm64mp?.onFrame?.(dataUrl); } catch {}
     // In live mode the background loop drives the panel (shows continuous gameplay)
     if (_turboMode && _turboCfg.live && _streamerMode) return;
     updateStreamerVision(dataUrl);
@@ -5190,6 +5269,13 @@ if (_debugHUD) document.getElementById('debug-btn')?.classList.add('active');
 updateBrainmapViz();
 fetchVisionModels();   // Pollinations vision-model list
 initAuth();
+initDiscordActivity().then((dc) => {
+    window.__sm64discord = dc;
+    initMultiplayer({ discord: dc });
+}).catch((err) => {
+    console.warn('[Discord] ', err);
+    initMultiplayer({});
+});
 renderControlsGuide(null);   // show static controls immediately
 // Voices may not be loaded yet — wait for them then re-render tutorial if open
 window.speechSynthesis?.addEventListener('voiceschanged', () => {});
