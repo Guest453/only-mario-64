@@ -519,7 +519,20 @@ export function createRelay(opts = {}) {
         handleHttp,
         rooms,
         stats: () => ({ rooms: rooms.size, connections: conns }),
-        close: () => new Promise((r) => { clearInterval(hb); server.close(r); }),
+        /**
+         * Graceful, but bounded. `server.close()` waits for every live socket —
+         * and a room full of players never voluntarily disconnects, so an
+         * unbounded close turns a SIGTERM into a hung deploy (Render restarts,
+         * Docker stops, our tests time out). Two seconds, then we are done.
+         */
+        close: () => new Promise((done) => {
+            clearInterval(hb);
+            try { server.closeAllConnections?.(); } catch {}
+            let finished = false;
+            const finish = () => { if (!finished) { finished = true; done(); } };
+            server.close(finish);
+            setTimeout(finish, 2000).unref?.();
+        }),
     };
 }
 

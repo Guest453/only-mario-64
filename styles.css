@@ -257,6 +257,9 @@ html:not(.coarse):not(.tall) #touch { display: none !important; }
 .pl-meta .talking { color: #a7f3c0; }
 .pl-meta .ping { color: #7c848e; }
 /* In the Activity but not in this game: real, present, not pressing. */
+.pl-body { min-width: 0; display: flex; flex-direction: column; gap: 3px; flex: 1 1 auto; }
+/* `html.in-discord` is set by src/discord.js when the SDK handshake is live —
+   a hook for anything that must behave differently inside the iframe. */
 .pl.dc-only { opacity: .52; border-style: dashed; }
 .pl.dc-only:hover { opacity: .8; }
 /* One action per roster row (make host / watch). */

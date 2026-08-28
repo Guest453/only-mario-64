@@ -87,7 +87,15 @@ const server = http.createServer((req, res) => {
 if (process.env.NO_RELAY !== '1') {
     relay = createRelay({ server, log: process.env.QUIET !== '1' });
     relay.attach(server);        // idempotent: only one 'upgrade' listener
-    process.on('SIGTERM', () => relay.close());
+    // Containers send SIGTERM and then SIGKILL; exiting promptly (after a bounded
+    // drain) is what makes a restart clean instead of a stale-task crash.
+    const shutdown = (sig) => () => {
+        console.log(`\n${sig} — draining`);
+        relay.close().finally(() => server.close(() => process.exit(0)));
+        setTimeout(() => process.exit(0), 2500).unref?.();
+    };
+    process.on('SIGTERM', shutdown('SIGTERM'));
+    process.on('SIGINT', shutdown('SIGINT'));
 }
 
 server.listen(PORT, HOST, () => {
