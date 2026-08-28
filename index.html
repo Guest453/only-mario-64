@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="description" content="Watch an AI play Super Mario 64 — Discord Activity + multiplayer spectator lobby.">
     <title>SM64 AI Player</title>
-    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="./styles.css?v=1.2">
     <script src="./lib/peerjs.min.js"></script>
     <!-- Rom Patcher JS — all format modules so parsePatchFile never hits undefined globals -->
     <script src="./lib/rom-patcher-js/modules/HashCalculator.js"></script>
@@ -512,7 +512,7 @@
           // Dynamically load main.js for AI features
           var s = document.createElement('script');
           s.type = 'module';
-          s.src = './main.js';
+          s.src = './main.js?v=1.2';
           document.head.appendChild(s);
       } else {
           // ── Original boot path: load sm64.wasm + main.js ──
@@ -538,8 +538,8 @@
           Module.print    = (t) => console.log(t);
           Module.printErr = (t) => console.warn(t);
 
-          document.write('<script src="./sm64.js"><\/script>');
-          document.write('<script type="module" src="./main.js"><\/script>');
+          document.write('<script src="./sm64.js?v=1.2"><\/script>');
+          document.write('<script type="module" src="./main.js?v=1.2"><\/script>');
       }
     </script>
 </body>
