@@ -3251,19 +3251,39 @@ function _isEditable(el) {
     return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
 }
 function _agentKeyGuard(e) {
-    if (!_agentOnly || !e.isTrusted) return;   // AI's synthetic keys pass through
+    if (!e.isTrusted) return;   // AI's synthetic keys pass through
     // Typing in ANY form field: stop the key reaching the game, but DON'T
     // preventDefault — that lets native text editing (chars/Backspace/caret) work.
     // stopPropagation doesn't cancel the default action.
+    //
+    // This is ALWAYS on (not just agent-only): the wasm SDL2 keyboard handler
+    // sits on document and would otherwise see every keystroke typed in a
+    // field — and inside Discord's activity iframe it can even preventDefault
+    // them, which is exactly why typing "does nothing" there. Stopping
+    // propagation at window capture means the game never sees the key, so it
+    // can never cancel the text insertion.
     if (_isEditable(e.target) || _isEditable(document.activeElement)) {
         e.stopImmediatePropagation();
-        const instr = document.getElementById('ai-instruction');
-        if (e.type === 'keydown' && e.key === 'Enter' && (e.target === instr || document.activeElement === instr)) {
-            e.preventDefault();
-            document.getElementById('send-instruction')?.click();
+        // Replicate the per-field Enter handlers here: they're attached to the
+        // inputs themselves and never fire once we stop propagation at window
+        // capture, before the event reaches the target.
+        if (e.type === 'keydown' && e.key === 'Enter') {
+            const t = e.target;
+            const id = (t && t.id) || (document.activeElement && document.activeElement.id) || '';
+            const btnId = {
+                'ai-instruction': 'send-instruction',
+                'auth-apikey':    'auth-key-btn',
+                'mp-room':        'mp-join-btn',
+            }[id];
+            if (btnId) {
+                e.preventDefault();
+                const btn = document.getElementById(btnId);
+                if (btn) btn.click();
+            }
         }
         return;
     }
+    if (!_agentOnly) return;   // the game-key withholding below is agent-only
     if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;  // app shortcuts pass
     if (_GAME_GUARD_CODES.has(e.code)) { e.stopImmediatePropagation(); e.preventDefault(); }
 }
