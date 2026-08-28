@@ -1,6 +1,11 @@
 // Multiplayer: each client runs its own WASM Mario, then live-streams
 // the canvas over WebRTC (PeerJS). Split-screen + nametags.
 // Discord Activities auto-join the voice-channel instance as the room.
+//
+// Stream lock: the only outbound media is #canvas.captureStream (no camera,
+// mic, or screen). Inbound camera/screen/audio tracks are dropped. This is
+// how we keep the lobby Mario-only — we set *what* is streamed, not a
+// post-hoc NSFW filter.
 
 function nickDefault() {
     try {
@@ -48,7 +53,47 @@ function shrinkFrame(dataUrl) {
 }
 
 function gameCanvas() {
+    // Only the original SM64 wasm canvas is ever allowed on the wire.
+    // Custom ROM / EmulatorJS / any other element is not streamable.
+    if (window.SM64JS_MODE) return null;
+    const wrap = document.getElementById('original-game-container');
+    if (wrap && wrap.style.display === 'none') return null;
     return document.getElementById('canvas');
+}
+
+function isGameLikeVideoTrack(track) {
+    if (!track || track.kind !== 'video') return false;
+    const label = String(track.label || '');
+    if (/camera|webcam|microphone|headset|display|screen|window|monitor|\btab\b|facetime|droidcam|\bobs\b|virtual/i.test(label)) {
+        return false;
+    }
+    let s = {};
+    try { s = track.getSettings() || {}; } catch {}
+    // Cameras expose facingMode / deviceId. Screen share exposes displaySurface.
+    if (s.facingMode || s.deviceId || s.groupId) return false;
+    if (s.displaySurface || s.cursor || s.logicalSurface) return false;
+    return true;
+}
+
+function sanitizeInboundStream(stream) {
+    if (!stream || typeof stream.getTracks !== 'function') return null;
+    for (const t of stream.getAudioTracks?.() || []) {
+        try { t.stop(); } catch {}
+        try { stream.removeTrack(t); } catch {}
+    }
+    const videos = stream.getVideoTracks?.() || [];
+    if (videos.length !== 1 || !isGameLikeVideoTrack(videos[0])) {
+        for (const t of videos) { try { t.stop(); } catch {} }
+        return null;
+    }
+    return stream;
+}
+
+function acceptThumb(dataUrl) {
+    if (typeof dataUrl !== 'string') return false;
+    if (!dataUrl.startsWith('data:image/jpeg;base64,')) return false;
+    if (dataUrl.length < 32 || dataUrl.length > 120000) return false;
+    return true;
 }
 
 export function initMultiplayer({ discord } = {}) {
@@ -114,11 +159,26 @@ export function initMultiplayer({ discord } = {}) {
     }
 
     function grabLocalStream() {
-        if (localStream && localStream.active) return localStream;
+        if (localStream && localStream.active) {
+            for (const t of localStream.getAudioTracks()) {
+                try { t.stop(); } catch {}
+                try { localStream.removeTrack(t); } catch {}
+            }
+            return localStream;
+        }
         const c = gameCanvas();
         if (!c || typeof c.captureStream !== 'function') return null;
         try {
+            // Hard lock: the only thing PeerJS ever gets is this canvas.
+            // No getUserMedia, no getDisplayMedia, no extra tracks.
             localStream = c.captureStream(24);
+            for (const t of localStream.getAudioTracks()) {
+                try { t.stop(); } catch {}
+                try { localStream.removeTrack(t); } catch {}
+            }
+            for (const t of localStream.getVideoTracks()) {
+                try { t.contentHint = 'motion'; } catch {}
+            }
             return localStream;
         } catch (err) {
             console.warn('[MP] captureStream failed', err);
@@ -126,12 +186,30 @@ export function initMultiplayer({ discord } = {}) {
         }
     }
 
+    function dropUnsafeStream(remoteId, reason) {
+        console.warn('[MP] blocked inbound stream', remoteId, reason);
+        const p = others.get(remoteId) || { id: remoteId };
+        delete p.stream;
+        p.blocked = true;
+        others.set(remoteId, p);
+        try { calls.get(remoteId)?.close(); } catch {}
+        renderStage();
+        render();
+        setStatus('Blocked a non-Mario stream (camera/screen/audio aren’t allowed)');
+    }
+
     function setupCall(call, remoteId) {
         if (!call || calls.has(remoteId)) return;
         calls.set(remoteId, call);
         call.on('stream', (stream) => {
+            const safe = sanitizeInboundStream(stream);
+            if (!safe) {
+                dropUnsafeStream(remoteId, 'not a Mario canvas');
+                return;
+            }
             const p = others.get(remoteId) || { id: remoteId };
-            p.stream = stream;
+            p.stream = safe;
+            p.blocked = false;
             others.set(remoteId, p);
             renderStage();
             render();
@@ -202,6 +280,7 @@ export function initMultiplayer({ discord } = {}) {
             return;
         }
         if (msg.t === 'frame' && msg.id && msg.id !== myId) {
+            if (!acceptThumb(msg.frame)) return;
             const prev = others.get(msg.id) || { id: msg.id };
             others.set(msg.id, { ...prev, frame: msg.frame, updated: Date.now() });
             render();
@@ -335,7 +414,7 @@ export function initMultiplayer({ discord } = {}) {
     function renderStage() {
         const stage = $('remote-stage');
         const app = document.getElementById('app');
-        const remotes = [...others.values()].filter(p => p.stream || p.frame);
+        const remotes = [...others.values()].filter(p => p.stream);
         const split = remotes.length > 0;
         app?.classList.toggle('mp-split', split);
         if (!stage) return;
@@ -361,15 +440,15 @@ export function initMultiplayer({ discord } = {}) {
             pane.querySelector('.nametag').textContent = p.name || '???';
             const vid = pane.querySelector('video');
             const img = pane.querySelector('img');
+            vid.muted = true;
+            vid.autoplay = true;
+            vid.playsInline = true;
+            vid.disablePictureInPicture = true;
             if (p.stream && vid.srcObject !== p.stream) {
                 vid.srcObject = p.stream;
                 vid.style.display = 'block';
                 img.style.display = 'none';
                 vid.play?.().catch(() => {});
-            } else if (!p.stream && p.frame) {
-                vid.style.display = 'none';
-                img.style.display = 'block';
-                img.src = p.frame;
             }
         }
         for (const pane of [...stage.querySelectorAll('.remote-pane')]) {
@@ -495,11 +574,12 @@ export function initMultiplayer({ discord } = {}) {
             render();
         },
         async onFrame(dataUrl) {
+            if (!gameCanvas()) return;
             const now = Date.now();
             if (now - lastFrameAt < 1800) return;
             lastFrameAt = now;
             const small = await shrinkFrame(dataUrl);
-            if (!small) return;
+            if (!acceptThumb(small)) return;
             me.frame = small;
             broadcast({ t: 'frame', id: myId, frame: small });
             render();
