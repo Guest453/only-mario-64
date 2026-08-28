@@ -143,6 +143,35 @@ process; (2) the room key is the Discord instance id, which is unguessable-ish b
 not secret. The relay has rate limits and an 8-player cap, no auth. Don't put
 anything on this host that you'd mind the internet poking.
 
+## No server at all: the Cloudflare Worker (Workers + Durable Objects)
+
+`worker/` is the same room rules (`src/room-core.js`, shared with the Node relay)
+on a Durable Object per room — no process to keep alive, no TLS to configure, and
+a public `wss://` URL for free. It is the option to reach for when you do not want
+a VPS; it is *not* a rewrite, so both backends answer the same protocol.
+
+```bash
+npm i -D wrangler
+npx wrangler dev --config worker/wrangler.toml          # local workerd, no account
+node scripts/worker-smoke.mjs                          # ← prove it before deploying
+npx wrangler login && npx wrangler deploy --config worker/wrangler.toml
+node scripts/worker-smoke.mjs --url wss://sm64-relay.<you>.workers.dev
+```
+
+Then the portal mapping is `/relay` → `sm64-relay.<you>.workers.dev`, exactly as
+for a VPS. Two things to know:
+
+- **The site still has to be hosted somewhere.** This removes the *relay* server,
+  not the static one (GitHub Pages/surge/your VPS is fine for that half).
+- Rooms hibernate between messages. A room's state lives in DO storage and is
+  restored on wake, which is what the last step of the smoke script checks: a
+  player joining after everyone else has been idle still finds the mode and roster
+  it should. Votes are the only timer kept (`storage.setAlarm`); `setTimeout` would
+  hold the isolate awake and is not allowed to be the source of truth.
+
+Free plan is enough (one room = one DO = max 8 players, and the 100 req/s soft
+limit per room is far above the ~4 input frames/s this game sends).
+
 ## TLS, which you do need
 
 Discord's proxy only forwards to `https://`/`wss://` origins. Terminate TLS in
@@ -188,9 +217,27 @@ on its own; if even that annoys you, cron a `curl /status` every 5 minutes.
 ## Testing
 
 ```bash
-node --test --test-force-exit "test/relay.test.mjs"   # 8 integration tests, real sockets
-npm test                                              # + arbitration + two DOM e2e files
+npm test                                              # everything, no installs needed
+node --test --test-force-exit "test/relay.test.mjs"   # relay over real sockets
+node --test --test-force-exit "test/room-core.test.mjs"  # the rules both backends share
 ```
 
 They drive it through the raw-socket client in `test/ws-client.mjs`, so the suite
 needs nothing installed and exercises real RFC 6455 framing rather than a mock.
+`test/proxy-edge.test.mjs` boots the actual game against a prefix-preserving
+proxy in front of the relay — that is Discord's shape — and asserts a remote press
+still becomes a key press on the canvas.
+
+For a host you have deployed, `scripts/worker-smoke.mjs` is the check to run:
+
+```bash
+node scripts/worker-smoke.mjs --url wss://sm64relay.exe.xyz
+node scripts/worker-smoke.mjs --url ws://127.0.0.1:8790 --path /relay/ws
+```
+
+11 numbered steps (join, election, star routing for presses, mode broadcast, video
+to watchers only, chat, room isolation, a vote settled by the relay, leave,
+rejoin-with-state). Both backends pass it today — the Worker under `wrangler dev`
+and `relay/server.js` on Node. If a step fails, the message tells you what that
+client actually received, which is normally "nothing" (the host is unreachable or
+the login gate ate it) or "welcome with 1 player" (the proxy stripped the room key).

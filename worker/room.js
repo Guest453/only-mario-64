@@ -83,7 +83,6 @@ export class Sm64Room extends DurableObject {
 
         const pair = new WebSocketPair();
         const [client, server] = Object.values(pair);
-        const cid = core.players.size ? null : null;          // join() assigns it
         const res = core.join({
             name: url.searchParams.get('name'),
             id: url.searchParams.get('id'),
@@ -105,12 +104,14 @@ export class Sm64Room extends DurableObject {
             return new Response(null, { status: 101, webSocket: client });
         }
 
-        void cid;
+        // The tag is what survives hibernation: `getWebSockets('cid:x')` resolves a
+        // target even while its socket is asleep, so routing never needs to wake
+        // anyone up just to read a field.
         this.ctx.acceptWebSocket(server, [`cid:${res.cid}`]);
         server.serializeAttachment({ cid: res.cid, joinedAt: Date.now() });
         server.send(JSON.stringify(res.welcome));
 
-        this.#fan(res.emit, server);
+        this.#fan(res.emit, core);
         await this.#save();
         return new Response(null, { status: 101, webSocket: client });
     }
@@ -127,7 +128,7 @@ export class Sm64Room extends DurableObject {
             let msg = null;
             try { msg = JSON.parse(message); } catch { core.handle(cid, { t: 'bad' }, Date.now(), message.length); return; }
             const out = core.handle(cid, msg, Date.now(), message.length);
-            this.#fan(out.emit, ws);
+            this.#fan(out.emit, core);
             if (out.persist) await this.#save();
             // A ballot is the only thing worth an alarm for: it must settle even
             // if every player goes quiet, and it must not hold the object awake
@@ -153,7 +154,7 @@ export class Sm64Room extends DurableObject {
         const cid = ws.deserializeAttachment()?.cid;
         if (cid) {
             const out = core.leave(cid, Date.now());
-            this.#fan(out.emit);
+            this.#fan(out.emit, core);
             await this.#save();
         }
         await this.#closeIfEmpty();
@@ -170,7 +171,7 @@ export class Sm64Room extends DurableObject {
         const core = await this.#core();
         if (core.vote) {
             const out = core.tally(Date.now());
-            this.#fan(out.emit);
+            this.#fan(out.emit, core);
         }
         await this.ctx.storage.deleteAlarm();
         if (core.players.size) await this.#save();
@@ -183,12 +184,26 @@ export class Sm64Room extends DurableObject {
      * matched by socket identity rather than attachment, which is what makes
      * hibernation safe here.
      */
-    #fan(emit = [], except = null) {
+    #fan(emit = [], core = null) {
         for (const out of emit) {
             const text = JSON.stringify(out.m);
             if (out.to === '*') {
-                for (const ws of this.ctx.getWebSockets()) {
-                    if (ws === except) continue;
+                // Broadcast by *membership*, not by `getWebSockets()`: the room's
+                // own player list is authoritative, and the tagged lookup is the
+                // one call that is guaranteed to resolve a hibernated socket. (An
+                // untagged getWebSockets() is documented to return every socket,
+                // but in local workerd it comes back empty for tagged/hibernated
+                // ones — which would silently swallow roster updates.)
+                // `except` is the core's own rule (the joiner already has the
+                // roster in their `welcome`) — never an identity guess about who
+                // sent the frame, or a host would be excluded from its own room.
+                const skip = out.except ?? null;
+                const targets = core ? core.players.keys()
+                    : this.ctx.getWebSockets().map((ws) => ws.deserializeAttachment?.()?.cid);
+                for (const cid of targets) {
+                    if (cid === skip) continue;
+                    const ws = this.ctx.getWebSockets(`cid:${cid}`)[0];
+                    if (!ws) continue;
                     try { ws.send(text); } catch { /* raced with a disconnect */ }
                 }
             } else {

@@ -16,6 +16,9 @@
 
 import { roomKeyOf } from '../src/room-core.js';
 
+// Wrangler needs the Durable Object class reachable from the entry module.
+export { Sm64Room } from './room.js';
+
 const TEXT = { 'Content-Type': 'text/plain; charset=utf-8', 'Access-Control-Allow-Origin': '*' };
 const JSONH = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' };
 

@@ -92,7 +92,11 @@ export function wsClient({ port, path = '/ws?room=lobby', host = '127.0.0.1' }) 
             for (;;) {
                 const left = end - Date.now();
                 if (left <= 0) throw new Error('no matching message');
-                const m = await this.next(left);
+                // A pending next() that times out must not surface as an unhandled
+                // rejection when `until` decides to give up first — tests that
+                // deliberately wait for a message that never comes rely on that.
+                const m = await this.next(left).catch(() => null);
+                if (m === null) throw new Error('no matching message');
                 if (m && pred(m)) return m;
             }
         },

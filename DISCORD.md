@@ -28,7 +28,7 @@ Free options, in the order that costs the least time:
 | --- | --- | --- |
 | **exe.dev / any VPS with TLS at the edge** | `HOST=0.0.0.0 PORT=8000 node server.js` | the box is **private by default** — `ssh exe.dev share set-public <vm>` or Discord just gets a login redirect. Full recipe in [docs/RELAY.md](./docs/RELAY.md). |
 | **Render** (free web service) | push `render.yaml`, done | it spins down when idle; ~30 s first join |
-| **Cloudflare Workers + Durable Objects** | `worker/` (same room logic, no process) | still needs a static host for the site |
+| **Cloudflare Workers + Durable Objects** | `npx wrangler deploy` on `worker/` — no process at all | the *site* still needs a host; rooms sleep between messages (state is restored from DO storage) |
 
 ```bash
 node relay/server.js          # relay only — prints ws://0.0.0.0:8790/ws?room=CODE

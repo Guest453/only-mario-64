@@ -79,7 +79,9 @@ render.yaml             one-click deploy for that file
 src/discord-mock.js     `?mock=1` stand-in client, so the Discord path runs in a plain tab
 scripts/check.js        `npm run check` — node --check every module
 sm64.js + sm64.wasm     the engine (vendored, unmodified)
-worker/                 (experimental) same room rules on Cloudflare Durable Objects
+src/room-core.js          the room rules, shared by both relay backends
+worker/ + wrangler.toml   the same rules on Cloudflare Durable Objects (no server)
+scripts/worker-smoke.mjs  protocol conformance check against a running relay
 docs/                   SDK notes, protocol, relay hosting, auth, design
 test/                   23 tests: arbitration, relay over real sockets, a served-origin
                         smoke test, two jsdom end-to-end runs, and the app driven
@@ -91,8 +93,10 @@ test/                   23 tests: arbitration, relay over real sockets, a served
 ```bash
 node server.js                      # :3823 — serves the site AND the relay on /ws
 node relay/server.js                # ...or the relay alone on :8790
-npm test                            # relay + arbitration + jsdom end-to-end
+npm test                            # relay + arbitration + jsdom end-to-end (34 tests)
 npm run check                       # node --check every module
+npm run smoke -- --url ws://127.0.0.1:3823   # drive a LIVE relay: 11 protocol steps,
+                                            # point --url at any host you deploy to
 open "http://localhost:3823/?mock=1"   # fake Discord identity, no portal needed
 ```
 

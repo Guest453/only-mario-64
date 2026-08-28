@@ -2,14 +2,15 @@
   "name": "sm64-mp-discord-activity",
   "version": "2.0.0",
   "private": true,
-  "description": "Super Mario 64 multiplayer as a Discord Activity — one shared pad, over a WebSocket relay",
+  "description": "Super Mario 64 multiplayer as a Discord Activity \u2014 one shared pad, over a WebSocket relay",
   "type": "module",
   "scripts": {
     "start": "node server.js",
     "relay": "node relay/server.js",
     "game": "node server.js",
     "test": "node --test --test-force-exit \"test/*.test.mjs\"",
-    "check": "node scripts/check.js"
+    "check": "node scripts/check.js",
+    "smoke": "node scripts/worker-smoke.mjs"
   },
   "engines": {
     "node": ">=18"

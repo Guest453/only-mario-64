@@ -299,6 +299,9 @@ export class RoomCore {
 
     restore(snap = {}) {
         if (!snap) return this;
+        // The snapshot IS the room identity: on a Durable Object wake the URL that
+        // happened to trigger it must not get to rename the room.
+        this.key = roomKeyOf(snap.key || this.key);
         this.host = snap.host ?? this.host;
         this.pin = snap.pin ?? null;
         if (snap.state) this.state = { ...this.state, ...snap.state };

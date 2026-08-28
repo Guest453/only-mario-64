@@ -1,0 +1,27 @@
+# Cloudflare Workers config for the serverless flavour of the relay.
+#
+# You only need this if you would rather not run a VPS: `npx wrangler deploy`
+# turns worker/index.js into wss://sm64-relay.<your-subdomain>.workers.dev, which
+# is all the Discord activity proxy asks for. The Node relay (relay/server.js) and
+# this one implement the same rules via src/room-core.js, so pick one, not both.
+#
+#   npx wrangler dev      # local workerd, same behaviour, no account needed
+#   npx wrangler deploy   # needs `npx wrangler login`
+#
+# Copy this file to the repo root (or run wrangler with --config worker/wrangler.toml).
+
+name = "sm64-relay"
+main = "index.js"
+compatibility_date = "2026-06-01"
+# ≥ 2026-04-07 gives `web_socket_auto_reply_to_close`, so calling ws.close() on a
+# hibernated socket is a no-op instead of a thrown error. Don't lower this.
+
+[vars]
+MAX_PLAYERS = "8"
+
+[durable_objects]
+bindings = [{ name = "ROOMS", class_name = "Sm64Room" }]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Sm64Room"]

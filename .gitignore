@@ -12,3 +12,6 @@ coverage/
 # Local overrides for running the relay or a tunnel on a custom port
 .env
 .env.local
+
+# wrangler local dev state (DO sqlite + sockets)
+.wrangler/
