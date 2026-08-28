@@ -71,6 +71,78 @@ trust any client-supplied field. `id`/`name` are display data. That's enough for
 a party game and it is stated in [docs/PROTOCOL.md](./PROTOCOL.md) rather than
 buried.
 
+## The cheapest option: a VPS whose edge already does TLS (exe.dev & friends)
+
+**Question we get constantly: does the relay need a raw TCP port?** No. It is an
+HTTP server that answers a WebSocket upgrade on the same port — `wss://` from the
+browser, `http://` on the box. You never expose TCP, never open a second port, and
+Discord's proxy (which only speaks HTTPS/WSS to your origin) is happy. exe.dev is
+the nicest version of this because its edge terminates TLS for you and forwards
+**one** port on the VM, and its docs say WebSockets/long-lived connections are
+supported through that proxy.
+
+```bash
+ssh exe.dev new sm64relay
+ssh sm64relay.exe.xyz
+  git clone -b arena/01a04a00-only-mario-64 https://github.com/Guest453/only-mario-64.git
+  cd only-mario-64
+  HOST=0.0.0.0 PORT=8000 node server.js      # site + relay on one port, zero installs
+```
+
+Then the two things that actually bite:
+
+```bash
+ssh exe.dev share port sm64relay 8000        # tell the edge which port to forward
+ssh exe.dev share set-public sm64relay       # ← REQUIRED
+```
+
+`set-public` matters because exe.dev VMs are **private by default**: anyone not on
+your share list hitting `sm64relay.exe.xyz` gets redirected to exe.dev's login.
+Discord's proxy is "anyone", so without this the Activity shows `○ solo` forever
+and there is no error to read. If you would rather keep the whole box private, give
+the relay its own public hostname instead of the shared one.
+
+Verify *from somewhere that is not logged in* (phone, incognito on another
+network) — both of these must work before touching the portal:
+
+```bash
+curl -s https://sm64relay.exe.xyz/status | head -3          # {"ok":true,...}
+curl -is -o /dev/null -H 'Connection: Upgrade' -H 'Upgrade: websocket' \
+  -H "Sec-WebSocket-Key: $(openssl rand -base64 16)" -H 'Sec-WebSocket-Version: 13' \
+  https://sm64relay.exe.xyz/ws?room=probe | head -1         # HTTP/1.1 101 Switching Protocols
+```
+
+Portal → Activities → URL Mappings: `/relay` → `sm64relay.exe.xyz` (no scheme, no
+path). Whether the edge forwards `/relay/ws` or `/ws` does not matter — the relay
+matches any path ending in `/ws`, and `test/proxy-edge.test.mjs` runs the whole app
+through a prefix-stripping proxy to prove both shapes work.
+
+Keep it alive across restarts (exe.dev restarts idle VMs):
+
+```bash
+sudo tee /etc/systemd/system/sm64relay.service > /dev/null <<'UNIT'
+[Unit]
+Description=SM64 multiplayer relay
+After=network-online.target
+[Service]
+WorkingDirectory=/home/exe/only-mario-64
+Environment=HOST=0.0.0.0
+Environment=PORT=8000
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+[Install]
+WantedBy=multi-user.target
+UNIT
+sudo systemctl enable --now sm64relay
+```
+
+Two notes: (1) `node server.js` serves the game too, so you can point the `/`
+mapping at the same host and skip GitHub Pages/surge entirely — one origin, one
+process; (2) the room key is the Discord instance id, which is unguessable-ish but
+not secret. The relay has rate limits and an 8-player cap, no auth. Don't put
+anything on this host that you'd mind the internet poking.
+
 ## TLS, which you do need
 
 Discord's proxy only forwards to `https://`/`wss://` origins. Terminate TLS in

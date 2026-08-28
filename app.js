@@ -59,7 +59,11 @@ async function boot() {
     try { await initDiscord(); }
     catch (err) { console.warn('[app] discord init failed', err); dc.error = String(err?.message || err); }
 
-    if (dc.sdk?.__mock) mockScenario(dc.sdk);
+    // Scripted fake joins/mic-blips make a solo demo feel alive; `?mockscript=0`
+    // turns them off so a screenshot or a test is deterministic.
+    if (dc.sdk?.__mock && new URLSearchParams(location.search).get('mockscript') !== '0') {
+        mockScenario(dc.sdk);
+    }
     UI.setLoading(0.12, 'loading the engine…');
     const enginePromise = whenEngine();      // parallel: nobody waits on nobody
 
@@ -308,7 +312,9 @@ function applyInputPolicy() {
 
     const banner = $('banner-text');
     if (banner) {
-        if (!S.joined && S.net?.status === 'offline') banner.textContent = 'relay unreachable — this is your own copy. docs/RELAY.md takes 2 minutes';
+        // "Offline" and "waiting to retry" are the same thing to the person playing:
+        // no room. Only the first attempt in flight stays quiet.
+        if (!S.joined && S.net && S.net.status !== 'connecting') banner.textContent = 'relay unreachable — this is your own copy. docs/RELAY.md takes 2 minutes';
         else if (S.detached) banner.textContent = 'you are on your own copy — the shared session keeps running';
         else if (!shared) banner.textContent = '';
         else if (S.net?.isHost) banner.textContent = `hosting · ${modeById(S.arb.mode).label} · ${S.net.activePlayers.length} pressing`;

@@ -17,16 +17,29 @@ Note the URL. Below, `<SITE>` = e.g. `https://guest453.github.io/only-mario-64`.
 
 ## 2. Run the relay somewhere public
 
-It has to be reachable over **wss://** (Discord proxies TLS only). Free options:
-Render (Node service, no Dockerfile needed), Railway, Fly.io, a VPS with caddy.
-Details and a `render.yaml` in [docs/RELAY.md](./docs/RELAY.md).
+It has to be reachable over **`wss://`** (Discord's proxy only speaks HTTPS/WSS to
+your origin — it will not open a raw TCP socket, and neither will this app). That
+is the whole requirement: **one HTTPS front door on one port**, which forwards the
+`Upgrade: websocket` header. Not WebRTC, not UDP, not a second service.
+
+Free options, in the order that costs the least time:
+
+| | what you run | gotcha |
+| --- | --- | --- |
+| **exe.dev / any VPS with TLS at the edge** | `HOST=0.0.0.0 PORT=8000 node server.js` | the box is **private by default** — `ssh exe.dev share set-public <vm>` or Discord just gets a login redirect. Full recipe in [docs/RELAY.md](./docs/RELAY.md). |
+| **Render** (free web service) | push `render.yaml`, done | it spins down when idle; ~30 s first join |
+| **Cloudflare Workers + Durable Objects** | `worker/` (same room logic, no process) | still needs a static host for the site |
 
 ```bash
-node relay/server.js          # prints: ws://0.0.0.0:8790/ws?room=CODE
+node relay/server.js          # relay only — prints ws://0.0.0.0:8790/ws?room=CODE
+node server.js                # site + relay on one port (:3823), which is all a VPS needs
 curl  localhost:8790/status   # sanity check: {"ok":true,...}
 ```
 
-Below, `<RELAY-HOST>` = e.g. `sm64-relay.onrender.com` (**no scheme, no path**).
+Below, `<RELAY-HOST>` = e.g. `sm64relay.exe.xyz` or `sm64-relay.onrender.com`
+(**no scheme, no path**). Check it from a browser that is *not* logged into the
+host — `curl -is https://<RELAY-HOST>/status` and the `101 Switching Protocols`
+probe in docs/RELAY.md are the two things that fail in real deployments.
 
 ## 3. Create the app
 

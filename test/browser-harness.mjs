@@ -48,12 +48,21 @@ function installWebSocketShim(win, port, wsClient) {
             this.bufferedAmount = 0;
             this.onopen = this.onmessage = this.onclose = this.onerror = null;
             const parts = new URL(url, 'http://x');
-            this._c = wsClient({ port, path: parts.pathname + parts.search });
+            // Honour the port the app asked for (that is the point of tests that
+            // route through a proxy); `port` is only the fallback for relative URLs.
+            this._c = wsClient({
+                port: Number(parts.port) || port,
+                host: parts.hostname || '127.0.0.1',
+                path: parts.pathname + parts.search,
+            });
             this._c.sock.on('connect', () => {
                 this.readyState = 1;
                 this.onopen?.({ type: 'open' });
                 this._pump();
             });
+            // A browser fires `error` then `close` when the socket cannot connect;
+            // mirror that so the app's "relay is down" path is the one under test.
+            this._c.sock.on('error', () => this.onerror?.({ type: 'error', message: 'connection refused' }));
             this._c.sock.on('close', () => {
                 this.readyState = 3;
                 this.onclose?.({ code: 1006, type: 'close' });

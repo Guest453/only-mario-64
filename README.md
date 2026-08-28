@@ -79,9 +79,11 @@ render.yaml             one-click deploy for that file
 src/discord-mock.js     `?mock=1` stand-in client, so the Discord path runs in a plain tab
 scripts/check.js        `npm run check` — node --check every module
 sm64.js + sm64.wasm     the engine (vendored, unmodified)
+worker/                 (experimental) same room rules on Cloudflare Durable Objects
 docs/                   SDK notes, protocol, relay hosting, auth, design
-test/                   22 tests: arbitration, relay over real sockets, a served-origin
-                        smoke test, two jsdom end-to-end runs
+test/                   23 tests: arbitration, relay over real sockets, a served-origin
+                        smoke test, two jsdom end-to-end runs, and the app driven
+                        through a prefix-preserving HTTPS proxy (the Discord shape)
 ```
 
 ## Run it
@@ -93,6 +95,8 @@ npm test                            # relay + arbitration + jsdom end-to-end
 npm run check                       # node --check every module
 open "http://localhost:3823/?mock=1"   # fake Discord identity, no portal needed
 ```
+
+`?mock=1&mockscript=0` skips the scripted fake joins when you want a quiet repro.
 
 Open `http://localhost:3823` twice, set both tabs to room `lobby`, pick
 🎊 Mash, and both keyboards move the same Mario. Two browser tabs on one
@@ -109,8 +113,11 @@ gotcha in [DISCORD.md](./DISCORD.md)):
 1. Host this folder as a static site (GitHub Pages works; `.nojekyll` is here).
 2. Developer Portal → your app → **Activities** → enable it, add the
    `/` URL mapping to your host.
-3. **URL mapping** `/relay` → your relay host (it must be a real host, e.g. a
-   Render/Railway free instance — this is the only piece of infrastructure).
+3. **URL mapping** `/relay` → your relay host. This is the only piece of real
+   infrastructure the project needs: one HTTPS URL that forwards `Upgrade:
+   websocket` — a `wss://` endpoint, never a raw TCP port. Cheapest is a VPS whose
+   edge already terminates TLS (exe.dev: `node server.js` on the forwarded port
+   plus `share set-public`), then Render via `render.yaml`. [docs/RELAY.md](./docs/RELAY.md).
 4. Set Activities URL to `/`, install the app as a **Guild Install**, launch it
    from a voice channel.
 

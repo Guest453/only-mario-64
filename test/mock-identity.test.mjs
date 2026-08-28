@@ -19,7 +19,10 @@ test('Discord identity drives the UI (?mock=1)',
     { skip: jsdomAvailable ? false : 'npm i -D jsdom' }, async (t) => {
         // No relay on this port (0 ⇒ the harness installs no WebSocket shim).
         const br = await bootBrowser({
-            room: 'mockroom', port: 0, extra: '&mock=1&presence=1',
+            // port: 1 = a closed port, so the relay is genuinely unreachable and we
+            // also prove identity survives a dead network. mockscript=0 keeps the
+            // roster deterministic.
+            room: 'mockroom', port: 1, extra: '&mock=1&presence=1&mockscript=0',
             nick: null, enter: false,
         });
         const $ = (id) => br.document.getElementById(id);
@@ -34,8 +37,10 @@ test('Discord identity drives the UI (?mock=1)',
             // 3 · roster = SDK participants; people in the Activity but not in the
             // game are shown, greyed, and labelled — presence is not authorship.
             await waitFor(() => $('roster').querySelectorAll('li').length >= 3, 3000, 'roster from participants');
-            const names = [...$('roster').querySelectorAll('.pl-name > span')].map((n) => n.textContent).sort();
-            assert.deepEqual(names, ['Mario', 'Toadsworthette', 'coolpope64#0001'],
+            // Not an exact-array check: the participant list is Discord's, and a
+            // late join would legitimately add a row mid-test.
+            const names = [...$('roster').querySelectorAll('.pl-name > span')].map((n) => n.textContent);
+            assert.deepEqual([...names].sort(), ['Mario', 'Toadsworthette', 'coolpope64#0001'],
                 'global_name beats username; a legacy discriminator is kept, an invalid #0000 is not');
             assert.ok($('roster').querySelector('li.dc-only'), 'activity-only participants marked');
             assert.match($('roster').textContent, /in the activity, not in this game/);
