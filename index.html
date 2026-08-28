@@ -89,60 +89,24 @@
         <!-- Game canvas (original baked-in decomp core) -->
         <div id="original-game-container">
             <canvas id="canvas" tabindex="0" aria-label="Super Mario 64 canvas"></canvas>
+            <div id="local-nametag" class="nametag">You</div>
         </div>
+        <!-- Other players' live WASM streams (split-screen) -->
+        <div id="remote-stage" hidden></div>
         <!-- EmulatorJS container (runtime ROM-loading core) -->
         <div id="emulatorjs-container" style="display:none;"></div>
 
-        <!-- ── Top HUD bar ─────────────────────────────── -->
+        <!-- ── Top HUD bar (play controls only — extras live in More) ── -->
         <div id="hud-bar">
-            <!-- Left: audio + speed + help + disconnect -->
             <div id="hud-left">
                 <button id="mute-btn" title="Mute game audio">🔊</button>
-                <div class="hud-divider"></div>
                 <label class="hud-label">Speed
                     <input type="range" id="speed-slider" min="0.5" max="3" step="0.5" value="1">
                     <span id="speed-label">1×</span>
                 </label>
-                <div class="hud-divider"></div>
-                <button id="controls-toggle-btn" class="hud-icon-btn" title="Controls guide">🎮</button>
-                <button id="help-btn"            class="hud-icon-btn" title="Tutorial / Help">❓</button>
-                <button id="streamer-toggle-btn" class="hud-icon-btn" title="Streamer mode (Shift+S)">🎥</button>
-                <button id="energy-config-btn"   class="hud-icon-btn" title="AI energy bar settings">⚡</button>
-                <button id="turbo-btn"           class="hud-icon-btn" title="Consistent rapid fire / turbo">⚡⚡</button>
-                <button id="preplan-btn"         class="hud-icon-btn" title="Pre-plan mode (AI writes a multi-step script)">🧠</button>
-                <button id="agent-only-btn"      class="hud-icon-btn" title="Agent-Only mode: disable manual control + enable the instruction box">🤖</button>
-                <button id="brainmap-btn"        class="hud-icon-btn" title="Brainmap visualizer (watch the AI's sense of place build)">🗺️</button>
-                <button id="debug-btn"           class="hud-icon-btn" title="Debug HUD (live AI state)">🐞</button>
-                <button id="patch-rom-btn"       class="hud-icon-btn" title="Load a custom ROM or apply a BPS patch">🩹 Patch</button>
-                <button id="disconnect-btn"      class="hud-icon-btn danger" title="Disconnect account" style="display:none">🔌</button>
             </div>
 
-            <!-- Centre: model picker + paid toggle -->
             <div id="hud-centre">
-                <span class="hud-label">Model</span>
-                <div id="model-select-wrap">
-                    <select id="model-select" title="AI vision model to use">
-                        <option value="">Loading models…</option>
-                    </select>
-                    <span id="model-status" title=""></span>
-                </div>
-                <label class="hud-toggle" title="Show paid-only models">
-                    <input type="checkbox" id="show-paid-toggle">
-                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
-                    <span class="hud-label">Paid</span>
-                </label>
-                <div class="hud-divider"></div>
-                <button id="provider-btn" class="hud-icon-btn" title="API provider settings">⚙ API</button>
-                <span id="pollen-chip" class="hud-chip" title="Your Pollinations pollen balance" style="display:none"></span>
-            </div>
-
-            <!-- Right: AI action buttons -->
-            <div id="hud-right">
-                <button id="pregame-notes-btn" class="hud-btn cyan"   title="AI studies the SM64 guide">📚 Study</button>
-                <button id="view-memory-btn"   class="hud-btn purple" title="View AI memory & notes">🧠 Memory</button>
-                <button id="ai-buddy-btn"      class="hud-btn orange">🧡 Buddy</button>
-                <button id="deep-think-btn"    class="hud-btn blue"   title="Deeper reasoning — slower but smarter AI decisions">💭 Think Harder</button>
-                <div class="hud-divider"></div>
                 <select id="play-mode" title="Pick what the Start button runs">
                     <option value="ai">🤖 AI Play</option>
                     <option value="rl">🧒 RL Play</option>
@@ -150,12 +114,54 @@
                     <option value="player-learn">🎮 Player Learn</option>
                     <option value="ai-teach">👨‍🏫 AI Teach</option>
                 </select>
-                <button id="ai-player-btn"     class="hud-btn green">▶ Start</button>
+                <button id="ai-player-btn" class="hud-btn green">▶ Start</button>
+                <button id="teach-good-btn" class="hud-btn teach-good" title="Reward the last action">👍</button>
+                <button id="teach-bad-btn"  class="hud-btn teach-bad"  title="Punish the last action">👎</button>
                 <div class="hud-divider"></div>
-                <button id="teach-good-btn"   class="hud-btn" style="font-size:14px;padding:4px 10px;background:#1a5c1a;border-color:#2d8a2d;" title="Reward the last action (teaches RL + AI)">👍</button>
-                <button id="teach-bad-btn"    class="hud-btn" style="font-size:14px;padding:4px 10px;background:#5c1a1a;border-color:#8a2d2d;" title="Punish the last action">👎</button>
+                <span class="hud-label">Model</span>
+                <div id="model-select-wrap">
+                    <select id="model-select" title="AI vision model to use">
+                        <option value="">Loading models…</option>
+                    </select>
+                </div>
+                <label class="hud-toggle" title="Show paid-only models">
+                    <input type="checkbox" id="show-paid-toggle">
+                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    <span class="hud-label">Paid</span>
+                </label>
+                <span id="pollen-chip" class="hud-chip" title="Your Pollinations pollen balance" style="display:none"></span>
+            </div>
+
+            <div id="hud-right">
+                <button id="mp-toggle-btn" class="hud-btn lobby-btn" title="Watch other people's AIs">👥 Lobby <span id="mp-count">0</span></button>
+                <div id="more-wrap">
+                    <button id="more-btn" class="hud-icon-btn" title="More tools" type="button">⋯ More</button>
+                    <div id="more-menu" hidden>
+                        <div class="more-group">Play</div>
+                        <button id="pregame-notes-btn" class="more-item">📚 Study</button>
+                        <button id="view-memory-btn"   class="more-item">🧠 Memory</button>
+                        <button id="ai-buddy-btn"      class="more-item">🧡 Buddy</button>
+                        <button id="deep-think-btn"    class="more-item">💭 Think Harder</button>
+                        <div class="more-group">AI extras</div>
+                        <button id="turbo-btn"      class="more-item" title="Consistent rapid fire / turbo">⚡⚡ Turbo</button>
+                        <button id="preplan-btn"    class="more-item" title="Pre-plan mode">🧠 Pre-plan</button>
+                        <button id="agent-only-btn" class="more-item" title="Agent-only (type instructions)">🤖 Agent-only</button>
+                        <div class="more-group">View</div>
+                        <button id="streamer-toggle-btn" class="more-item" title="Streamer mode (Shift+S)">🎥 Streamer</button>
+                        <button id="brainmap-btn"        class="more-item">🗺️ Brainmap</button>
+                        <button id="debug-btn"           class="more-item">🐞 Debug</button>
+                        <button id="controls-toggle-btn" class="more-item">🎮 Controls</button>
+                        <button id="help-btn"            class="more-item">❓ Help</button>
+                        <div class="more-group">Setup</div>
+                        <button id="provider-btn"      class="more-item">⚙ API / key</button>
+                        <button id="energy-config-btn" class="more-item">⚡ Energy bar</button>
+                        <button id="patch-rom-btn"     class="more-item">🩹 Patch ROM</button>
+                        <button id="disconnect-btn"    class="more-item danger" style="display:none">🔌 Disconnect</button>
+                    </div>
+                </div>
             </div>
         </div>
+        <span id="model-status" class="hud-sr-only" title=""></span>
 
         <!-- AI status ticker -->
         <div id="ai-status"></div>
@@ -371,11 +377,15 @@
                 <span>👥 AI Lobby — watch their runs</span>
                 <button type="button" id="mp-close-btn" aria-label="Close">✕</button>
             </div>
+            <p class="mp-blurb">Each player runs their own Mario. Share a room code to live-stream both games split-screen — nametags use your Discord name when available.</p>
             <div id="mp-room-row">
                 <input id="mp-room" placeholder="Room code" maxlength="24" spellcheck="false">
                 <button type="button" id="mp-join-btn" class="hud-btn green">Join</button>
                 <button type="button" id="mp-copy-btn" class="hud-icon-btn" title="Copy room code">⧉</button>
             </div>
+            <label class="mp-nick-row" for="mp-nick">Your name
+                <input id="mp-nick" maxlength="24" placeholder="Nametag" autocomplete="nickname">
+            </label>
             <div id="mp-status">Not connected</div>
             <div id="mp-grid"></div>
         </div>

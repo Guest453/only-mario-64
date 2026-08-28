@@ -69,6 +69,13 @@ export async function initDiscordActivity() {
         try {
             await sdk.commands.setConfig({ use_interactive_pip: false });
         } catch {}
+        try {
+            sdk.subscribe('CURRENT_USER_UPDATE', (u) => {
+                info.user = u;
+                const name = u?.global_name || u?.username;
+                if (name) window.__sm64mp?.setName?.(name);
+            });
+        } catch {}
         console.log('[Discord] Activity ready', {
             instanceId: info.instanceId,
             platform: info.platform,

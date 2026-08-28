@@ -4907,6 +4907,7 @@ function updateStreamerOverlay(state) {
 // Mirror exactly what the AI "sees" into the streamer overlay
 function setAIVisionFrame(dataUrl) {
     _aiVisionFrame = dataUrl;
+    try { window.__sm64mp?.onFrame?.(dataUrl); } catch {}
     // In live mode the background loop drives the panel (shows continuous gameplay)
     if (_turboMode && _turboCfg.live && _streamerMode) return;
     updateStreamerVision(dataUrl);
