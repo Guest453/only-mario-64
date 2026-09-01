@@ -18,7 +18,13 @@
 <script src="./host.js"></script>
 </head>
 <body>
-  <canvas id="canvas" tabindex="0"></canvas>
+  <!-- An explicit size matters. A bare <canvas> is 300x150 — a 2:1 aspect that
+       is neither the game's nor anything else's — and the wasm was happily
+       rendering into it, so the stream went out squashed. 320x240 is the N64's
+       real output resolution: correct 4:3, and a quarter of the fill rate of
+       640x480, which is what keeps a GPU-less box in the frame budget.
+       Viewers upscale it with image-rendering: pixelated. -->
+  <canvas id="canvas" tabindex="0" width="320" height="240"></canvas>
   <div id="boot">booting…</div>
 
 <script>

@@ -6,10 +6,13 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "host-static": "node host/serve-host.js"
+    "host-static": "node host/serve-host.js",
+    "test": "node test/protocol.test.js"
   },
   "dependencies": {
     "ws": "^8.18.0"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  }
 }

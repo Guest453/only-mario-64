@@ -201,6 +201,18 @@ async function startVideo(canvas) {
         if (!videoEncoder || videoEncoder.state !== 'configured') { videoFrame.close(); continue; }
         // Never let the encoder fall behind the game; drop instead of buffering.
         if (videoEncoder.encodeQueueSize > 2) { videoFrame.close(); continue; }
+        // The game can change resolution after we configured the encoder. Feeding
+        // mismatched frames produces garbage, so rebuild the pipeline instead.
+        if (videoFrame.displayWidth !== config.width || videoFrame.displayHeight !== config.height) {
+            log(`canvas resized to ${videoFrame.displayWidth}x${videoFrame.displayHeight} — reconfiguring`);
+            videoFrame.close();
+            try { reader.cancel(); } catch {}
+            try { videoEncoder.close(); } catch {}
+            videoEncoder = null;
+            sentVideoConfig = false;
+            startVideo(canvas);
+            return;
+        }
         const key = wantKeyframe || (n++ % (FPS * 2) === 0);
         wantKeyframe = false;
         try { videoEncoder.encode(videoFrame, { keyFrame: key }); } catch (err) { log('encode failed', err.message); }
@@ -209,7 +221,15 @@ async function startVideo(canvas) {
 }
 
 async function startAudio() {
-    if (!capturedAudioStream) { log('no audio stream captured — running silent'); return; }
+    // SDL2 does not build its AudioContext at startup — it waits until the game
+    // actually plays a sound, which is well after onRuntimeInitialized. Checking
+    // once meant we always lost the race and every session ran silent. Poll for
+    // it instead, then start encoding whenever it shows up.
+    for (let i = 0; i < 600 && !capturedAudioStream; i++) {
+        await new Promise((r) => setTimeout(r, 100));
+    }
+    if (!capturedAudioStream) { log('no audio stream after 60s — running silent'); return; }
+    log('audio stream captured');
     const track = capturedAudioStream.getAudioTracks()[0];
     if (!track) { log('no audio track — running silent'); return; }
 
@@ -289,8 +309,15 @@ function connect() {
 window.__arenaStart = async function arenaStart() {
     const canvas = document.getElementById('canvas');
     connect();
-    // The canvas has no size until the game's first frame lands.
-    for (let i = 0; i < 600 && !(canvas.width > 1 && canvas.height > 1); i++) {
+    // Wait for a size the GAME chose, not the placeholder.
+    //
+    // The first version waited for `width > 1`, which an untouched 300x150
+    // canvas satisfies instantly — so the encoder got configured against a
+    // blank placeholder before the wasm ever set its viewport, and every viewer
+    // received a squashed 300x150 stream. Wait for a plausible game resolution
+    // instead, and settle for whatever we have if the game never resizes.
+    const MIN_W = 256, MIN_H = 192;
+    for (let i = 0; i < 600 && !(canvas.width >= MIN_W && canvas.height >= MIN_H); i++) {
         await new Promise((r) => setTimeout(r, 100));
     }
     log(`canvas ready ${canvas.width}x${canvas.height}`);

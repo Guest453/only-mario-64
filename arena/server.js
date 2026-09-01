@@ -597,7 +597,16 @@ setInterval(() => {
     }
 }, 30000);
 
-server.listen(PORT, '127.0.0.1', () => {
+// Bind 0.0.0.0, NOT loopback.
+//
+// Inside a container, 127.0.0.1 is the container's own loopback, so Docker's
+// port proxy cannot reach the listener and every connection from outside dies
+// silently — the port looks bound on the host and answers nothing.
+//
+// This is not an exposure: isolation comes from the PUBLISH side. compose maps
+// "127.0.0.1:8090:8090", so the host only ever offers it on loopback, and the
+// public entry point stays nginx.
+server.listen(PORT, process.env.ARENA_BIND || '0.0.0.0', () => {
     console.log(`🍄 Mario Arena relay on 127.0.0.1:${PORT}`);
     console.log(`   viewers: ws://…/ws   host: ws://…/host?token=…`);
     console.log(`   admin id: ${ADMIN_ID}`);

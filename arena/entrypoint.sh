@@ -36,6 +36,11 @@ HOST_URL="http://127.0.0.1:${HOST_STATIC_PORT}/host.html?relay=ws://127.0.0.1:${
 #   --autoplay-policy=...      nothing can click in a headless tab, and without
 #                              this the AudioContext never leaves 'suspended'
 #   --disable-*-backgrounding  a throttled renderer drops the game to ~1fps
+#   --disable-gpu-vsync        headless still runs a compositor, and it paces
+#   --disable-frame-rate-limit rAF to its own clock. The game's render loop is
+#                              driven by rAF, so that cap becomes the stream's
+#                              frame rate no matter how fast the CPU is. Both
+#                              flags are needed; vsync alone is not enough.
 #   --user-data-dir            IndexedDB lives here, which means THE SAVE FILE
 #                              lives here, which is why it is a mounted volume
 exec chromium \
@@ -50,7 +55,9 @@ exec chromium \
   --disable-backgrounding-occluded-windows \
   --disable-renderer-backgrounding \
   --hide-scrollbars \
-  --window-size=640,480 \
+  --disable-gpu-vsync \
+  --disable-frame-rate-limit \
+  --window-size=${ARENA_W:-320},${ARENA_H:-240} \
   --user-data-dir="$PROFILE_DIR" \
   --enable-logging=stderr --v=0 \
   "$HOST_URL"
