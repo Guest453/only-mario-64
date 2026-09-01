@@ -91,8 +91,18 @@
             <canvas id="canvas" tabindex="0" aria-label="Super Mario 64 canvas"></canvas>
             <div id="local-nametag" class="nametag">You</div>
         </div>
-        <!-- Other players' live WASM streams (split-screen) -->
+        <!-- The host's shared Mario, as seen by everyone else in the room -->
         <div id="remote-stage" hidden></div>
+
+        <!-- Crowd controller: what the whole room is pressing, right now.
+             Also a tappable pad, because Discord on mobile has no keyboard. -->
+        <div id="crowd-pad" hidden>
+            <div class="crowd-bar">
+                <button type="button" class="crowd-mode" title="Toggle how everyone's inputs are merged">🔥 ANARCHY</button>
+                <span class="crowd-who"></span>
+            </div>
+            <div class="crowd-keys"></div>
+        </div>
         <!-- EmulatorJS container (runtime ROM-loading core) -->
         <div id="emulatorjs-container" style="display:none;"></div>
 
@@ -133,7 +143,7 @@
             </div>
 
             <div id="hud-right">
-                <button id="mp-toggle-btn" class="hud-btn lobby-btn" title="Watch other people's AIs">👥 Lobby <span id="mp-count">0</span></button>
+                <button id="mp-toggle-btn" class="hud-btn lobby-btn" title="Everyone here controls the same Mario">👥 Room <span id="mp-count">0</span></button>
                 <div id="more-wrap">
                     <button id="more-btn" class="hud-icon-btn" title="More tools" type="button">⋯ More</button>
                     <div id="more-menu" hidden>
@@ -377,7 +387,11 @@
                 <span>👥 AI Lobby — watch their runs</span>
                 <button type="button" id="mp-close-btn" aria-label="Close">✕</button>
             </div>
-            <p class="mp-blurb">Each player runs their own Mario. Share a room code for split-screen. Only the SM64 game canvas is streamed — no camera, mic, or screen share.</p>
+            <p class="mp-blurb"><b>Everyone controls Mario.</b> One machine in the room runs the game and streams it; every key anyone presses is merged into that single controller. Only the SM64 game canvas is streamed — no camera, mic, or screen share.</p>
+            <div id="mp-mode-row">
+                <button type="button" id="mp-mode-btn" class="hud-btn">🔥 Anarchy / 🗳️ Democracy</button>
+                <small>Anarchy: every key anyone holds is held. Democracy: the most-voted keys win.</small>
+            </div>
             <div id="mp-room-row">
                 <input id="mp-room" placeholder="Room code" maxlength="24" spellcheck="false">
                 <button type="button" id="mp-join-btn" class="hud-btn green">Join</button>

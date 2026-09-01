@@ -2683,6 +2683,80 @@ function _rlSetHeld(desiredCodes) {
     for (const code of desired) if (!_rlHeld.has(code)) { _rlKeyEv('keydown', code); _rlHeld.add(code); }
 }
 function _rlReleaseAll() { for (const code of _rlHeld) _rlKeyEv('keyup', code); _rlHeld.clear(); }
+
+// ── CROWD CONTROL BRIDGE ─────────────────────────────────────────────────────
+// "Everyone controls Mario": only the ROOM HOST actually runs the wasm. Every
+// player (host included) sends the keys they're holding to the host, which
+// merges them into ONE set and hands it here. We replay that set on the local
+// Mario as synthetic (untrusted) KeyboardEvents — the same path the RL uses,
+// which _agentKeyGuard deliberately lets through.
+//
+// While crowd mode is on we also guard TRUSTED keys away from the wasm, so the
+// host's own keyboard doesn't reach Mario twice (once raw, once merged) and so
+// democracy/anarchy voting applies to the host exactly like everyone else.
+let _crowdHeld = new Set();
+function _crowdSetHeld(codes) {
+    const desired = new Set(codes || []);
+    for (const code of _crowdHeld) if (!desired.has(code)) { _rlKeyEv('keyup', code); _crowdHeld.delete(code); }
+    for (const code of desired) if (!_crowdHeld.has(code)) { _rlKeyEv('keydown', code); _crowdHeld.add(code); }
+}
+// Physical key -> game key. WASD and the arrows both drive the stick so nobody
+// has to relearn a layout; X = A (jump), C = B (dive/punch), Space = Z (crouch).
+const _CROWD_KEYMAP = {
+    ArrowUp: 'ArrowUp', ArrowDown: 'ArrowDown', ArrowLeft: 'ArrowLeft', ArrowRight: 'ArrowRight',
+    KeyW: 'ArrowUp', KeyS: 'ArrowDown', KeyA: 'ArrowLeft', KeyD: 'ArrowRight',
+    KeyX: 'KeyX', KeyC: 'KeyC', Space: 'Space', Enter: 'Enter',
+    KeyJ: 'KeyX', KeyK: 'KeyC', ShiftLeft: 'Space', ShiftRight: 'Space',
+};
+// What THIS browser's human is holding right now, and who wants to know.
+let _crowdLocal = new Set(), _crowdOnLocal = null;
+function _crowdEmitLocal() { try { _crowdOnLocal?.([..._crowdLocal]); } catch {} }
+function _crowdNoteKey(e) {
+    const code = _CROWD_KEYMAP[e.code];
+    if (!code) return;
+    if (e.type === 'keydown') { if (_crowdLocal.has(code)) return; _crowdLocal.add(code); }
+    else if (e.type === 'keyup') { if (!_crowdLocal.delete(code)) return; }
+    else return;
+    _crowdEmitLocal();
+}
+// Losing focus (alt-tab, Discord steals the frame) must not leave a key stuck
+// down for the whole room.
+window.addEventListener('blur', () => {
+    if (!_crowdLocal.size) return;
+    _crowdLocal.clear();
+    _crowdEmitLocal();
+});
+
+window.__sm64crowd = {
+    setHeld: _crowdSetHeld,
+    releaseAll() { _crowdSetHeld([]); },
+    // Turn the trusted-key guard on/off (see _agentKeyGuard below).
+    setGuard(on) {
+        _crowdGuard = !!on;
+        if (!_crowdGuard) { _crowdLocal.clear(); _crowdEmitLocal(); _crowdSetHeld([]); }
+    },
+    // Subscribe to this browser's own held keys (array of game key codes).
+    onLocal(cb) { _crowdOnLocal = typeof cb === 'function' ? cb : null; },
+    localHeld() { return [..._crowdLocal]; },
+    // On-screen d-pad (Discord on mobile has no keyboard) folds into the same
+    // held set as the physical keys.
+    setVirtual(code, down) {
+        if (!_CROWD_KEYMAP[code]) return;
+        const c = _CROWD_KEYMAP[code];
+        if (down) { if (_crowdLocal.has(c)) return; _crowdLocal.add(c); }
+        else if (!_crowdLocal.delete(c)) return;
+        _crowdEmitLocal();
+    },
+    // Non-hosts keep their own wasm running (so anyone can take over the moment
+    // the host leaves) but it must not be seen or heard.
+    setLocalAudio(on) {
+        try {
+            const a = (typeof Module !== 'undefined' && Module?.SDL2?.audioContext) || null;
+            if (!a) return;
+            on ? a.resume() : a.suspend();
+        } catch {}
+    },
+};
 // Map an action category to the SET of key codes to hold this tick.
 function _catToHeld(cat) {
     const turnKey = _lastOpenSide === 'L' ? 'ArrowLeft' : _lastOpenSide === 'R' ? 'ArrowRight'
@@ -3253,6 +3327,9 @@ document.addEventListener('keyup', (e) => {
 // them. The AI's keys are dispatched via KeyboardEvent (isTrusted === false), so
 // they pass straight through.
 let _agentOnly = (() => { try { return localStorage.getItem('sm64_agent_only') === '1'; } catch { return false; } })();
+// Set by the crowd-control bridge above: while a shared-Mario room is live, real
+// keypresses feed the vote instead of driving Mario directly.
+let _crowdGuard = false;
 
 // Game-relevant keys to withhold from Mario when agent-only is on (plain presses
 // only — modified combos are app/browser shortcuts and pass through).
@@ -3315,9 +3392,17 @@ function _agentKeyGuard(e) {
         }
         return;
     }
-    if (!_agentOnly) return;   // the game-key withholding below is agent-only
-    if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;  // app shortcuts pass
-    if (_GAME_GUARD_CODES.has(e.code)) { e.stopImmediatePropagation(); e.preventDefault(); }
+    if (!_agentOnly && !_crowdGuard) return;   // withholding is agent-only / crowd-only
+    if (e.ctrlKey || e.metaKey || e.altKey) return;   // app shortcuts pass
+    // In crowd mode the key becomes a VOTE, not a direct input: record it here
+    // (this listener runs first, so nothing downstream can swallow it) and then
+    // fall through to the guard, which keeps the raw key away from the wasm.
+    if (_crowdGuard) _crowdNoteKey(e);
+    if (e.shiftKey && !_crowdGuard) return;
+    if (_GAME_GUARD_CODES.has(e.code) || (_crowdGuard && _CROWD_KEYMAP[e.code])) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+    }
 }
 ['keydown', 'keyup', 'keypress'].forEach(t => window.addEventListener(t, _agentKeyGuard, true));
 

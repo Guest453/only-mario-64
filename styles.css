@@ -1626,21 +1626,85 @@ html.discord-activity.discord-compact .remote-pane .rp-foot { font-size: 10px; }
 }
 .remote-pane.live .rp-live.connecting { display: none; }
 
-#app.mp-split #original-game-container {
-    width: 50vw; right: auto;
+/* ── Crowd control: one Mario, everyone's hands on it ─────────────
+   The host sees its own canvas. Every other player's canvas is hidden
+   (their wasm keeps running silently so they can take over instantly if
+   the host leaves) and replaced with the host's live video, full bleed. */
+#app.crowd-on #local-nametag { display: block; }
+#app.crowd-viewer #original-game-container { visibility: hidden; }
+#remote-stage.shared-view,
+#app.crowd-viewer #remote-stage {
+    display: block; width: 100vw; right: 0; left: 0;
+    top: var(--hud-h); height: calc(100vh - var(--hud-h));
 }
-#app.mp-split #canvas,
-#app.mp-split #emulatorjs-container {
-    width: 50vw;
-}
-#app.mp-split #remote-stage { display: grid; }
+#app.crowd-viewer #remote-stage .remote-pane { width: 100%; height: 100%; }
+#app.streamer-mode.crowd-viewer #remote-stage { top: 0; height: 100vh; }
 
-#app.streamer-mode.mp-split #canvas {
-    top: 0; height: 100vh; width: 50vw;
+.remote-pane.shared video, .remote-pane.shared img {
+    object-fit: contain; width: 100%; height: 100%;
 }
-#app.streamer-mode.mp-split #original-game-container {
-    top: 0; height: 100vh; width: 50vw;
+
+/* The shared controller HUD. Shows every button, who's on it, and which
+   ones actually won the merge this tick. Tappable for mobile Discord. */
+#crowd-pad {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: 10px; z-index: 40;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 8px 10px; border-radius: 14px;
+    background: rgba(8,8,14,0.72); border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.45);
+    backdrop-filter: blur(6px);
+    user-select: none; -webkit-user-select: none; touch-action: none;
+    max-width: 96vw;
 }
-#app.streamer-mode.mp-split #remote-stage {
-    top: 0; height: 100vh;
+#crowd-pad[hidden] { display: none; }
+.crowd-bar {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 11px; color: rgba(255,255,255,0.8);
 }
+.crowd-mode {
+    font: inherit; font-weight: 900; letter-spacing: 0.06em;
+    background: rgba(255,255,255,0.1); color: #fff; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.18); border-radius: 99px;
+    padding: 3px 10px;
+}
+.crowd-mode:hover { background: rgba(255,255,255,0.18); }
+.crowd-who { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.crowd-keys { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.crowd-key {
+    position: relative; cursor: pointer;
+    width: 44px; height: 44px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: 900; color: rgba(255,255,255,0.72);
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.14);
+    transition: background 90ms linear, border-color 90ms linear, transform 90ms;
+}
+/* Somebody in the room wants this button. */
+.crowd-key.voted { color: #fff; background: rgba(0,172,193,0.28); border-color: rgba(0,172,193,0.55); }
+/* You are holding it. */
+.crowd-key.mine { transform: translateY(2px); box-shadow: inset 0 0 0 2px rgba(255,255,255,0.55); }
+/* It survived the merge — Mario is actually getting it. */
+.crowd-key.won { background: linear-gradient(180deg, #43a047, #1b5e20); border-color: #66bb6a; color: #fff; }
+.crowd-key .ck-n {
+    position: absolute; top: -5px; right: -5px;
+    min-width: 16px; height: 16px; padding: 0 4px;
+    border-radius: 99px; background: #e53935; color: #fff;
+    font-size: 10px; font-weight: 800; line-height: 16px;
+}
+.crowd-key:not(.voted) .ck-n { display: none; }
+
+/* Lobby cards now show live inputs instead of a video thumbnail. */
+#mp-mode-row { display: flex; flex-direction: column; gap: 4px; margin: 6px 0 10px; }
+#mp-mode-row small { color: rgba(255,255,255,0.6); font-size: 11px; }
+.mp-keys { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; min-height: 22px; }
+.mini-key {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 22px; height: 22px; padding: 0 5px; border-radius: 6px;
+    background: rgba(0,172,193,0.3); border: 1px solid rgba(0,172,193,0.55);
+    font-size: 12px; font-weight: 800; color: #fff;
+}
+.mini-idle { font-size: 11px; color: rgba(255,255,255,0.45); }
+
+html.discord-activity.discord-compact .crowd-key { width: 36px; height: 36px; font-size: 14px; }
+html.discord-activity.discord-compact #crowd-pad { padding: 6px 8px; bottom: 6px; }

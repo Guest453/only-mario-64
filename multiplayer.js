@@ -1,11 +1,19 @@
-// Multiplayer: each client runs its own WASM Mario, then live-streams
-// the canvas over WebRTC (PeerJS). Split-screen + nametags.
-// Discord Activities auto-join the voice-channel instance as the room.
+// Crowd control: EVERYONE in the room controls ONE Mario.
+//
+// Exactly one browser in a room runs the SM64 wasm — the HOST, elected by
+// claiming the room's deterministic PeerJS id. Everyone else is a controller
+// plus a viewer: their keypresses travel to the host over the PeerJS data
+// channel, and the host's live canvas travels back over WebRTC video. The host
+// merges every player's held keys into ONE virtual controller and replays it on
+// its wasm (main.js `window.__sm64crowd`).
+//
+// Merge modes:
+//   anarchy   — every key anybody holds is held. Total chaos, instant response.
+//   democracy — the keys with the most votes win each tick. Slower, funnier.
 //
 // Stream lock: the only outbound media is #canvas.captureStream (no camera,
-// mic, or screen). Inbound camera/screen/audio tracks are dropped. This is
-// how we keep the lobby Mario-only — we set *what* is streamed, not a
-// post-hoc NSFW filter.
+// mic, or screen). Inbound camera/screen/audio tracks are dropped. This is how
+// we keep the room Mario-only — we set *what* is streamed, not a post-hoc filter.
 
 function nickDefault() {
     try {
@@ -52,8 +60,9 @@ function shrinkFrame(dataUrl) {
             const w = 240, h = Math.max(80, Math.round(img.height * (w / img.width)));
             const c = document.createElement('canvas');
             c.width = w; c.height = h;
-            c.getContext('2d').drawImage(img, 0, 0, w, h);
-            resolve(c.toDataURL('image/jpeg', 0.42));
+            const ctx = c.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            try { resolve(c.toDataURL('image/jpeg', 0.45)); } catch { resolve(null); }
         };
         img.onerror = () => resolve(null);
         img.src = dataUrl;
@@ -104,6 +113,25 @@ function acceptThumb(dataUrl) {
     return true;
 }
 
+// ── The shared controller ────────────────────────────────────────────────────
+// Game key code -> the button face we draw in the HUD.
+const BUTTONS = [
+    { code: 'ArrowUp',    label: '↑' },
+    { code: 'ArrowLeft',  label: '←' },
+    { code: 'ArrowDown',  label: '↓' },
+    { code: 'ArrowRight', label: '→' },
+    { code: 'KeyX',       label: 'A' },
+    { code: 'KeyC',       label: 'B' },
+    { code: 'Space',      label: 'Z' },
+    { code: 'Enter',      label: 'START' },
+];
+const BUTTON_LABEL = Object.fromEntries(BUTTONS.map(b => [b.code, b.label]));
+const MERGE_MODES = ['anarchy', 'democracy'];
+
+// A player whose last input packet is older than this is treated as holding
+// nothing, so a disconnect mid-jump can't pin the button down for everyone.
+const INPUT_TTL_MS = 3000;
+
 // Discord Activities run inside a sandboxed iframe at <app>.discordsays.com.
 // Their CSP only lets network requests out through Discord's proxy. PeerJS
 // reaches the public broker over a raw WebSocket, which the proxy must route.
@@ -144,6 +172,25 @@ export function initMultiplayer({ discord } = {}) {
     let localStream = null;
     let streamRetry = null;
 
+    // ── Crowd state ─────────────────────────────────────────────────────────
+    // Host side: who is holding what, keyed by player id (the host is in here
+    // too, under myId — it votes like everyone else).
+    const inputs = new Map();
+    let mergeMode = 'anarchy';
+    let myHeld = [];
+    let lastSentHeld = '';
+    let appliedHeld = '';
+    let mergeLoop = null;
+    let lastTallyAt = 0;
+    let lastTallyKey = '';
+    // What the room is currently pressing, mirrored on every client for the HUD:
+    // { code: [names…] }.
+    let tally = {};
+    let mergedHeld = [];
+    // The host's live view, as seen by a client.
+    let hostStream = null;
+    let hostFrame = null;
+
     // The Discord display name. Prefer the CURRENT_USER_UPDATE user object; also
     // fall back to the buffered detectedName so we never show a random nick in
     // Discord, even if the event fired before this module mounted.
@@ -164,6 +211,8 @@ export function initMultiplayer({ discord } = {}) {
     };
 
     const $ = (id) => document.getElementById(id);
+    const crowd = () => window.__sm64crowd || null;
+    const inRoom = () => role === 'host' || role === 'client';
 
     function setStatus(text) {
         const el = $('mp-status');
@@ -197,7 +246,120 @@ export function initMultiplayer({ discord } = {}) {
         }
     }
 
+    // ── Input plumbing ──────────────────────────────────────────────────────
+    // Local keys (physical or on-screen) arrive here from main.js, which owns
+    // the window-capture guard and therefore sees them first.
+    function onLocalHeld(held) {
+        myHeld = Array.isArray(held) ? held : [];
+        const key = myHeld.slice().sort().join(',');
+        if (key === lastSentHeld) return;
+        lastSentHeld = key;
+        if (role === 'host') {
+            noteInput(myId, me.name, myHeld);
+            mergeNow();
+        } else if (role === 'client') {
+            broadcast({ t: 'input', id: myId, name: me.name, held: myHeld });
+        }
+        renderPad();
+    }
+
+    function noteInput(id, name, held) {
+        if (!id) return;
+        const clean = (Array.isArray(held) ? held : [])
+            .filter(c => BUTTON_LABEL[c])
+            .slice(0, BUTTONS.length);
+        inputs.set(id, { name: String(name || '???').slice(0, 24), held: clean, at: Date.now() });
+    }
+
+    // Fold every player's held keys into the one set Mario actually gets.
+    function mergeHeld() {
+        const now = Date.now();
+        const votes = new Map();
+        let voters = 0;
+        for (const [id, v] of inputs) {
+            if (now - v.at > INPUT_TTL_MS) { inputs.delete(id); continue; }
+            if (v.held.length) voters++;
+            for (const c of v.held) {
+                if (!votes.has(c)) votes.set(c, []);
+                votes.get(c).push(v.name);
+            }
+        }
+        let held;
+        if (mergeMode === 'democracy') {
+            // Only the most-wanted buttons make it through. Ties all win, so
+            // "up + A" still works when the room agrees on both.
+            let max = 0;
+            for (const arr of votes.values()) max = Math.max(max, arr.length);
+            held = max ? [...votes.entries()].filter(([, a]) => a.length === max).map(([c]) => c) : [];
+        } else {
+            held = [...votes.keys()];
+        }
+        const t = {};
+        for (const [c, names] of votes) t[c] = names;
+        return { held, tally: t, voters };
+    }
+
+    // Host only: recompute, drive the wasm, and mirror the tally to everyone.
+    function mergeNow(force) {
+        if (role !== 'host') return;
+        const r = mergeHeld();
+        mergedHeld = r.held;
+        tally = r.tally;
+        const key = r.held.slice().sort().join(',');
+        if (key !== appliedHeld) {
+            appliedHeld = key;
+            try { crowd()?.setHeld(r.held); } catch {}
+        }
+        const now = Date.now();
+        if (force || key !== lastTallyKey || now - lastTallyAt > 700) {
+            lastTallyKey = key;
+            lastTallyAt = now;
+            broadcast({ t: 'crowd', mode: mergeMode, tally, held: r.held, voters: r.voters });
+        }
+        renderPad();
+    }
+
+    function setMergeMode(next, fromPeer) {
+        if (!MERGE_MODES.includes(next)) return;
+        mergeMode = next;
+        try { localStorage.setItem('sm64_merge_mode', mergeMode); } catch {}
+        if (role === 'host') mergeNow(true);
+        else if (role === 'client' && !fromPeer) broadcast({ t: 'mode', mode: mergeMode });
+        renderPad();
+        render();
+    }
+
+    // Crowd control is live whenever we're in a room: keys become votes on every
+    // machine, including the host's.
+    function setCrowdActive(on) {
+        const c = crowd();
+        if (!c) return;
+        try { c.setGuard(!!on); } catch {}
+        if (on) {
+            try { c.onLocal(onLocalHeld); } catch {}
+        } else {
+            try { c.onLocal(null); c.releaseAll(); } catch {}
+            inputs.clear();
+            tally = {};
+            mergedHeld = [];
+            appliedHeld = '';
+            lastSentHeld = '';
+        }
+        // Only the host's Mario is seen and heard. Everyone else keeps their own
+        // wasm running silently so any of them can take over instantly if the
+        // host closes the tab.
+        try { c.setLocalAudio(role !== 'client'); } catch {}
+        document.getElementById('app')?.classList.toggle('crowd-on', !!on);
+        document.getElementById('app')?.classList.toggle('crowd-viewer', on && role === 'client');
+        if (mergeLoop) { clearInterval(mergeLoop); mergeLoop = null; }
+        if (on && role === 'host') mergeLoop = setInterval(() => mergeNow(), 120);
+        renderPad();
+    }
+
+    // ── Media ───────────────────────────────────────────────────────────────
     function grabLocalStream() {
+        // Only the host has anything to show; clients never publish media.
+        if (role === 'client') return null;
         if (localStream && localStream.active) {
             for (const t of localStream.getAudioTracks()) {
                 try { t.stop(); } catch {}
@@ -210,7 +372,7 @@ export function initMultiplayer({ discord } = {}) {
         try {
             // Hard lock: the only thing PeerJS ever gets is this canvas.
             // No getUserMedia, no getDisplayMedia, no extra tracks.
-            localStream = c.captureStream(24);
+            localStream = c.captureStream(30);
             for (const t of localStream.getAudioTracks()) {
                 try { t.stop(); } catch {}
                 try { localStream.removeTrack(t); } catch {}
@@ -227,13 +389,9 @@ export function initMultiplayer({ discord } = {}) {
 
     function dropUnsafeStream(remoteId, reason) {
         console.warn('[MP] blocked inbound stream', remoteId, reason);
-        const p = others.get(remoteId) || { id: remoteId };
-        delete p.stream;
-        p.blocked = true;
-        others.set(remoteId, p);
+        hostStream = null;
         try { calls.get(remoteId)?.close(); } catch {}
         renderStage();
-        render();
         setStatus('Blocked a non-Mario stream (camera/screen/audio aren’t allowed)');
     }
 
@@ -246,55 +404,59 @@ export function initMultiplayer({ discord } = {}) {
                 dropUnsafeStream(remoteId, 'not a Mario canvas');
                 return;
             }
-            const p = others.get(remoteId) || { id: remoteId };
-            p.stream = safe;
-            p.blocked = false;
-            others.set(remoteId, p);
+            // The only stream that matters is the host's shared Mario.
+            if (role === 'client') hostStream = safe;
             renderStage();
             render();
         });
         call.on('close', () => {
             calls.delete(remoteId);
-            const p = others.get(remoteId);
-            if (p) { delete p.stream; others.set(remoteId, p); }
+            if (role === 'client') hostStream = null;
             renderStage();
         });
         call.on('error', (e) => console.warn('[MP] call', e));
     }
 
+    // The host pushes its canvas to every player; clients never call out.
     function maybeCall(remoteId) {
         if (!remoteId || remoteId === myId || calls.has(remoteId)) return;
+        if (role !== 'host') return;
         const stream = grabLocalStream();
         if (!stream || !peer) return;
-        // Deterministic: only the lexicographically greater id places the call.
-        if (String(myId) < String(remoteId)) return;
         try {
-            const call = peer.call(remoteId, stream);
-            setupCall(call, remoteId);
+            setupCall(peer.call(remoteId, stream), remoteId);
         } catch (err) {
             console.warn('[MP] call out', err);
         }
     }
 
     function callEveryone() {
+        if (role !== 'host') return;
         grabLocalStream();
         for (const id of others.keys()) maybeCall(id);
         for (const id of peers.keys()) maybeCall(id);
     }
 
+    // ── Wire protocol ───────────────────────────────────────────────────────
     function onPeerMessage(fromId, msg) {
         if (!msg || typeof msg !== 'object') return;
-        if (role === 'host' && msg.t !== 'hello') broadcast(msg, fromId);
+        // The host is the hub: fan out anything peers need to agree on. Inputs
+        // stop at the host (it publishes the merged tally instead), and a crowd
+        // tally is host-authored, so neither is relayed.
+        if (role === 'host' && !['hello', 'input', 'crowd', 'mode'].includes(msg.t)) {
+            broadcast(msg, fromId);
+        }
 
         if (msg.t === 'hello') {
             others.set(msg.id, { ...(others.get(msg.id) || {}), ...msg, updated: Date.now() });
             send(peers.get(fromId), snapshot());
-            if (me.frame) send(peers.get(fromId), { t: 'frame', id: myId, frame: me.frame });
             if (role === 'host') {
                 send(peers.get(fromId), {
                     t: 'roster',
                     players: [snapshot(), ...[...others.values()].filter(p => p.id !== msg.id)],
                 });
+                if (me.frame) send(peers.get(fromId), { t: 'frame', id: myId, frame: me.frame });
+                send(peers.get(fromId), { t: 'crowd', mode: mergeMode, tally, held: mergedHeld, voters: inputs.size });
             }
             maybeCall(msg.id);
             render();
@@ -305,7 +467,6 @@ export function initMultiplayer({ discord } = {}) {
             for (const p of msg.players) {
                 if (p.id && p.id !== myId) {
                     others.set(p.id, { ...(others.get(p.id) || {}), ...p, updated: Date.now() });
-                    maybeCall(p.id);
                 }
             }
             render();
@@ -315,21 +476,41 @@ export function initMultiplayer({ discord } = {}) {
         if (msg.t === 'state' && msg.id && msg.id !== myId) {
             others.set(msg.id, { ...(others.get(msg.id) || {}), ...msg, updated: Date.now() });
             render();
-            renderStage();
+            return;
+        }
+        // A controller telling the host what it's holding.
+        if (msg.t === 'input') {
+            if (role !== 'host') return;
+            noteInput(msg.id || fromId, msg.name || others.get(fromId)?.name, msg.held);
+            mergeNow();
+            return;
+        }
+        // The host telling everyone what the room is pressing.
+        if (msg.t === 'crowd') {
+            if (role === 'host') return;
+            if (MERGE_MODES.includes(msg.mode)) mergeMode = msg.mode;
+            tally = (msg.tally && typeof msg.tally === 'object') ? msg.tally : {};
+            mergedHeld = Array.isArray(msg.held) ? msg.held : [];
+            renderPad();
+            return;
+        }
+        if (msg.t === 'mode') {
+            setMergeMode(msg.mode, true);
+            if (role === 'host') broadcast({ t: 'crowd', mode: mergeMode, tally, held: mergedHeld, voters: inputs.size });
             return;
         }
         if (msg.t === 'frame' && msg.id && msg.id !== myId) {
             if (!acceptThumb(msg.frame)) return;
-            const prev = others.get(msg.id) || { id: msg.id };
-            others.set(msg.id, { ...prev, frame: msg.frame, updated: Date.now() });
-            render();
+            hostFrame = msg.frame;
             renderStage();
             return;
         }
         if (msg.t === 'bye' && msg.id) {
             others.delete(msg.id);
+            inputs.delete(msg.id);
             try { calls.get(msg.id)?.close(); } catch {}
             calls.delete(msg.id);
+            if (role === 'host') mergeNow(true);
             render();
             renderStage();
         }
@@ -342,15 +523,26 @@ export function initMultiplayer({ discord } = {}) {
         conn.on('open', () => {
             send(conn, { t: 'hello', ...snapshot() });
             maybeCall(pid);
+            // Re-announce our held keys to a host we just (re)connected to.
+            lastSentHeld = '';
+            onLocalHeld(crowd()?.localHeld?.() || []);
             setStatus(role === 'host'
-                ? `Hosting “${room}” · ${peers.size + 1} playing`
+                ? `Hosting “${room}” · ${peers.size + 1} on the pad`
                 : `In “${room}”`);
         });
         conn.on('close', () => {
             peers.delete(pid);
             others.delete(pid);
+            inputs.delete(pid);
             try { calls.get(pid)?.close(); } catch {}
             calls.delete(pid);
+            if (role === 'host') mergeNow(true);
+            // The host went away — try to take over the room ourselves.
+            if (role === 'client' && pid === hostPeerId(room)) {
+                hostStream = null;
+                setStatus('Host left — taking over…');
+                setTimeout(() => joinRoom(room), 400 + Math.floor(Math.random() * 1200));
+            }
             render();
             renderStage();
         });
@@ -364,8 +556,11 @@ export function initMultiplayer({ discord } = {}) {
         peer = null;
         peers.clear();
         others.clear();
+        inputs.clear();
+        hostStream = null;
         role = 'idle';
         myId = '';
+        setCrowdActive(false);
         renderStage();
     }
 
@@ -393,12 +588,14 @@ export function initMultiplayer({ discord } = {}) {
                 room = roomName;
                 p.on('connection', attach);
                 p.on('call', (call) => {
-                    const stream = grabLocalStream();
-                    call.answer(stream || undefined);
+                    // Answer with our canvas so late joiners still see Mario.
+                    call.answer(grabLocalStream() || undefined);
                     setupCall(call, call.peer);
                 });
-                setStatus(`Hosting “${room}” — share this code`);
+                setCrowdActive(true);
+                setStatus(`Hosting “${room}” — this machine runs Mario`);
                 render();
+                renderStage();
                 resolve('host');
             });
             p.on('disconnected', () => console.warn('[MP] broker disconnected'));
@@ -420,20 +617,18 @@ export function initMultiplayer({ discord } = {}) {
                 myId = id;
                 role = 'client';
                 room = roomName;
+                // Controllers publish nothing — answer the host's call empty.
                 p.on('call', (call) => {
-                    const stream = grabLocalStream();
-                    call.answer(stream || undefined);
+                    call.answer(undefined);
                     setupCall(call, call.peer);
                 });
                 // The host registers its PeerJS id at broker connect time; if we
                 // arrive first we get peer-unavailable. Retry a few times so both
                 // auto-joining users reliably pair up.
                 const hostId = hostPeerId(roomName);
-                let conn = null;
                 let attempts = 0;
                 const tryConnect = () => {
                     const c = p.connect(hostId, { reliable: true });
-                    conn = c;
                     attach(c);
                     c.on('error', (err) => {
                         if (err?.type === 'peer-unavailable' && attempts < 6) {
@@ -447,8 +642,10 @@ export function initMultiplayer({ discord } = {}) {
                     });
                 };
                 tryConnect();
-                setStatus(`Joined “${room}” (looking for host…)`);
+                setCrowdActive(true);
+                setStatus(`Joined “${room}” — you're on the shared controller`);
                 render();
+                renderStage();
                 resolve('client');
             });
         });
@@ -466,9 +663,9 @@ export function initMultiplayer({ discord } = {}) {
         try { localStorage.setItem('sm64_mp_room', roomName); } catch {}
         destroyPeer();
         setStatus(`Joining “${roomName}”…`);
-        grabLocalStream();
         try {
             await becomeHost(roomName);
+            grabLocalStream();
         } catch {
             try {
                 await becomeClient(roomName);
@@ -486,114 +683,102 @@ export function initMultiplayer({ discord } = {}) {
 
     function updateNametag() {
         const tag = $('local-nametag');
-        if (tag) tag.textContent = me.name || 'You';
+        if (!tag) return;
+        tag.textContent = role === 'host'
+            ? `${me.name || 'You'} · hosting Mario`
+            : (me.name || 'You');
     }
 
+    // ── The shared view ─────────────────────────────────────────────────────
+    // The host shows its own canvas. Everyone else replaces it with the host's
+    // live video, so the whole room is literally looking at one Mario.
     function renderStage() {
         const stage = $('remote-stage');
         const app = document.getElementById('app');
-        // Show a pane for EVERY remote peer, so the spectate view is usable even
-        // before a live WebRTC stream arrives — the broadcast thumbnail frame
-        // fills in as a poster until the live video connects.
-        const remotes = [...others.values()];
-        const split = remotes.length > 0;
-        app?.classList.toggle('mp-split', split);
+        const viewer = role === 'client';
+        app?.classList.toggle('crowd-viewer', viewer);
         if (!stage) return;
-        if (!split) {
+        if (!viewer) {
             stage.hidden = true;
             stage.innerHTML = '';
             return;
         }
         stage.hidden = false;
-        const n = remotes.length;
-        stage.style.gridTemplateRows = n > 1 ? `repeat(${n}, 1fr)` : '1fr';
-        const existing = new Set();
-        for (const p of remotes) {
-            existing.add(p.id);
-            let pane = stage.querySelector(`[data-pid="${CSS.escape(p.id)}"]`);
-            if (!pane) {
-                pane = document.createElement('div');
-                pane.className = 'remote-pane';
-                pane.dataset.pid = p.id;
-                pane.innerHTML = [
-                    '<div class="rp-live">LIVE</div>',
-                    '<div class="rp-hud">',
-                    '  <span class="rp-name"></span>',
-                    '  <span class="rp-tag"></span>',
-                    '</div>',
-                    '<video autoplay playsinline muted></video>',
-                    '<img class="rp-thumb" alt="">',
-                    '<div class="rp-foot">',
-                    '  <span class="rp-stats"></span>',
-                    '  <span class="rp-thought"></span>',
-                    '</div>',
-                ].join('');
-                stage.appendChild(pane);
-            }
-            const hasStream = !!p.stream;
-            pane.classList.toggle('live', hasStream);
-
-            // Name — a 💬 prefix marks names that came from the Discord SDK.
-            const nameEl = pane.querySelector('.rp-name');
-            nameEl.textContent = p.name || '???';
-            nameEl.classList.toggle('discord', !!p.discord);
-
-            const tagEl = pane.querySelector('.rp-tag');
-            tagEl.textContent = p.playing ? '🤖 AI' : '🎮';
-            tagEl.classList.toggle('ai', !!p.playing);
-
-            const stats = [
-                p.stars != null ? `⭐ ${p.stars}` : null,
-                p.coins != null ? `🪙 ${p.coins}` : null,
-                p.lives != null ? `🍄 ${p.lives}` : null,
-            ].filter(Boolean).join('  ');
-            pane.querySelector('.rp-stats').textContent = stats;
-
-            const region = p.region && p.region !== 'unknown' ? ` · ${p.region}` : '';
-            pane.querySelector('.rp-thought').textContent = (p.thought || '—') + region;
-
-            const liveEl = pane.querySelector('.rp-live');
-            liveEl.textContent = hasStream ? 'LIVE' : 'CONNECT';
-            liveEl.classList.toggle('connecting', !hasStream);
-
-            const vid = pane.querySelector('video');
-            const img = pane.querySelector('.rp-thumb');
-            vid.muted = true;
-            vid.autoplay = true;
-            vid.playsInline = true;
-            vid.disablePictureInPicture = true;
-            if (p.stream && vid.srcObject !== p.stream) {
-                vid.srcObject = p.stream;
-                vid.style.display = 'block';
-                img.style.display = 'none';
-                vid.play?.().catch(() => {});
-            } else if (!hasStream) {
-                vid.style.display = 'none';
-                if (p.frame) { img.src = p.frame; img.style.display = 'block'; }
-                else { img.removeAttribute('src'); img.style.display = 'block'; }
-            }
+        let pane = stage.querySelector('.remote-pane');
+        if (!pane) {
+            pane = document.createElement('div');
+            pane.className = 'remote-pane shared';
+            pane.innerHTML = [
+                '<div class="rp-live">LIVE</div>',
+                '<video autoplay playsinline muted></video>',
+                '<img class="rp-thumb" alt="">',
+            ].join('');
+            stage.innerHTML = '';
+            stage.appendChild(pane);
         }
-        for (const pane of [...stage.querySelectorAll('.remote-pane')]) {
-            if (!existing.has(pane.dataset.pid)) pane.remove();
+        pane.classList.toggle('live', !!hostStream);
+        const liveEl = pane.querySelector('.rp-live');
+        liveEl.textContent = hostStream ? 'LIVE · shared Mario' : 'CONNECTING…';
+        liveEl.classList.toggle('connecting', !hostStream);
+
+        const vid = pane.querySelector('video');
+        const img = pane.querySelector('.rp-thumb');
+        vid.muted = true;
+        vid.autoplay = true;
+        vid.playsInline = true;
+        vid.disablePictureInPicture = true;
+        if (hostStream && vid.srcObject !== hostStream) {
+            vid.srcObject = hostStream;
+            vid.style.display = 'block';
+            img.style.display = 'none';
+            vid.play?.().catch(() => {});
+        } else if (!hostStream) {
+            vid.style.display = 'none';
+            if (hostFrame) { img.src = hostFrame; img.style.display = 'block'; }
+            else { img.removeAttribute('src'); img.style.display = 'block'; }
+        }
+    }
+
+    // ── The crowd HUD: what the room is pressing, right now ─────────────────
+    function renderPad() {
+        const pad = $('crowd-pad');
+        if (!pad) return;
+        pad.hidden = !inRoom();
+        if (!inRoom()) return;
+        const mine = new Set(myHeld);
+        const held = new Set(mergedHeld);
+        for (const b of BUTTONS) {
+            let el = pad.querySelector(`[data-code="${b.code}"]`);
+            if (!el) {
+                el = document.createElement('button');
+                el.type = 'button';
+                el.className = 'crowd-key k-' + b.code;
+                el.dataset.code = b.code;
+                el.innerHTML = `<span class="ck-face">${b.label}</span><span class="ck-n"></span>`;
+                pad.querySelector('.crowd-keys')?.appendChild(el);
+            }
+            const votes = (tally[b.code] || []).length;
+            el.classList.toggle('mine', mine.has(b.code));
+            el.classList.toggle('won', held.has(b.code));
+            el.classList.toggle('voted', votes > 0);
+            el.title = votes ? (tally[b.code] || []).join(', ') : 'nobody';
+            el.querySelector('.ck-n').textContent = votes ? String(votes) : '';
+        }
+        const modeEl = pad.querySelector('.crowd-mode');
+        if (modeEl) modeEl.textContent = mergeMode === 'democracy' ? '🗳️ DEMOCRACY' : '🔥 ANARCHY';
+        const whoEl = pad.querySelector('.crowd-who');
+        if (whoEl) {
+            const n = others.size + 1;
+            whoEl.textContent = `${n} on the pad · ${role === 'host' ? 'you run the game' : 'host runs the game'}`;
         }
     }
 
     function card(p, isMe) {
-        const playing = p.playing ? '🤖 AI' : '🎮 playing';
-        const stats = [
-            p.stars != null ? `⭐${p.stars}` : null,
-            p.coins != null ? `🪙${p.coins}` : null,
-            p.lives != null ? `🍄${p.lives}` : null,
-        ].filter(Boolean).join(' ');
-        const live = p.stream ? '<div class="mp-live">LIVE</div>' : '';
-        const img = p.frame
-            ? `<img class="mp-frame" alt="" src="${p.frame}">`
-            : `<div class="mp-frame ph">${isMe ? 'Your Mario' : 'Waiting for stream…'}</div>`;
+        const held = (p.id && role === 'host' ? inputs.get(p.id)?.held : null) || [];
+        const keys = held.map(c => `<b class="mini-key">${BUTTON_LABEL[c] || '?'}</b>`).join('') || '<span class="mini-idle">idle</span>';
         return `<article class="mp-card${isMe ? ' me' : ''}">
-            <header><b>${esc(p.name || '???')}</b> <span>${playing}</span></header>
-            <div class="mp-frame-wrap">${live}${img}</div>
-            <p class="mp-thought">${esc(p.thought || '—')}</p>
-            <footer>${esc(p.region || '')} ${stats}</footer>
+            <header><b>${esc(p.name || '???')}</b> <span>${p.host ? '🕹️ runs Mario' : '🎮 controller'}</span></header>
+            <div class="mp-keys">${keys}</div>
         </article>`;
     }
 
@@ -601,33 +786,30 @@ export function initMultiplayer({ discord } = {}) {
         const grid = $('mp-grid');
         const dock = $('mp-dock');
         const list = [
-            { ...me, id: myId || 'me', name: me.name + ' (you)', thought: me.thought, frame: me.frame, playing: me.playing, region: me.region, stars: me.stars, coins: me.coins, lives: me.lives, mode: me.mode },
-            ...[...others.values()].sort((a, b) => String(a.name).localeCompare(String(b.name))),
+            { ...me, id: myId || 'me', name: me.name + ' (you)', host: role === 'host' },
+            ...[...others.values()]
+                .map(p => ({ ...p, host: role === 'client' && p.id === hostPeerId(room) }))
+                .sort((a, b) => String(a.name).localeCompare(String(b.name))),
         ];
         if (grid) {
             grid.innerHTML = list.map((p, i) => card(p, i === 0)).join('')
-                || '<p class="mp-empty">Share the room code. When a friend joins, both Marios go split-screen.</p>';
+                || '<p class="mp-empty">Share the room code — everyone who joins presses the same buttons on the same Mario.</p>';
         }
         if (dock) {
             const othersList = [...others.values()];
-            dock.classList.toggle('open', othersList.length > 0 && !$('mp-panel')?.classList.contains('open'));
-            dock.innerHTML = othersList.map(p => `
-                <div class="mp-dock-item" title="${esc(p.name)}">
-                    ${p.frame ? `<img src="${p.frame}" alt="">` : '<div class="ph"></div>'}
-                    <span>${esc((p.name || '?').slice(0, 14))}</span>
-                    <small>${p.stream ? 'LIVE' : (p.playing ? '🤖' : '💤')} ${esc((p.thought || '').slice(0, 36))}</small>
-                </div>`).join('');
+            dock.classList.toggle('open', false);
+            dock.innerHTML = '';
         }
-        const n = String(others.size);
         const count = $('mp-count');
-        if (count) count.textContent = n;
+        if (count) count.textContent = String(others.size + (inRoom() ? 1 : 0));
         // While nobody is peer-connected yet but Discord says friends share the
-        // activity, surface that so the lobby doesn't look dead.
+        // activity, surface that so the room doesn't look dead.
         const here = (!others.size && discordParticipants.length > 1)
             ? ` · ${discordParticipants.length} in activity`
             : '';
-        if (role === 'host') setStatus(`Room “${room}” · ${others.size + 1} Mario${others.size ? 's' : ''} — streaming${here}`);
-        else if (role === 'client') setStatus(`In “${room}” · ${others.size + 1} Marios${here}`);
+        if (role === 'host') setStatus(`Room “${room}” · ${others.size + 1} controlling Mario — you run the game${here}`);
+        else if (role === 'client') setStatus(`Room “${room}” · ${others.size + 1} controlling Mario${here}`);
+        renderPad();
         updateNametag();
     }
 
@@ -654,8 +836,38 @@ export function initMultiplayer({ discord } = {}) {
         });
     }
 
+    // Touch/click the on-screen pad — Discord on mobile has no keyboard.
+    function wirePad() {
+        const pad = $('crowd-pad');
+        if (!pad) return;
+        const keys = pad.querySelector('.crowd-keys');
+        const set = (el, down) => {
+            const code = el?.dataset?.code;
+            if (!code) return;
+            try { window.__sm64crowd?.setVirtual(code, down); } catch {}
+        };
+        keys?.addEventListener('pointerdown', (e) => {
+            const el = e.target.closest('.crowd-key');
+            if (!el) return;
+            e.preventDefault();
+            try { el.setPointerCapture(e.pointerId); } catch {}
+            set(el, true);
+        });
+        const release = (e) => {
+            const el = e.target.closest?.('.crowd-key');
+            if (el) set(el, false);
+        };
+        keys?.addEventListener('pointerup', release);
+        keys?.addEventListener('pointercancel', release);
+        keys?.addEventListener('pointerleave', release);
+        pad.querySelector('.crowd-mode')?.addEventListener('click', () => {
+            setMergeMode(mergeMode === 'anarchy' ? 'democracy' : 'anarchy');
+        });
+    }
+
     function wireUi() {
         wireChrome();
+        wirePad();
         $('mp-toggle-btn')?.addEventListener('click', () => openLobby());
         $('mp-close-btn')?.addEventListener('click', () => openLobby(false));
         $('mp-join-btn')?.addEventListener('click', () => joinRoom($('mp-room')?.value || 'lobby'));
@@ -665,6 +877,9 @@ export function initMultiplayer({ discord } = {}) {
         $('mp-copy-btn')?.addEventListener('click', async () => {
             const code = $('mp-room')?.value || room;
             try { await navigator.clipboard.writeText(code); setStatus(`Copied “${code}”`); } catch {}
+        });
+        $('mp-mode-btn')?.addEventListener('click', () => {
+            setMergeMode(mergeMode === 'anarchy' ? 'democracy' : 'anarchy');
         });
         const nick = $('mp-nick') || $('auth-nick');
         const authNick = $('auth-nick');
@@ -679,7 +894,6 @@ export function initMultiplayer({ discord } = {}) {
                 broadcast(snapshot());
                 updateNametag();
                 render();
-                renderStage();
             });
         };
         onNick(nick);
@@ -698,10 +912,11 @@ export function initMultiplayer({ discord } = {}) {
                 if (region) me.region = region.replace(/^📍\s*/, '');
             } catch {}
             broadcast(snapshot());
-            render();
         },
         async onFrame(dataUrl) {
-            if (!gameCanvas()) return;
+            // Only the host's Mario is worth showing, so only the host sends a
+            // poster frame (it covers the gap before WebRTC video connects).
+            if (role !== 'host' || !gameCanvas()) return;
             const now = Date.now();
             if (now - lastFrameAt < 1800) return;
             lastFrameAt = now;
@@ -709,7 +924,6 @@ export function initMultiplayer({ discord } = {}) {
             if (!acceptThumb(small)) return;
             me.frame = small;
             broadcast({ t: 'frame', id: myId, frame: small });
-            render();
         },
         onGameState(state) {
             if (!state) return;
@@ -731,7 +945,7 @@ export function initMultiplayer({ discord } = {}) {
         },
         // Called by discord-activity.js whenever the participant roster changes.
         // We record it and, while nobody is peer-connected yet, surface who
-        // shares the activity so the lobby doesn't look empty.
+        // shares the activity so the room doesn't look empty.
         onParticipants(list) {
             if (!Array.isArray(list)) return;
             discordParticipants = list;
@@ -740,14 +954,20 @@ export function initMultiplayer({ discord } = {}) {
         },
         join: joinRoom,
         open: openLobby,
+        setMode: setMergeMode,
+        get role() { return role; },
     };
 
     window.__sm64mp = api;
+    try {
+        const saved = localStorage.getItem('sm64_merge_mode');
+        if (MERGE_MODES.includes(saved)) mergeMode = saved;
+    } catch {}
     wireUi();
     updateNametag();
     render();
 
-    // Seed the lobby roster from the Discord SDK and apply the detected Discord
+    // Seed the roster from the Discord SDK and apply the detected Discord
     // display name. The participant list / user may have already populated before
     // multiplayer finished booting, so re-sync now; later updates arrive via the
     // subscription handlers.
@@ -774,16 +994,18 @@ export function initMultiplayer({ discord } = {}) {
     const roomInput = $('mp-room');
     if (roomInput) roomInput.value = autoRoom;
     if (discord?.instanceId) {
-        // Report auto-joining the Discord activity instance.
+        // Everyone launching the activity in this voice channel lands in the
+        // same room automatically — that's what makes "everyone controls Mario"
+        // work with zero setup.
         setStatus(`Auto-joining “${autoRoom}” (Discord activity)`);
     }
 
     setTimeout(() => {
         joinRoom(autoRoom);
-        grabLocalStream();
         if (!localStream) {
             streamRetry = setInterval(() => {
-                if (grabLocalStream()) { clearInterval(streamRetry); callEveryone(); }
+                if (role !== 'host') return;
+                if (grabLocalStream()) { clearInterval(streamRetry); streamRetry = null; callEveryone(); }
             }, 1500);
         }
         setInterval(() => {
@@ -791,6 +1013,19 @@ export function initMultiplayer({ discord } = {}) {
             if (!c || c.width < 8) return;
             try { api.onFrame(c.toDataURL('image/jpeg', 0.45)); } catch {}
         }, 2800);
+        // Heartbeat: keeps a held key alive past INPUT_TTL_MS and re-syncs a
+        // controller whose input packet was lost.
+        setInterval(() => {
+            if (!inRoom() || !myHeld.length) return;
+            if (role === 'host') noteInput(myId, me.name, myHeld);
+            else broadcast({ t: 'input', id: myId, name: me.name, held: myHeld });
+        }, 1200);
+        // SDL's audio context is created lazily, often after we've already
+        // joined — keep re-asserting that only the host's Mario is audible.
+        setInterval(() => {
+            if (!inRoom()) return;
+            try { crowd()?.setLocalAudio(role !== 'client'); } catch {}
+        }, 2000);
     }, 200);
 
     window.addEventListener('beforeunload', () => {
