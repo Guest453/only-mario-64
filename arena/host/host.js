@@ -22,23 +22,40 @@ const RENDER_H = Number(params.get('h') || 240);
 // ─────────────────────────────────────────────────────────────────────────────
 // PIN THE VIEWPORT — this must run before sm64.js.
 //
-// The wasm sizes its canvas from window.innerWidth/innerHeight (35 references in
-// sm64.js). Headless Chromium reports a 1920x1080 viewport no matter what
-// --window-size says, so the game dutifully rendered 1080p through SwiftShader
-// on a box with no GPU: 2-3 fps, and above H.264 level 3.1's ceiling so the
-// encoder fell back to VP8 as well.
+// The wasm imports exactly four sizing thunks from JS (sm64.js:1808-1811):
 //
-// Fighting it after the fact doesn't work — the frames are already expensive by
-// the time we see them. Instead we answer the question the game actually asks.
-// 320x240 is the N64's real output resolution, so this is not a downgrade; it is
-// the correct size, and viewers upscale it with image-rendering: pixelated.
+//     function() { return screen.width;        }
+//     function() { return screen.height;       }
+//     function() { return window.innerWidth;   }
+//     function() { return window.innerHeight;  }
+//
+// Headless Chromium reports a 1920x1080 SCREEN regardless of --window-size, so
+// the game sized itself to 1080p and rendered it through SwiftShader on a box
+// with no GPU: 2-3 fps, and past H.264 level 3.1's ~720p ceiling, so the encoder
+// silently fell back to VP8 as well.
+//
+// A first attempt pinned only the window pair and changed nothing — the game
+// reads the SCREEN pair. All four are pinned now, which is the complete set of
+// questions the binary can ask about display size.
+//
+// Fighting the resize afterwards cannot work: by the time a frame reaches us it
+// has already been rendered at full cost. 320x240 is the N64's real output
+// resolution, so this is not a downgrade — it is the correct size, and viewers
+// upscale it with image-rendering: pixelated.
 // ─────────────────────────────────────────────────────────────────────────────
-try {
-    Object.defineProperty(window, 'innerWidth',  { get: () => RENDER_W, configurable: true });
-    Object.defineProperty(window, 'innerHeight', { get: () => RENDER_H, configurable: true });
-} catch (err) {
-    console.warn('[host] could not pin the viewport', err);
+function pin(obj, prop, value) {
+    try {
+        Object.defineProperty(obj, prop, { get: () => value, configurable: true });
+    } catch (err) {
+        console.warn(`[host] could not pin ${prop}`, err);
+    }
 }
+pin(window, 'innerWidth', RENDER_W);
+pin(window, 'innerHeight', RENDER_H);
+pin(window.screen, 'width', RENDER_W);
+pin(window.screen, 'height', RENDER_H);
+pin(window.screen, 'availWidth', RENDER_W);
+pin(window.screen, 'availHeight', RENDER_H);
 
 const KIND = { VCONF: 1, VKEY: 2, VDELTA: 3, ACONF: 4, ACHUNK: 5 };
 
