@@ -16,6 +16,29 @@ const RELAY    = params.get('relay') || 'ws://127.0.0.1:8090/host';
 const TOKEN    = params.get('token') || '';
 const FPS      = Number(params.get('fps') || 30);
 const BITRATE  = Number(params.get('bitrate') || 1_800_000);
+const RENDER_W = Number(params.get('w') || 320);
+const RENDER_H = Number(params.get('h') || 240);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PIN THE VIEWPORT — this must run before sm64.js.
+//
+// The wasm sizes its canvas from window.innerWidth/innerHeight (35 references in
+// sm64.js). Headless Chromium reports a 1920x1080 viewport no matter what
+// --window-size says, so the game dutifully rendered 1080p through SwiftShader
+// on a box with no GPU: 2-3 fps, and above H.264 level 3.1's ceiling so the
+// encoder fell back to VP8 as well.
+//
+// Fighting it after the fact doesn't work — the frames are already expensive by
+// the time we see them. Instead we answer the question the game actually asks.
+// 320x240 is the N64's real output resolution, so this is not a downgrade; it is
+// the correct size, and viewers upscale it with image-rendering: pixelated.
+// ─────────────────────────────────────────────────────────────────────────────
+try {
+    Object.defineProperty(window, 'innerWidth',  { get: () => RENDER_W, configurable: true });
+    Object.defineProperty(window, 'innerHeight', { get: () => RENDER_H, configurable: true });
+} catch (err) {
+    console.warn('[host] could not pin the viewport', err);
+}
 
 const KIND = { VCONF: 1, VKEY: 2, VDELTA: 3, ACONF: 4, ACHUNK: 5 };
 
@@ -316,7 +339,7 @@ window.__arenaStart = async function arenaStart() {
     // blank placeholder before the wasm ever set its viewport, and every viewer
     // received a squashed 300x150 stream. Wait for a plausible game resolution
     // instead, and settle for whatever we have if the game never resizes.
-    const MIN_W = 256, MIN_H = 192;
+    const MIN_W = Math.min(256, RENDER_W), MIN_H = Math.min(192, RENDER_H);
     for (let i = 0; i < 600 && !(canvas.width >= MIN_W && canvas.height >= MIN_H); i++) {
         await new Promise((r) => setTimeout(r, 100));
     }

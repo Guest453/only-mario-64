@@ -26,7 +26,9 @@ for i in $(seq 1 50); do
   sleep 0.2
 done
 
-HOST_URL="http://127.0.0.1:${HOST_STATIC_PORT}/host.html?relay=ws://127.0.0.1:${ARENA_PORT}/host&token=${ARENA_HOST_TOKEN}&fps=${FPS}&bitrate=${BITRATE}"
+W="${ARENA_W:-320}"
+H="${ARENA_H:-240}"
+HOST_URL="http://127.0.0.1:${HOST_STATIC_PORT}/host.html?relay=ws://127.0.0.1:${ARENA_PORT}/host&token=${ARENA_HOST_TOKEN}&fps=${FPS}&bitrate=${BITRATE}&w=${W}&h=${H}"
 
 # Chromium flags, and why each one is here:
 #   --headless=new             no X server, no Xvfb, no framebuffer grab
@@ -57,7 +59,7 @@ exec chromium \
   --hide-scrollbars \
   --disable-gpu-vsync \
   --disable-frame-rate-limit \
-  --window-size=${ARENA_W:-320},${ARENA_H:-240} \
+  --window-size=${W},${H} \
   --user-data-dir="$PROFILE_DIR" \
   --enable-logging=stderr --v=0 \
   "$HOST_URL"
