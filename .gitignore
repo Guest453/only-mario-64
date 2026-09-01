@@ -1,1 +1,5 @@
 tas/**/*.m64
+
+# arena secrets — never commit (public repo)
+arena/.env
+arena/node_modules

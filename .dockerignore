@@ -1,0 +1,13 @@
+.git
+node_modules
+arena/node_modules
+sm64js-game
+lib/rom-patcher-js
+knowledge
+tas
+*.txt
+main.js
+multiplayer.js
+ai-player.html
+index.html
+styles.css

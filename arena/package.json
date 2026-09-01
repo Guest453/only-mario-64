@@ -1,0 +1,15 @@
+{
+  "name": "mario-arena",
+  "version": "1.0.0",
+  "private": true,
+  "description": "One global Super Mario 64, controlled by every Discord server at once.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "host-static": "node host/serve-host.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "engines": { "node": ">=18" }
+}

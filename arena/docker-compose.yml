@@ -1,0 +1,36 @@
+# Deployed on ropeway-per-bronze alongside the existing vnc-activity stack.
+#
+# Port 8090 is bound to LOOPBACK ONLY. The public entry point is the host-level
+# nginx on :8000, which already fronts this box for Discord — see
+# deploy/nginx-arena.conf. Nothing here is reachable from the internet directly.
+
+services:
+  mario-arena:
+    build:
+      context: ..
+      dockerfile: arena/Dockerfile
+    image: mario-arena:latest
+    container_name: mario-arena
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8090:8090"
+    volumes:
+      # THE save file. IndexedDB inside the Chromium profile holds the emscripten
+      # IDBFS mount, so this volume is every star anyone has ever collected.
+      # Losing it resets the world; it is the only stateful thing here.
+      - arena-profile:/data/profile
+    environment:
+      ARENA_HOST_TOKEN: "${ARENA_HOST_TOKEN:?set ARENA_HOST_TOKEN in .env}"
+      DISCORD_CLIENT_ID: "${DISCORD_CLIENT_ID:-}"
+      DISCORD_CLIENT_SECRET: "${DISCORD_CLIENT_SECRET:-}"
+      ARENA_ADMIN_ID: "${ARENA_ADMIN_ID:-1246945967102623755}"
+      ARENA_FPS: "${ARENA_FPS:-30}"
+      ARENA_BITRATE: "${ARENA_BITRATE:-1800000}"
+    # 2 vCPU box that also runs a Minecraft server: cap the arena so a runaway
+    # encoder can't starve everything else.
+    cpus: 1.5
+    mem_limit: 2g
+    shm_size: 512m
+
+volumes:
+  arena-profile:

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Everyone Controls Mario</title>
+<link rel="stylesheet" href="./client.css">
+</head>
+<body data-chrome="on">
+
+<div id="stage">
+  <canvas id="screen" width="640" height="480"></canvas>
+  <div id="status" class="hidden">connecting…</div>
+
+  <div id="topbar">
+    <span class="brand">🍄</span>
+    <span class="pill" id="rosterpill" title="who is playing">
+      <span id="roster-faces"></span><b id="count">0</b>
+    </span>
+    <span class="pill mode" id="modepill">ANARCHY</span>
+
+    <span class="spacer"></span>
+
+    <button class="icon" id="btn-vote"  title="Call a vote to change the mode">⚖️</button>
+    <button class="icon" id="btn-sound" title="Enable sound">🔇</button>
+    <!-- Discord activity panels get tiny (PIP / grid). This collapses every bit
+         of chrome so the game gets the whole frame. -->
+    <button class="icon" id="btn-chrome" title="Hide the controls and chat">⤢</button>
+  </div>
+
+  <!-- ── Vote overlay ──────────────────────────────────────────────────────
+       Appears for EVERYONE the moment someone calls a mode change. -->
+  <div id="vote" class="hidden">
+    <div class="vote-card">
+      <div class="vote-head">
+        <span id="vote-title">switch to DEMOCRACY?</span>
+        <span id="vote-timer" class="vote-timer">20s</span>
+      </div>
+      <div class="vote-by">called by <b id="vote-by">someone</b></div>
+      <div class="vote-tally">
+        <div class="tally yes">
+          <div class="tally-head">✅ <b id="vote-yes-n">0</b> / <span id="vote-needed">0</span> needed</div>
+          <div class="faces" id="vote-yes-faces"></div>
+        </div>
+        <div class="tally no">
+          <div class="tally-head">❌ <b id="vote-no-n">0</b></div>
+          <div class="faces" id="vote-no-faces"></div>
+        </div>
+      </div>
+      <div class="vote-actions">
+        <button id="vote-yes" class="yes">Vote YES</button>
+        <button id="vote-no"  class="no">Vote NO</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- The controller. `data-key` values are the only seven codes the server
+     accepts. Classes are painted live:
+       .mine = you are holding it   .live = the hive mind is holding it -->
+<div id="pad">
+  <div class="dpad">
+    <button data-key="ArrowUp"    class="up">▲</button>
+    <button data-key="ArrowLeft"  class="left">◀</button>
+    <button data-key="ArrowRight" class="right">▶</button>
+    <button data-key="ArrowDown"  class="down">▼</button>
+  </div>
+  <div class="face">
+    <button data-key="Space" class="btn z" title="Z — crouch / ground pound">Z</button>
+    <button data-key="KeyC"  class="btn b" title="B — dive / punch / grab">B</button>
+    <button data-key="KeyX"  class="btn a" title="A — jump">A</button>
+    <button data-key="Enter" class="btn start" title="Start">START</button>
+  </div>
+</div>
+
+<div id="side">
+  <div id="chatlog"></div>
+  <input id="chatinput" type="text" maxlength="300" placeholder="say something…" autocomplete="off">
+  <div id="legend">
+    WASD/arrows move · <kbd>X</kbd> jump · <kbd>C</kbd> dive · <kbd>Space</kbd> crouch · <kbd>Enter</kbd> start
+  </div>
+</div>
+
+<script type="module" src="./client.js"></script>
+</body>
+</html>

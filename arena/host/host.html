@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mario Arena — Host</title>
+<style>
+  html, body { margin: 0; background: #000; overflow: hidden; }
+  /* Headless Chromium still composites, so keep the canvas at its native size —
+     scaling it here would only cost us fill rate on a box with no GPU. */
+  #canvas { display: block; background: #000; image-rendering: pixelated; }
+  #boot { position: fixed; left: 8px; top: 8px; color: #6f6; font: 12px monospace; }
+</style>
+
+<!-- host.js FIRST, as a classic script, and before sm64.js.
+     It installs the AudioContext shim that captures the game's audio, and that
+     shim is only effective if it exists before the wasm constructs its context.
+     A module script would be deferred past sm64.js and miss the window. -->
+<script src="./host.js"></script>
+</head>
+<body>
+  <canvas id="canvas" tabindex="0"></canvas>
+  <div id="boot">booting…</div>
+
+<script>
+  // Same Module contract the original index.html used, minus the AI player,
+  // the lobby, the ROM patcher and the auth gate. This page only plays.
+  window.Module = window.Module || {};
+  Module.canvas = document.getElementById('canvas');
+  Module.locateFile = (p) => (p.endsWith('.wasm') ? './sm64.wasm' : p);
+  Module.preRun = Module.preRun || [];
+  Module.postRun = Module.postRun || [];
+  Module.print = (t) => console.log(t);
+  Module.printErr = (t) => console.warn(t);
+  Module.setStatus = (t) => {
+    const el = document.getElementById('boot');
+    if (el) { el.textContent = t || ''; if (!t) el.style.display = 'none'; }
+  };
+
+  // ── Persistent save ──────────────────────────────────────────────────────
+  // IDBFS puts the save in IndexedDB, which lives in the Chromium profile
+  // directory. That directory is a mounted volume, so the stars survive
+  // container restarts. This is THE save file for everyone on the planet.
+  Module.preRun.push(function () {
+    try {
+      if (Module.FS && Module.IDBFS) {
+        try { Module.FS.mkdir('/save'); } catch {}
+        Module.FS.mount(Module.IDBFS, {}, '/save');
+      }
+    } catch (err) { console.error('save mount failed:', err); }
+  });
+
+  Module.onRuntimeInitialized = function () {
+    try {
+      if (Module.FS && Module.IDBFS) {
+        Module.FS.syncfs(true, (err) => {
+          if (err) console.warn('save load error:', err);
+          else console.log('[host] save loaded');
+        });
+        window.saveNow = function (cb) {
+          try { if (typeof Module.writeSave === 'function') Module.writeSave(); } catch {}
+          Module.FS.syncfs(false, (e) => { if (typeof cb === 'function') cb(e); });
+        };
+        setInterval(() => window.saveNow(), 5000);
+      }
+    } catch (err) { console.error('save init failed:', err); }
+
+    // Start streaming once the runtime is alive. __arenaStart waits for the
+    // canvas to get real dimensions before it configures the encoder.
+    if (typeof window.__arenaStart === 'function') window.__arenaStart();
+  };
+</script>
+<script src="./sm64.js"></script>
+</body>
+</html>
