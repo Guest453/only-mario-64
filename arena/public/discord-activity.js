@@ -132,52 +132,36 @@ export async function initDiscordActivity() {
         // act as the user against Discord's API. The session id it returns is
         // the only credential this page holds, and it only opens our socket.
         //
-        // Two-step authorize, and the order matters.
+        // The documented Embedded App SDK flow, exactly as Discord specifies it:
         //
-        // `prompt: 'none'` is silent for anyone who has already authorized the
-        // app — but it REJECTS for anyone who has not, instead of showing them
-        // the consent screen. Shipping only that meant every first-time player
-        // hit "sign-in failed" and nothing ever reached /api/token (confirmed
-        // from nginx: the shell loaded, the token endpoint was never called).
+        //   const { code } = await discordSdk.commands.authorize({
+        //     client_id, response_type: "code", state: "", prompt: "none", scope: [...]
+        //   });
         //
-        // So: try silent first, and fall back to a real consent prompt. Returning
-        // players see nothing; new players approve once and are silent after.
+        // NO redirect_uri. Per the docs the SDK "automatically handles
+        // redirecting users back to your Activity when the RPC authorize command
+        // is called", and passing one is rejected outright with
+        // "Redirect URI cannot be used in the RPC OAuth2 Authorization flow".
+        //
+        // Two earlier attempts here were guesses and both were wrong: a consent
+        // fallback (Discord: missing redirect_uri) and then supplying one
+        // (Discord: redirect_uri not allowed in RPC). prompt:"none" is correct —
+        // Discord itself prompts the user to authorize the app when the activity
+        // is first launched, so there is no separate consent step to build.
         try {
-            // redirect_uri is REQUIRED for a consent authorize. Discord answered
-            // the first consent attempt with:
-            //   invalid_request: Missing "redirect_uri" in request
-            // `prompt: 'none'` happens not to need it, which is why the silent
-            // path never surfaced this.
-            //
-            // Inside an activity this origin is https://<client_id>.discordsays.com.
-            // It is never actually navigated to — Discord only validates it — but
-            // it MUST be registered under OAuth2 -> Redirects, and it must be
-            // byte-identical in the token exchange or that fails with
-            // invalid_grant. Sent on both attempts so the two can never disagree.
-            const redirectUri = location.origin;
-
-            const authorize = (extra) => sdk.commands.authorize({
+            const { code } = await sdk.commands.authorize({
                 client_id: clientId,
                 response_type: 'code',
                 state: '',
+                prompt: 'none',
                 scope: ['identify'],
-                redirect_uri: redirectUri,
-                ...extra,
             });
-
-            let code = null;
-            try {
-                ({ code } = await authorize({ prompt: 'none' }));
-            } catch (silentErr) {
-                console.log('[Discord] silent authorize declined, asking for consent');
-                ({ code } = await authorize({}));
-            }
             if (!code) throw new Error('authorize returned no code');
 
             const res = await fetch('/api/token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code, redirect_uri: redirectUri }),
+                body: JSON.stringify({ code }),
             });
             const payload = await res.json().catch(() => ({}));
             if (!res.ok || !payload.session) {
