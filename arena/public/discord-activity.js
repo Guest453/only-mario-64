@@ -143,11 +143,25 @@ export async function initDiscordActivity() {
         // So: try silent first, and fall back to a real consent prompt. Returning
         // players see nothing; new players approve once and are silent after.
         try {
+            // redirect_uri is REQUIRED for a consent authorize. Discord answered
+            // the first consent attempt with:
+            //   invalid_request: Missing "redirect_uri" in request
+            // `prompt: 'none'` happens not to need it, which is why the silent
+            // path never surfaced this.
+            //
+            // Inside an activity this origin is https://<client_id>.discordsays.com.
+            // It is never actually navigated to — Discord only validates it — but
+            // it MUST be registered under OAuth2 -> Redirects, and it must be
+            // byte-identical in the token exchange or that fails with
+            // invalid_grant. Sent on both attempts so the two can never disagree.
+            const redirectUri = location.origin;
+
             const authorize = (extra) => sdk.commands.authorize({
                 client_id: clientId,
                 response_type: 'code',
                 state: '',
                 scope: ['identify'],
+                redirect_uri: redirectUri,
                 ...extra,
             });
 
@@ -163,7 +177,7 @@ export async function initDiscordActivity() {
             const res = await fetch('/api/token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code }),
+                body: JSON.stringify({ code, redirect_uri: redirectUri }),
             });
             const payload = await res.json().catch(() => ({}));
             if (!res.ok || !payload.session) {

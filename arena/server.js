@@ -40,6 +40,9 @@ const CLIENT_ID   = process.env.DISCORD_CLIENT_ID || '';
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || '';
 // Discord user id that gets the admin panel. Same owner as the vnc-activity box.
 const ADMIN_ID    = process.env.ARENA_ADMIN_ID || '1246945967102623755';
+// Public origin, if the activity is ever served from our own domain rather than
+// <client_id>.discordsays.com. Only used to allowlist redirect_uri.
+const ARENA_ORIGIN = process.env.ARENA_ORIGIN || '';
 
 // ── Limits ───────────────────────────────────────────────────────────────────
 const MAX_VIEWERS      = 400;      // hard cap on concurrent viewers
@@ -254,10 +257,17 @@ async function handleToken(req, res) {
            .end(JSON.stringify({ error: 'discord credentials not configured' }));
         return;
     }
-    let code;
+    let code, redirectUri;
     try {
         const parsed = JSON.parse(await readBody(req));
         code = typeof parsed.code === 'string' ? parsed.code : null;
+        // Must match the value used at authorize time or Discord answers
+        // invalid_grant. Allowlisted by shape rather than passed through: this
+        // is a value we hand to Discord on the user's behalf, so a client does
+        // not get to put an arbitrary URL in it.
+        const r = typeof parsed.redirect_uri === 'string' ? parsed.redirect_uri : '';
+        if (/^https:\/\/\d{5,25}\.discordsays\.com$/.test(r)) redirectUri = r;
+        else if (ARENA_ORIGIN && r === ARENA_ORIGIN) redirectUri = r;
     } catch { code = null; }
     if (!code || code.length > 512) {
         res.writeHead(400, { 'Content-Type': 'application/json' })
@@ -265,12 +275,14 @@ async function handleToken(req, res) {
         return;
     }
     try {
-        const body = new URLSearchParams({
+        const params = {
             client_id: CLIENT_ID,
             client_secret: CLIENT_SECRET,
             grant_type: 'authorization_code',
             code,
-        });
+        };
+        if (redirectUri) params.redirect_uri = redirectUri;
+        const body = new URLSearchParams(params);
         const r = await fetch('https://discord.com/api/oauth2/token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -278,9 +290,13 @@ async function handleToken(req, res) {
         });
         const json = await r.json();
         if (!r.ok || !json.access_token) {
-            console.warn('[arena] token exchange rejected by Discord:', json.error || r.status);
+            const why = [json.error, json.error_description].filter(Boolean).join(': ') || String(r.status);
+            console.warn('[arena] token exchange rejected by Discord:', why);
+            // Pass Discord's own wording through to the gate. It is not
+            // sensitive, and a generic message here is what made the last two
+            // failures require a log dig.
             res.writeHead(502, { 'Content-Type': 'application/json' })
-               .end(JSON.stringify({ error: 'exchange failed' }));
+               .end(JSON.stringify({ error: 'exchange failed: ' + why.slice(0, 160) }));
             return;
         }
 
