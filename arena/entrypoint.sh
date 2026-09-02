@@ -26,8 +26,8 @@ for i in $(seq 1 50); do
   sleep 0.2
 done
 
-W="${ARENA_W:-320}"
-H="${ARENA_H:-240}"
+W="${ARENA_W:-480}"
+H="${ARENA_H:-270}"
 HOST_URL="http://127.0.0.1:${HOST_STATIC_PORT}/host.html?relay=ws://127.0.0.1:${ARENA_PORT}/host&token=${ARENA_HOST_TOKEN}&fps=${FPS}&bitrate=${BITRATE}&w=${W}&h=${H}"
 
 # Chromium flags, and why each one is here:

@@ -16,8 +16,8 @@ const RELAY    = params.get('relay') || 'ws://127.0.0.1:8090/host';
 const TOKEN    = params.get('token') || '';
 const FPS      = Number(params.get('fps') || 30);
 const BITRATE  = Number(params.get('bitrate') || 1_800_000);
-const RENDER_W = Number(params.get('w') || 320);
-const RENDER_H = Number(params.get('h') || 240);
+const RENDER_W = Number(params.get('w') || 480);
+const RENDER_H = Number(params.get('h') || 270);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PIN THE VIEWPORT — this must run before sm64.js.
@@ -50,6 +50,97 @@ function pin(obj, prop, value) {
         console.warn(`[host] could not pin ${prop}`, err);
     }
 }
+// ─────────────────────────────────────────────────────────────────────────────
+// SHRINK THE RENDER — clamp the canvas AND scale the GL viewport to match.
+//
+// Three guesses failed before instrumenting this. The tracer's stack was
+// unambiguous:
+//
+//   _emscripten_set_canvas_element_size (sm64.js:6015)
+//     <- Emscripten_CreateWindow  <- SDL_CreateWindow
+//     <- gfx_sdl_init <- gfx_init <- main
+//
+// SDL_CreateWindow sets the canvas to 1x1 then 1920x1080 at startup. It does NOT
+// read screen.* or innerWidth (both pinned to 320x240 and both ignored) — it
+// uses SDL's own display bounds. Rendering 1080p in SwiftShader on a GPU-less
+// box costs 1-2 fps, so the size has to come down.
+//
+// Clamping the canvas alone is NOT enough, and the failure is instructive: the
+// backing store became 320x240 but glViewport stayed [0,0,1920,1080], so the
+// game drew a 1080p projection into a 320x240 buffer and all you saw was the
+// top-left corner of the sky. The game sets its viewport from SDL's window size
+// and never re-reads the drawable size.
+//
+// So scale the viewport by exactly the same factor, self-calibrating from
+// whatever SDL asked for. The height is derived from SDL's aspect rather than
+// hardcoded: SDL picks 16:9, and forcing a 4:3 canvas would squash the picture.
+// ─────────────────────────────────────────────────────────────────────────────
+let sdlW = 0, sdlH = 0;          // what SDL believes the window is
+let renderW = RENDER_W, renderH = RENDER_H;
+
+for (const prop of ['width', 'height']) {
+    const desc = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, prop);
+    Object.defineProperty(HTMLCanvasElement.prototype, prop, {
+        configurable: true,
+        get() { return desc.get.call(this); },
+        set(v) {
+            // Only OUR canvas. The game builds offscreen canvases for cursors
+            // and textures; clamping those would corrupt them.
+            if (this.id !== 'canvas') return desc.set.call(this, v);
+
+            if (prop === 'width') {
+                if (v > 1) sdlW = v;
+                return desc.set.call(this, renderW);
+            }
+            if (v > 1) sdlH = v;
+            // Match SDL's aspect exactly so nothing is stretched.
+            if (sdlW > 1 && sdlH > 1) renderH = Math.round(renderW * (sdlH / sdlW));
+            return desc.set.call(this, renderH);
+        },
+    });
+}
+
+// Scale every viewport/scissor call by the same ratio. The game thinks it is
+// drawing at SDL's size; we quietly map that space onto the small buffer.
+function installGlScaling(proto) {
+    if (!proto) return;
+    for (const fn of ['viewport', 'scissor']) {
+        const orig = proto[fn];
+        if (!orig) continue;
+        proto[fn] = function (x, y, w, h) {
+            if (sdlW > 1 && this.canvas && this.canvas.id === 'canvas') {
+                const s = this.drawingBufferWidth / sdlW;
+                return orig.call(this, Math.round(x * s), Math.round(y * s),
+                                       Math.round(w * s), Math.round(h * s));
+            }
+            return orig.call(this, x, y, w, h);
+        };
+    }
+}
+installGlScaling(window.WebGLRenderingContext && WebGLRenderingContext.prototype);
+installGlScaling(window.WebGL2RenderingContext && WebGL2RenderingContext.prototype);
+
+// Opt-in resize tracer (?debugresize=1). Three separate guesses at what was
+// resizing this canvas to 1920x1080 were all wrong, so this exists to print the
+// actual call site instead of a fourth guess. Left in the tree deliberately —
+// it costs nothing when the flag is absent, and it is the only honest way to
+// answer "who resized my canvas" in a minified 400KB emscripten bundle.
+if (params.get('debugresize') === '1') {
+    for (const prop of ['width', 'height']) {
+        const desc = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, prop);
+        Object.defineProperty(HTMLCanvasElement.prototype, prop, {
+            configurable: true,
+            get() { return desc.get.call(this); },
+            set(v) {
+                if (this.id === 'canvas') {
+                    console.log(`[resize] canvas.${prop} = ${v}\n${new Error().stack}`);
+                }
+                return desc.set.call(this, v);
+            },
+        });
+    }
+}
+
 pin(window, 'innerWidth', RENDER_W);
 pin(window, 'innerHeight', RENDER_H);
 pin(window.screen, 'width', RENDER_W);
@@ -356,7 +447,7 @@ window.__arenaStart = async function arenaStart() {
     // blank placeholder before the wasm ever set its viewport, and every viewer
     // received a squashed 300x150 stream. Wait for a plausible game resolution
     // instead, and settle for whatever we have if the game never resizes.
-    const MIN_W = Math.min(256, RENDER_W), MIN_H = Math.min(192, RENDER_H);
+    const MIN_W = Math.min(64, RENDER_W), MIN_H = Math.min(64, RENDER_H);
     for (let i = 0; i < 600 && !(canvas.width >= MIN_W && canvas.height >= MIN_H); i++) {
         await new Promise((r) => setTimeout(r, 100));
     }
