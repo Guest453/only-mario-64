@@ -52,7 +52,10 @@ function viewer(name, discordId) {
 
 (async () => {
     const server = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
-        env: { ...process.env, ARENA_PORT: String(PORT), ARENA_HOST_TOKEN: TOKEN, ARENA_BIND: '127.0.0.1' },
+        // ARENA_ALLOW_GUEST lets the suite exercise the merge/vote protocol
+        // without standing up a fake Discord. The gate itself is covered by its
+        // own server below, started WITHOUT this flag.
+        env: { ...process.env, ARENA_PORT: String(PORT), ARENA_HOST_TOKEN: TOKEN, ARENA_BIND: '127.0.0.1', ARENA_ALLOW_GUEST: '1' },
         stdio: 'ignore',
     });
     const stop = () => { try { server.kill('SIGTERM'); } catch {} };
@@ -107,11 +110,23 @@ function viewer(name, discordId) {
         await wait(300);
         ok('releasing clears the controller', (a.held || []).length === 0, JSON.stringify(a.held));
 
-        // ── identity ───────────────────────────────────────────────────────
+        // ── identity is the SERVER's, never the client's ───────────────────
+        // These viewers said hello as "alice" and "bob". The server must ignore
+        // that entirely and use the session name — otherwise anyone could wear
+        // anyone else's name, and (before this was fixed) claim the admin id and
+        // be handed the admin star.
         b.send(JSON.stringify({ t: 'chat', text: 'hello' }));
         await wait(250);
-        ok('chat carries the speaker name', a.lastChat && a.lastChat.from === 'bob',
+        ok('chat uses the session name, ignoring the client-claimed one',
+            a.lastChat && a.lastChat.from === 'Guest' && a.lastChat.from !== 'bob',
             JSON.stringify(a.lastChat && a.lastChat.from));
+
+        b.send(JSON.stringify({ t: 'hello', name: 'TotallyTheAdmin', discordId: '1246945967102623755' }));
+        b.send(JSON.stringify({ t: 'chat', text: 'am i admin' }));
+        await wait(300);
+        ok('a client cannot claim the admin id to get admin',
+            a.lastChat && a.lastChat.admin !== true && a.lastChat.from !== 'TotallyTheAdmin',
+            JSON.stringify(a.lastChat));
 
         // ── the mode vote ──────────────────────────────────────────────────
         a.send(JSON.stringify({ t: 'modevote', mode: 'democracy' }));
@@ -120,7 +135,8 @@ function viewer(name, discordId) {
         ok('the proposer counts as a yes', a.vote && a.vote.yes.length === 1);
         ok('a 2-person room needs BOTH votes', a.vote && a.vote.needed === 2, a.vote && String(a.vote.needed));
         ok('one vote alone does not flip the mode', a.mode !== 'democracy', String(a.mode));
-        ok('the vote names the voter', a.vote && a.vote.yes[0] && a.vote.yes[0].name === 'alice',
+        ok('the vote names the voter from the session',
+            a.vote && a.vote.yes[0] && a.vote.yes[0].name === 'Guest',
             JSON.stringify(a.vote && a.vote.yes[0]));
 
         b.send(JSON.stringify({ t: 'votecast', yes: true }));
@@ -144,6 +160,32 @@ function viewer(name, discordId) {
         a.send(JSON.stringify({ t: 'chat', text: 'x'.repeat(50000) }));
         await wait(200);
         ok('an oversized frame does not kill the connection', a.readyState === 1);
+
+        // ── the auth gate ──────────────────────────────────────────────────
+        // A second relay with guest access OFF: no session, no socket.
+        const GATE_PORT = PORT + 1;
+        const gated = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
+            env: { ...process.env, ARENA_PORT: String(GATE_PORT), ARENA_HOST_TOKEN: TOKEN, ARENA_BIND: '127.0.0.1' },
+            stdio: 'ignore',
+        });
+        for (let i = 0; i < 100; i++) { if (await portOpen(GATE_PORT)) break; await wait(50); }
+
+        const anon = new WebSocket(`ws://127.0.0.1:${GATE_PORT}/ws`);
+        const anonRes = await new Promise((r) => {
+            anon.on('open', () => r('open'));
+            anon.on('error', () => r('refused'));
+            anon.on('close', () => r('refused'));
+        });
+        ok('a viewer with NO discord session is refused', anonRes === 'refused', anonRes);
+
+        const fake = new WebSocket(`ws://127.0.0.1:${GATE_PORT}/ws?s=deadbeef`);
+        const fakeRes = await new Promise((r) => {
+            fake.on('open', () => r('open'));
+            fake.on('error', () => r('refused'));
+            fake.on('close', () => r('refused'));
+        });
+        ok('a forged session id is refused', fakeRes === 'refused', fakeRes);
+        try { gated.kill('SIGTERM'); } catch {}
     } catch (err) {
         ok('suite ran without throwing', false, err.message);
     }

@@ -116,9 +116,19 @@ async function configureVideo(config) {
     if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'needkey' }));
 }
 
+// If a viewer's machine (or tab) can't keep up, decoded frames pile up and the
+// stream drifts permanently behind — you end up watching the past with no way
+// to catch up, which is worse than a visible skip. Above this depth we stop
+// feeding deltas and wait for the next keyframe, which snaps back to live.
+const MAX_DECODE_QUEUE = 6;
+
 function decodeVideo(kind, timestamp, payload) {
     if (!videoDecoder || videoDecoder.state !== 'configured') return;
     const isKey = kind === KIND.VKEY;
+    if (!isKey && videoDecoder.decodeQueueSize > MAX_DECODE_QUEUE) {
+        waitingForKeyframe = true;   // drop to live at the next keyframe
+        return;
+    }
     if (waitingForKeyframe && !isKey) return;   // deltas before a keyframe = guaranteed error
     if (isKey) waitingForKeyframe = false;
     try {
@@ -131,6 +141,9 @@ let audioCtx = null;
 let audioDecoder = null;
 let playHead = 0;
 const JITTER_S = 0.10;
+// Never let scheduled audio run further ahead than this; past it we are
+// accumulating latency instead of playing live.
+const MAX_AUDIO_LEAD_S = 0.45;
 
 async function configureAudio(config) {
     if (!config || !config.codec) return;
@@ -159,6 +172,14 @@ async function configureAudio(config) {
                 src.connect(audioCtx.destination);
                 const now = audioCtx.currentTime;
                 if (playHead < now + 0.01) playHead = now + JITTER_S;  // re-anchor after a stall
+                // Anti-overbuffer: audio scheduled too far ahead means we are
+                // drifting behind live and the lag only ever grows. Drop this
+                // packet and re-anchor rather than queue more of the past.
+                if (playHead - now > MAX_AUDIO_LEAD_S) {
+                    playHead = now + JITTER_S;
+                    audioData.close();
+                    return;
+                }
                 src.start(playHead);
                 playHead += buf.duration;
             } catch { /* a dropped audio packet is not worth a stack trace */ }
@@ -255,14 +276,20 @@ function paintHeld(keys) {
     document.querySelectorAll('[data-key]').forEach((el) => el.classList.toggle('live', set.has(el.dataset.key)));
 }
 
-// ── Chrome collapse ──────────────────────────────────────────────────────────
-// Discord panels can be tiny; the pad and chat suffocate the game. This hides
-// all of it. The keyboard keeps working, so it is a real playing mode.
-function setChrome(on) {
-    document.body.dataset.chrome = on ? 'on' : 'off';
-    $('btn-chrome').textContent = on ? '⤢' : '⤡';
-    $('btn-chrome').title = on ? 'Hide the controls and chat' : 'Show the controls and chat';
-    try { localStorage.setItem('arena_chrome', on ? 'on' : 'off'); } catch {}
+// ── Panel toggles ────────────────────────────────────────────────────────────
+// The on-screen pad and the chat column hide INDEPENDENTLY, and both start
+// hidden. A Discord activity panel can be tiny, and a d-pad plus a chat column
+// leave the game a postage stamp. The keyboard works whether or not the pad is
+// shown, so "everything hidden" is a full playing mode.
+function setPanel(name, on) {
+    document.body.dataset[name] = on ? 'on' : 'off';
+    const btn = $('btn-' + name);
+    if (btn) btn.classList.toggle('on', on);
+    try { localStorage.setItem('arena_' + name, on ? 'on' : 'off'); } catch {}
+}
+
+function togglePanel(name) {
+    setPanel(name, document.body.dataset[name] !== 'on');
 }
 
 // ── Vote UI ──────────────────────────────────────────────────────────────────
@@ -343,12 +370,13 @@ function setMode(next) {
 // ── Connection ───────────────────────────────────────────────────────────────
 function wsUrl() {
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const s = discord && discord.session ? `?s=${encodeURIComponent(discord.session)}` : '';
     // The Activity is configured with a ROOT url mapping (/ -> this origin), so
     // the iframe is served from <app_id>.discordsays.com and every request —
     // WebSocket upgrades included — is proxied same-origin. No /.proxy prefix:
     // that is only for extra mappings, and would point at a path Discord never
     // mapped.
-    return `${proto}//${location.host}/ws`;
+    return `${proto}//${location.host}/ws${s}`;
 }
 
 function connect() {
@@ -358,11 +386,10 @@ function connect() {
 
     ws.onopen = () => {
         setStatus('waiting for the game…');
+        // Name, avatar and admin come from the server's verified session — the
+        // client is not asked, and could not be trusted if it were.
         ws.send(JSON.stringify({
             t: 'hello',
-            name: (discord && discord.detectedName) || 'Guest',
-            discordId: (discord && discord.userId) || null,
-            avatar: (discord && discord.avatar) || null,
             guildId: (discord && discord.guildId) || null,
         }));
     };
@@ -433,12 +460,13 @@ function connect() {
     $('btn-sound').addEventListener('click', unlockAudio);
     document.addEventListener('pointerdown', unlockAudio, { once: true });
 
-    // Start collapsed if the panel is small or the player asked for it last time.
-    let chrome = 'on';
-    try { chrome = localStorage.getItem('arena_chrome') || 'on'; } catch {}
-    if (window.innerWidth < 480 || window.innerHeight < 380) chrome = 'off';
-    setChrome(chrome === 'on');
-    $('btn-chrome').addEventListener('click', () => setChrome(document.body.dataset.chrome !== 'on'));
+    // Both default to HIDDEN — game first. A returning player's choice wins.
+    for (const name of ['pad', 'chat']) {
+        let saved = null;
+        try { saved = localStorage.getItem('arena_' + name); } catch {}
+        setPanel(name, saved === 'on');
+        $('btn-' + name).addEventListener('click', () => togglePanel(name));
+    }
 
     // Calling a vote proposes the OTHER mode — there are only two.
     $('btn-vote').addEventListener('click', () => {
@@ -465,7 +493,32 @@ function connect() {
         }
     });
 
-    // Identity first, so the very first hello carries a real name and avatar.
-    try { discord = await initDiscordActivity(); } catch (err) { console.warn('[arena] discord init failed', err); }
+    // Authenticate BEFORE anything else. Without a server-minted session the
+    // socket refuses us, so there is no point opening it — show the gate and
+    // stop. No Discord auth, no game.
+    try {
+        discord = await initDiscordActivity();
+    } catch (err) {
+        console.warn('[arena] discord init failed', err);
+    }
+
+    if (!discord || !discord.session) {
+        showGate(discord);
+        return;
+    }
     connect();
 })();
+
+function showGate(d) {
+    const msg = $('gate-msg');
+    if (!d || !d.active) {
+        msg.textContent = 'Open this inside Discord to play.';
+    } else if (d.authError) {
+        msg.textContent = 'Discord sign-in failed. Reopen the activity to retry.';
+        console.warn('[arena] gate reason:', d.authError);
+    } else {
+        msg.textContent = 'Sign in with Discord to play.';
+    }
+    $('gate').classList.remove('hidden');
+    setStatus('');
+}

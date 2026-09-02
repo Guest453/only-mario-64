@@ -58,6 +58,8 @@ export async function initDiscordActivity() {
         avatar: null,          // Discord avatar hash
         detectedName: null,
         authenticated: false,
+        session: null,         // server-minted; the only credential we hold
+        authError: null,
         participants: [],
         refreshParticipants: async () => [],
     };
@@ -120,16 +122,18 @@ export async function initDiscordActivity() {
 
         try { await sdk.commands.setConfig({ use_interactive_pip: false }); } catch {}
 
-        // ── OAuth: get the player's REAL Discord name and avatar ─────────
+        // ── OAuth: the server verifies who this is ───────────────────────
         //
-        // The Activity SDK's own CURRENT_USER_UPDATE event is not guaranteed to
-        // fire, and gives us nothing to prove identity with. The supported flow
-        // is authorize -> exchange the code server-side for a token -> hand the
-        // token back to the client via authenticate(). Only the server ever
-        // holds the client secret.
+        // authorize -> POST /api/token. The server exchanges the code for an
+        // access token, calls GET /users/@me with it, and mints a session.
+        //
+        // The access token deliberately does NOT come back to the browser: it
+        // has no use here, and withholding it means a compromised client cannot
+        // act as the user against Discord's API. The session id it returns is
+        // the only credential this page holds, and it only opens our socket.
         //
         // `prompt: 'none'` means no consent screen for anyone who has already
-        // authorized the app, so for almost everyone this is invisible.
+        // authorized, so for almost everyone this is invisible.
         try {
             const { code } = await sdk.commands.authorize({
                 client_id: clientId,
@@ -138,31 +142,29 @@ export async function initDiscordActivity() {
                 prompt: 'none',
                 scope: ['identify'],
             });
-            if (code) {
-                const res = await fetch('/api/token', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code }),
-                });
-                const payload = await res.json();
-                if (payload && payload.access_token) {
-                    const auth = await sdk.commands.authenticate({ access_token: payload.access_token });
-                    const u = auth && auth.user;
-                    if (u) {
-                        info.user = u;
-                        info.userId = u.id || null;
-                        info.avatar = u.avatar || null;
-                        info.detectedName = u.global_name || u.username || null;
-                        info.authenticated = true;
-                    }
-                } else {
-                    console.warn('[Discord] token exchange returned no access_token', payload && payload.error);
-                }
+            if (!code) throw new Error('authorize returned no code');
+
+            const res = await fetch('/api/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code }),
+            });
+            const payload = await res.json().catch(() => ({}));
+            if (!res.ok || !payload.session) {
+                throw new Error('token exchange failed: ' + (payload.error || res.status));
             }
+
+            info.session = payload.session;
+            info.user = payload.user;
+            info.userId = payload.user?.id || null;
+            info.avatar = payload.user?.avatar || null;
+            info.detectedName = payload.user?.global_name || payload.user?.username || null;
+            info.authenticated = true;
+            console.log('[Discord] authenticated as', info.detectedName);
         } catch (err) {
-            // Not fatal. Without OAuth you still see and play the game, you just
-            // show up without a Discord name and picture.
-            console.warn('[Discord] OAuth failed — continuing unauthenticated', err);
+            // Fatal for gameplay now: without a session the socket refuses us.
+            info.authError = String(err && err.message || err);
+            console.warn('[Discord] OAuth failed —', info.authError);
         }
 
         info.refreshParticipants = async () => {

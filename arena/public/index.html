@@ -6,11 +6,24 @@
 <title>Everyone Controls Mario</title>
 <link rel="stylesheet" href="./client.css">
 </head>
-<body data-chrome="on">
+<body data-pad="off" data-chat="off">
 
 <div id="stage">
   <canvas id="screen" width="640" height="480"></canvas>
   <div id="status" class="hidden">connecting…</div>
+
+  <!-- No Discord auth, no game. The shell still loads (it has to, in order to
+       run the SDK and authorise at all), but without a server-minted session
+       the socket refuses us and there is nothing behind this panel. -->
+  <div id="gate" class="hidden">
+    <div class="gate-card">
+      <div class="gate-icon">🍄</div>
+      <h1>Everyone Controls Mario</h1>
+      <p id="gate-msg">Sign in with Discord to play.</p>
+      <p class="gate-sub">This is a Discord Activity — launch it from a voice
+        channel. One Mario, every server, all at once.</p>
+    </div>
+  </div>
 
   <div id="topbar">
     <span class="brand">🍄</span>
@@ -21,11 +34,14 @@
 
     <span class="spacer"></span>
 
-    <button class="icon" id="btn-vote"  title="Call a vote to change the mode">⚖️</button>
+    <button class="icon" id="btn-vote"  title="Call a vote to change the mode">⚖️ vote</button>
     <button class="icon" id="btn-sound" title="Enable sound">🔇</button>
-    <!-- Discord activity panels get tiny (PIP / grid). This collapses every bit
-         of chrome so the game gets the whole frame. -->
-    <button class="icon" id="btn-chrome" title="Hide the controls and chat">⤢</button>
+    <!-- Independently hideable, and both hidden by default. A d-pad and a chat
+         column suffocate a Discord activity panel, and the keyboard works
+         whether or not the on-screen pad is shown. Labelled, not a cryptic
+         glyph — the previous single ⤢ icon was undiscoverable. -->
+    <button class="icon" id="btn-pad"  title="Show/hide the on-screen controls">🎮 controls</button>
+    <button class="icon" id="btn-chat" title="Show/hide chat">💬 chat</button>
   </div>
 
   <!-- ── Vote overlay ──────────────────────────────────────────────────────

@@ -61,6 +61,47 @@ const VALID_KEYS = new Set([
     'Enter',  // Start
 ]);
 
+// ── Sessions: server-VERIFIED Discord identity ───────────────────────────────
+//
+// Identity used to be whatever the client claimed in its hello frame. That was
+// both a bug and a hole: a browser whose OAuth silently failed still connected
+// and showed up as "Guest", and any client could simply claim the admin's
+// discordId and be handed the admin star.
+//
+// Now the server does the whole exchange — code -> access_token -> GET
+// /users/@me — and mints a session. The socket refuses anyone without one, so
+// the name and avatar on screen are Discord's answer, never the client's.
+const sessions = new Map();   // sessionId -> {discordId, name, avatar, admin, expires}
+const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+// Escape hatch for LOCAL development only (no Discord in the loop). Never set
+// this in production: it re-opens anonymous access.
+const ALLOW_GUEST = process.env.ARENA_ALLOW_GUEST === '1';
+
+function newSession(user) {
+    const id = crypto.randomBytes(32).toString('hex');
+    sessions.set(id, {
+        discordId: user.id,
+        name: (user.global_name || user.username || 'Mario').slice(0, 32),
+        avatar: user.avatar || null,
+        admin: user.id === ADMIN_ID,
+        expires: Date.now() + SESSION_TTL_MS,
+    });
+    return id;
+}
+
+function getSession(id) {
+    if (!id) return null;
+    const s = sessions.get(id);
+    if (!s) return null;
+    if (Date.now() > s.expires) { sessions.delete(id); return null; }
+    return s;
+}
+
+setInterval(() => {
+    const now = Date.now();
+    for (const [id, s] of sessions) if (now > s.expires) sessions.delete(id);
+}, 60 * 60 * 1000);
+
 // ── Session state (there is only one, forever) ───────────────────────────────
 const viewers = new Map();   // id -> viewer
 let hostSock = null;         // the headless Chromium running the game
@@ -106,6 +147,26 @@ const MIME = {
     '.ico':  'image/x-icon',
 };
 
+// Build id = hash of the app shell, computed at start. The server restarts on
+// every deploy, so this changes exactly when the code does.
+//
+// This exists because Cloudflare REWRITES our Cache-Control. The origin sends
+// "no-cache" for .js/.css and the browser receives "max-age=14400" — the zone's
+// 4h Browser Cache TTL overriding origin headers. So a deploy stranded every
+// player on the previous build for four hours, and inside a Discord activity
+// there is no hard reload. Fighting it with headers cannot work from here.
+//
+// Versioned URLs sidestep it entirely: a new build references URLs that have
+// never been cached by anyone. Cloudflare's default cache level keys on the
+// full URL including query string, so ?v= is enough.
+const BUILD = (() => {
+    const h = crypto.createHash('sha1');
+    for (const f of ['client.js', 'client.css', 'index.html', 'discord-activity.js']) {
+        try { h.update(fs.readFileSync(path.join(PUBLIC_DIR, f))); } catch {}
+    }
+    return h.digest('hex').slice(0, 10);
+})();
+
 function serveStatic(req, res) {
     let url = decodeURIComponent((req.url || '/').split('?')[0]);
     if (url === '/' || url === '') url = '/index.html';
@@ -118,6 +179,19 @@ function serveStatic(req, res) {
     fs.readFile(target, (err, data) => {
         if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }).end('Not found'); return; }
         const ext = path.extname(target).toLowerCase();
+        // Stamp asset references with the build id.
+        //
+        // .js is rewritten too, not just .html: client.js imports
+        // ./discord-activity.js by bare specifier, and that URL never appears in
+        // the shell — so without this it could sit stale in cache for hours
+        // while everything around it updated.
+        if (ext === '.html' || ext === '.js') {
+            data = Buffer.from(
+                data.toString('utf8').replace(
+                    /(\.\/)(client\.js|client\.css|discord-activity\.js)(?!\?)/g,
+                    (_m, dot, file) => `${dot}${file}?v=${BUILD}`),
+                'utf8');
+        }
         res.writeHead(200, {
             'Content-Type': MIME[ext] || 'application/octet-stream',
             // Discord embeds us in an iframe on <app>.discordsays.com, so the
@@ -130,8 +204,11 @@ function serveStatic(req, res) {
             // expires — and inside Discord there is no obvious way to hard
             // reload. 'no-cache' still allows 304s, so this costs a round trip,
             // not a re-download. Genuinely static vendored assets keep a TTL.
-            'Cache-Control': ['.html', '.js', '.css'].includes(ext)
-                ? 'no-cache'
+            // The shell must never be cached — it carries the build id that
+            // points at everything else. Assets are versioned, so they are safe
+            // to cache hard (and Cloudflare will do so regardless).
+            'Cache-Control': ext === '.html'
+                ? 'no-store, must-revalidate'
                 : 'public, max-age=3600',
         }).end(data);
     });
@@ -181,8 +258,32 @@ async function handleToken(req, res) {
             body,
         });
         const json = await r.json();
-        res.writeHead(r.ok ? 200 : 502, { 'Content-Type': 'application/json' })
-           .end(JSON.stringify(r.ok ? { access_token: json.access_token } : { error: 'exchange failed' }));
+        if (!r.ok || !json.access_token) {
+            console.warn('[arena] token exchange rejected by Discord:', json.error || r.status);
+            res.writeHead(502, { 'Content-Type': 'application/json' })
+               .end(JSON.stringify({ error: 'exchange failed' }));
+            return;
+        }
+
+        // Ask Discord who this actually is. The access token never goes back to
+        // the browser — it has no use there, and not returning it means a
+        // compromised client cannot act as the user against Discord's API.
+        const me = await fetch('https://discord.com/api/users/@me', {
+            headers: { Authorization: `Bearer ${json.access_token}` },
+        });
+        if (!me.ok) {
+            console.warn('[arena] /users/@me failed:', me.status);
+            res.writeHead(502, { 'Content-Type': 'application/json' })
+               .end(JSON.stringify({ error: 'identify failed' }));
+            return;
+        }
+        const user = await me.json();
+        const session = newSession(user);
+        console.log(`[arena] authenticated ${user.global_name || user.username} (${user.id})`);
+        res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({
+            session,
+            user: { id: user.id, username: user.username, global_name: user.global_name, avatar: user.avatar },
+        }));
     } catch (err) {
         console.warn('[arena] token exchange failed:', err.message);
         res.writeHead(502, { 'Content-Type': 'application/json' })
@@ -220,13 +321,28 @@ server.on('upgrade', (req, socket, head) => {
         const okToken = HOST_TOKEN && token.length === HOST_TOKEN.length &&
             crypto.timingSafeEqual(Buffer.from(token), Buffer.from(HOST_TOKEN));
         if (!okToken) { socket.destroy(); return; }
-    } else if (viewers.size >= MAX_VIEWERS) {
-        socket.destroy();
-        return;
+    }
+
+    // Viewers must present a session minted by the verified OAuth exchange.
+    // No Discord auth, no game — the socket is the only way to reach the
+    // stream, so refusing here refuses everything.
+    let session = null;
+    if (isView) {
+        if (viewers.size >= MAX_VIEWERS) { socket.destroy(); return; }
+        const sid = new URL(req.url, 'http://x').searchParams.get('s') || '';
+        session = getSession(sid);
+        if (!session) {
+            if (!ALLOW_GUEST) {
+                socket.write('HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n');
+                socket.destroy();
+                return;
+            }
+            session = { discordId: null, name: 'Guest', avatar: null, admin: false };
+        }
     }
 
     wss.handleUpgrade(req, socket, head, (ws) => {
-        if (isHost) attachHost(ws); else attachViewer(ws);
+        if (isHost) attachHost(ws); else attachViewer(ws, session);
     });
 });
 
@@ -278,14 +394,16 @@ function requestKeyframe() {
 }
 
 // ── Viewers ──────────────────────────────────────────────────────────────────
-function attachViewer(ws) {
+function attachViewer(ws, session) {
     const v = {
         id: nextId(),
         ws,
-        name: 'Mario',
-        discordId: null,
-        avatar: null,      // Discord avatar HASH only, never a client-supplied URL
-        admin: false,
+        // All four come from the server's own call to Discord. The client is
+        // never asked, so it can never lie — including about being the admin.
+        name: session.name,
+        discordId: session.discordId,
+        avatar: session.avatar,
+        admin: session.admin,
         keys: new Set(),
         keysAt: 0,
         lastChat: 0,
@@ -334,22 +452,10 @@ function attachViewer(ws) {
 function handleViewerMsg(v, msg) {
     switch (msg && msg.t) {
         case 'hello': {
-            // Identity comes from the Discord SDK on the client. It is display
-            // only — never trusted for anything but a nametag — EXCEPT the admin
-            // check, which is an exact id match against a compile-time constant.
-            const name = typeof msg.name === 'string' ? msg.name.slice(0, 32).trim() : '';
-            if (name) v.name = name;
-            if (typeof msg.discordId === 'string' && /^\d{5,25}$/.test(msg.discordId)) {
-                v.discordId = msg.discordId;
-                v.admin = msg.discordId === ADMIN_ID;
-            }
+            // Name, avatar and admin are already set from the verified session.
+            // The only thing worth taking from the client is which guild the
+            // activity was launched in, and that is a label with no privileges.
             if (typeof msg.guildId === 'string' && /^\d{5,25}$/.test(msg.guildId)) v.guildId = msg.guildId;
-            // Avatar HASH, not a URL. Clients build the CDN link themselves, so a
-            // malicious client cannot make everyone else's browser fetch an
-            // arbitrary origin just by claiming it as their profile picture.
-            if (typeof msg.avatar === 'string' && /^(a_)?[a-f0-9]{32}$/.test(msg.avatar)) {
-                v.avatar = msg.avatar;
-            }
             broadcastRoster();
             break;
         }

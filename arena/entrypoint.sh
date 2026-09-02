@@ -12,6 +12,25 @@ PROFILE_DIR="${ARENA_PROFILE_DIR:-/data/profile}"
 
 mkdir -p "$PROFILE_DIR"
 
+# Clear the stale profile lock left by the PREVIOUS container.
+#
+# The profile is a persistent volume (it holds the save), and Chromium writes a
+# SingletonLock symlink into it naming the host and pid that own the profile.
+# After `docker compose up --build` the new container has a NEW hostname, so
+# Chromium sees a lock owned by "another computer", refuses to start, the
+# entrypoint exits, and the container restart-loops. Left unhandled this means
+# every single redeploy takes the arena down permanently.
+#
+# Moved aside rather than deleted: `rm` is banned on this box, and mv is both
+# sufficient (Chromium recreates these on launch) and reversible. A fixed
+# destination name means at most one stale copy of each, never a pile.
+for lock in SingletonLock SingletonSocket SingletonCookie; do
+  if [ -e "$PROFILE_DIR/$lock" ] || [ -L "$PROFILE_DIR/$lock" ]; then
+    mv -f "$PROFILE_DIR/$lock" "$PROFILE_DIR/.stale-$lock" 2>/dev/null \
+      && echo "[entrypoint] moved stale $lock aside"
+  fi
+done
+
 node /app/arena/server.js &
 RELAY_PID=$!
 node /app/arena/host/serve-host.js &
