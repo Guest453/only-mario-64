@@ -514,11 +514,19 @@ function showGate(d) {
     if (!d || !d.active) {
         msg.textContent = 'Open this inside Discord to play.';
     } else if (d.authError) {
-        msg.textContent = 'Discord sign-in failed. Reopen the activity to retry.';
+        msg.textContent = 'Discord sign-in failed.';
+        // Show the real reason. Hiding it behind a generic message is what made
+        // the first failure take a log dig to explain.
+        const detail = $('gate-detail');
+        detail.textContent = String(d.authError).slice(0, 200);
+        detail.classList.remove('hidden');
+        $('gate-retry').classList.remove('hidden');
         console.warn('[arena] gate reason:', d.authError);
     } else {
         msg.textContent = 'Sign in with Discord to play.';
+        $('gate-retry').classList.remove('hidden');
     }
+    $('gate-retry').addEventListener('click', () => location.reload(), { once: true });
     $('gate').classList.remove('hidden');
     setStatus('');
 }

@@ -22,6 +22,11 @@
       <p id="gate-msg">Sign in with Discord to play.</p>
       <p class="gate-sub">This is a Discord Activity — launch it from a voice
         channel. One Mario, every server, all at once.</p>
+      <button id="gate-retry" class="hidden">Try again</button>
+      <!-- The actual failure, on screen. A generic "sign-in failed" sent us
+           digging through nginx logs to find out the authorize call had thrown;
+           the next person should just be able to read it. -->
+      <p id="gate-detail" class="gate-detail hidden"></p>
     </div>
   </div>
 

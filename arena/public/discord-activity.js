@@ -132,16 +132,32 @@ export async function initDiscordActivity() {
         // act as the user against Discord's API. The session id it returns is
         // the only credential this page holds, and it only opens our socket.
         //
-        // `prompt: 'none'` means no consent screen for anyone who has already
-        // authorized, so for almost everyone this is invisible.
+        // Two-step authorize, and the order matters.
+        //
+        // `prompt: 'none'` is silent for anyone who has already authorized the
+        // app — but it REJECTS for anyone who has not, instead of showing them
+        // the consent screen. Shipping only that meant every first-time player
+        // hit "sign-in failed" and nothing ever reached /api/token (confirmed
+        // from nginx: the shell loaded, the token endpoint was never called).
+        //
+        // So: try silent first, and fall back to a real consent prompt. Returning
+        // players see nothing; new players approve once and are silent after.
         try {
-            const { code } = await sdk.commands.authorize({
+            const authorize = (extra) => sdk.commands.authorize({
                 client_id: clientId,
                 response_type: 'code',
                 state: '',
-                prompt: 'none',
                 scope: ['identify'],
+                ...extra,
             });
+
+            let code = null;
+            try {
+                ({ code } = await authorize({ prompt: 'none' }));
+            } catch (silentErr) {
+                console.log('[Discord] silent authorize declined, asking for consent');
+                ({ code } = await authorize({}));
+            }
             if (!code) throw new Error('authorize returned no code');
 
             const res = await fetch('/api/token', {
