@@ -186,6 +186,32 @@ function viewer(name, discordId) {
         });
         ok('a forged session id is refused', fakeRes === 'refused', fakeRes);
         try { gated.kill('SIGTERM'); } catch {}
+
+        // ── the video-stall watchdog ───────────────────────────────────────
+        // A host that connects but never sends a frame is the exact production
+        // failure: the game crashed, the socket stayed up, and nothing noticed.
+        // The relay must ask it to reload.
+        const WD_PORT = PORT + 2;
+        const wd = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
+            env: {
+                ...process.env, ARENA_PORT: String(WD_PORT), ARENA_HOST_TOKEN: TOKEN,
+                ARENA_BIND: '127.0.0.1', ARENA_ALLOW_GUEST: '1',
+                ARENA_STALL_RELOAD_MS: '300', ARENA_STALL_EXIT_MS: '60000',
+                ARENA_WATCHDOG_TICK_MS: '100',
+            },
+            stdio: 'ignore',
+        });
+        for (let i = 0; i < 100; i++) { if (await portOpen(WD_PORT)) break; await wait(50); }
+
+        const mute = new WebSocket(`ws://127.0.0.1:${WD_PORT}/host?token=${TOKEN}`);
+        let gotReload = false;
+        mute.on('message', (d) => {
+            try { if (JSON.parse(d.toString()).t === 'reload') gotReload = true; } catch {}
+        });
+        await new Promise((r) => { mute.on('open', r); mute.on('error', r); });
+        await wait(1200);   // longer than the 300ms stall threshold
+        ok('a silent host gets told to reload', gotReload === true, String(gotReload));
+        try { mute.close(); wd.kill('SIGTERM'); } catch {}
     } catch (err) {
         ok('suite ran without throwing', false, err.message);
     }

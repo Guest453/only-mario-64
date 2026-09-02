@@ -121,6 +121,25 @@ let keyframeRequestedAt = 0;
 
 let stats = { frames: 0, bytes: 0, since: Date.now() };
 
+// ── Watchdog ─────────────────────────────────────────────────────────────────
+// The game can die while everything around it looks healthy. Observed in
+// production: sm64.js threw "Maximum call stack size exceeded" ~5 minutes in;
+// video stopped dead, audio kept flowing, the host socket stayed connected and
+// the container stayed "Up" — because Chromium was fine, only the page had
+// crashed. `restart: unless-stopped` cannot see that, so nothing recovered and
+// the arena was a black screen until a human noticed.
+//
+// So watch the only thing that actually proves the game is alive: video frames.
+// Two tiers, because a page reload is cheap and keeps the profile (and the save)
+// warm, while a container restart is the bigger hammer if the reload didn't take.
+let lastVideoAt = Date.now();
+let reloadSentAt = 0;
+// Configurable so the test suite can exercise the stall path in milliseconds
+// instead of waiting a real minute for it.
+const VIDEO_STALL_RELOAD_MS = Number(process.env.ARENA_STALL_RELOAD_MS || 20000);
+const VIDEO_STALL_EXIT_MS = Number(process.env.ARENA_STALL_EXIT_MS || 75000);
+const WATCHDOG_TICK_MS = Number(process.env.ARENA_WATCHDOG_TICK_MS || 5000);
+
 const nextId = (() => { let n = 0; return () => `v${++n}`; })();
 
 // ── Binary media framing ─────────────────────────────────────────────────────
@@ -352,6 +371,7 @@ function attachHost(ws) {
     hostSock = ws;
     hostAlive = true;
     lastSentKeys = '';
+    lastVideoAt = Date.now();   // give a booting page its grace period
     console.log('[arena] host connected');
     broadcastJson({ t: 'host', up: true });
 
@@ -359,8 +379,8 @@ function attachHost(ws) {
         if (isBinary) {
             if (data.length > MAX_MEDIA_FRAME) return;
             const kind = mediaKind(data);
-            if (kind === KIND.VKEY) { lastKeyframe = Buffer.from(data); stats.frames++; }
-            else if (kind === KIND.VDELTA) stats.frames++;
+            if (kind === KIND.VKEY) { lastKeyframe = Buffer.from(data); stats.frames++; lastVideoAt = Date.now(); }
+            else if (kind === KIND.VDELTA) { stats.frames++; lastVideoAt = Date.now(); }
             stats.bytes += data.length;
             broadcastBinary(data);
             return;
@@ -690,6 +710,25 @@ setInterval(() => {
         broadcastJson({ t: 'held', keys: [...held] });
     }
 }, Math.round(1000 / TICK_HZ));
+
+setInterval(() => {
+    if (!hostAlive) return;
+    const stalled = Date.now() - lastVideoAt;
+
+    // Tier 2: the reload didn't bring it back. Exit so Docker recreates the
+    // container. The save is synced to IDBFS every 5s, so this costs seconds.
+    if (stalled > VIDEO_STALL_EXIT_MS) {
+        console.error(`[arena] no video for ${(stalled / 1000) | 0}s after a reload — exiting for a container restart`);
+        process.exit(1);
+    }
+
+    // Tier 1: tell the host page to reload itself.
+    if (stalled > VIDEO_STALL_RELOAD_MS && Date.now() - reloadSentAt > VIDEO_STALL_EXIT_MS) {
+        console.warn(`[arena] no video for ${(stalled / 1000) | 0}s — reloading the host page`);
+        reloadSentAt = Date.now();
+        sendHost({ t: 'reload' });
+    }
+}, WATCHDOG_TICK_MS);
 
 // Periodic keyframe so a viewer who joins between keyframes isn't stuck black.
 setInterval(() => { if (viewers.size > 0) requestKeyframe(); }, 2000);

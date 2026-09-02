@@ -427,6 +427,12 @@ function connect() {
         let msg; try { msg = JSON.parse(ev.data); } catch { return; }
         if (msg.t === 'input') applyInput(Array.isArray(msg.keys) ? msg.keys : []);
         else if (msg.t === 'keyframe') wantKeyframe = true;
+        else if (msg.t === 'reload') {
+            // The relay saw video stop. The wasm has almost certainly thrown and
+            // there is no way back from inside it — reload the whole page.
+            log('relay asked for a reload (video stalled)');
+            location.reload();
+        }
     };
     ws.onclose = () => {
         wsReady = false;
