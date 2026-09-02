@@ -1,0 +1,25 @@
+# Stable public origin for the arena. Install with:
+#   sudo cp arena/deploy/cloudflared-arena.service /etc/systemd/system/
+#   sudo systemctl enable --now cloudflared-arena
+#
+# This replaced a `cloudflared tunnel --url` quick tunnel, which had two fatal
+# properties for a Discord Activity: it died with its process, and it minted a
+# NEW public hostname every start — so every blip meant re-editing the Discord
+# portal. A named tunnel keeps one hostname; Restart=always keeps it up.
+#
+# Boot chain this depends on (all must be enabled, they are not by default):
+#   docker, containerd, nginx, cloudflared-arena
+[Unit]
+Description=cloudflared named tunnel (Mario Arena origin)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=exedev
+ExecStart=/bin/cloudflared --config /home/exedev/.cloudflared/config.yml --no-autoupdate tunnel run
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
