@@ -95,9 +95,16 @@ COPY arena/desktop/retroarch.cfg /etc/arena-retroarch.cfg
 # session as root, which meant anyone driving the keyboard was driving it as
 # root — a bad trade for zero benefit.
 RUN useradd -m -u 1000 -s /bin/false arena \
-    && mkdir -p /roms /data/retroarch /data/saves /data/system /data/pulse /data/home \
+    && mkdir -p /roms /data/retroarch /data/saves /data/system /data/pulse \
+                /data/home /data/home/.run /data/home/.config/pulse \
     && chown -R arena:arena /data /roms /home/arena \
-    && chmod 644 /etc/arena-retroarch.cfg
+    && chmod 700 /data/home/.run /data/pulse \
+    && chmod 644 /etc/arena-retroarch.cfg \
+    # PulseAudio refuses to start without a machine-id, and XDG_RUNTIME_DIR has
+    # to exist as a real 0700 directory owned by the user. Both were missing
+    # after the switch to non-root, which is why pulse silently never came up.
+    && (dbus-uuidgen > /etc/machine-id 2>/dev/null || cat /proc/sys/kernel/random/uuid | tr -d '-' > /etc/machine-id) \
+    && chmod 644 /etc/machine-id
 
 USER arena
 ENV HOME=/data/home XDG_RUNTIME_DIR=/data/home/.run

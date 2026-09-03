@@ -26,15 +26,47 @@ xdpyinfo >/dev/null 2>&1 || { echo "[desktop] FATAL: X never came up"; exit 1; }
 xset s off -dpms s noblank || true
 
 echo "[desktop] starting pulseaudio"
-# A null sink gives us something to record even with no sound hardware. Lesson
-# carried over from the vnc-activity box: keep PULSE_RUNTIME_PATH in the user's
-# own home, never a root-created /tmp path, or the session user gets locked out
-# of its own socket.
+# A null sink gives us something to record even with no sound hardware.
+#
+# This block used to end every line with ">/dev/null 2>&1 || true", so when
+# pulse failed to start nothing said so — the symptom that reached users was
+# "no audio AND the game runs at turbo speed", because RetroArch paces emulation
+# against its audio output and had nothing to pace against. Errors are loud now.
 export PULSE_RUNTIME_PATH=/data/pulse
-mkdir -p "$PULSE_RUNTIME_PATH"
-pulseaudio --start --exit-idle-time=-1 --disallow-exit >/dev/null 2>&1 || true
-pactl load-module module-null-sink sink_name=arena sink_properties=device.description=arena >/dev/null 2>&1 || true
-pactl set-default-sink arena >/dev/null 2>&1 || true
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/data/home/.run}"
+mkdir -p "$PULSE_RUNTIME_PATH" "$XDG_RUNTIME_DIR"
+chmod 700 "$PULSE_RUNTIME_PATH" "$XDG_RUNTIME_DIR" 2>/dev/null || true
+
+# NOT -D. Daemonising closes stderr, which collides with --log-target=stderr and
+# the fork handshake fails in a container: the only symptom was "Daemon startup
+# failed" with no reason. Run in the foreground as a background job instead —
+# verified by hand: identical flags minus -D and pulse starts, creates its sink
+# and stays up.
+pulseaudio --exit-idle-time=-1 --disallow-exit --disable-shm     --log-target=newfile:/data/pulse.log &
+PULSE_PID=$!
+
+# Wait for the daemon to actually answer before loading anything into it.
+PULSE_OK=0
+for i in $(seq 1 40); do
+  if pactl info >/dev/null 2>&1; then PULSE_OK=1; break; fi
+  sleep 0.25
+done
+
+if [ "$PULSE_OK" = "1" ]; then
+  pactl load-module module-null-sink sink_name=arena sink_properties=device.description=arena >/dev/null 2>&1 || true
+  pactl set-default-sink arena >/dev/null 2>&1 || true
+  if pactl list short sources 2>/dev/null | grep -q "arena.monitor"; then
+    echo "[desktop] audio ready: arena.monitor"
+  else
+    echo "[desktop] WARNING: pulse is up but arena.monitor is missing — expect silence"
+  fi
+else
+  # Not fatal: video still works. But say so, loudly, instead of pretending.
+  echo "[desktop] WARNING: pulseaudio did NOT start — there will be no sound."
+  echo "[desktop] RetroArch is capped by fastforward_ratio so the game still runs at 1x."
+  echo "[desktop] pulse log follows:"
+  tail -20 /data/pulse.log 2>/dev/null | sed 's/^/[pulse] /' || true
+fi
 
 echo "[desktop] starting window manager"
 # xfwm4 alone: the XFCE window manager without the panel, desktop menu, app
