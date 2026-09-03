@@ -32,17 +32,39 @@ echo "[desktop] starting pulseaudio"
 # pulse failed to start nothing said so — the symptom that reached users was
 # "no audio AND the game runs at turbo speed", because RetroArch paces emulation
 # against its audio output and had nothing to pace against. Errors are loud now.
-export PULSE_RUNTIME_PATH=/data/pulse
-export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/data/home/.run}"
+# PULSE_RUNTIME_PATH must NOT live on the persistent volume.
+#
+# It used to be /data/pulse. /data is a docker volume, so the pid file and unix
+# socket survived the container that made them: on the next start PulseAudio
+# found a pid file naming a process that does not exist in this container,
+# concluded another daemon owned the runtime dir, and exited. Symptom was
+# "arena.monitor: No such process" in a restart loop and total silence — the
+# exact same shape as the stale Chromium SingletonLock this container already
+# had to be taught about.
+#
+# Runtime state belongs somewhere container-local, so /tmp: fresh every boot,
+# and created by this user (a ROOT-created /tmp pulse dir is its own bug — it
+# locks the session user out of its own socket).
+export PULSE_RUNTIME_PATH=/tmp/pulse-arena
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/arena-run}"
 mkdir -p "$PULSE_RUNTIME_PATH" "$XDG_RUNTIME_DIR"
 chmod 700 "$PULSE_RUNTIME_PATH" "$XDG_RUNTIME_DIR" 2>/dev/null || true
+
+# Belt and braces: if anything stale is somehow present, move it aside rather
+# than let pulse refuse to start. Moved, not deleted.
+for stale in pid native; do
+  if [ -e "$PULSE_RUNTIME_PATH/$stale" ]; then
+    mv -f "$PULSE_RUNTIME_PATH/$stale" "$PULSE_RUNTIME_PATH/.stale-$stale" 2>/dev/null \
+      && echo "[desktop] moved stale pulse $stale aside"
+  fi
+done
 
 # NOT -D. Daemonising closes stderr, which collides with --log-target=stderr and
 # the fork handshake fails in a container: the only symptom was "Daemon startup
 # failed" with no reason. Run in the foreground as a background job instead —
 # verified by hand: identical flags minus -D and pulse starts, creates its sink
 # and stays up.
-pulseaudio --exit-idle-time=-1 --disallow-exit --disable-shm     --log-target=newfile:/data/pulse.log &
+pulseaudio --exit-idle-time=-1 --disallow-exit --disable-shm     --log-target=newfile:/tmp/pulse.log &
 PULSE_PID=$!
 
 # Wait for the daemon to actually answer before loading anything into it.
@@ -90,7 +112,7 @@ else
   echo "[desktop] WARNING: pulseaudio did NOT start — there will be no sound."
   echo "[desktop] RetroArch is capped by fastforward_ratio so the game still runs at 1x."
   echo "[desktop] pulse log follows:"
-  tail -20 /data/pulse.log 2>/dev/null | sed 's/^/[pulse] /' || true
+  tail -20 /tmp/pulse.log 2>/dev/null | sed 's/^/[pulse] /' || true
 fi
 
 echo "[desktop] starting window manager"

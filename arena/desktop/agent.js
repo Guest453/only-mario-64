@@ -213,6 +213,18 @@ function startAudio() {
         '-use_wallclock_as_timestamps', '1', '-af', 'aresample=async=1',
         '-c:a', 'libopus', '-b:a', '96000', '-ar', '48000', '-ac', '2',
         '-frame_duration', '20',
+        // THE reason audio arrived in ~1s bursts with silence between them.
+        //
+        // ffmpeg's Ogg muxer defaults to page_duration = 1000000us: it batches a
+        // whole SECOND of Opus packets into one page before flushing. Live audio
+        // then reaches the client as one big burst per second, so the ring buffer
+        // plays what it got, underruns, sits silent waiting for the next page,
+        // refills, plays — an on/off cycle at roughly 1Hz.
+        //
+        // 20000us = one page per 20ms frame, and flush_packets stops libavformat
+        // holding anything back on its own.
+        '-page_duration', '20000',
+        '-flush_packets', '1',
         '-f', 'ogg', 'pipe:1',
     ];
     const ff = spawn('ffmpeg', args, { stdio: ['ignore', 'pipe', 'pipe'] });

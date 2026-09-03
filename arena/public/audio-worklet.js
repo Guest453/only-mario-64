@@ -37,6 +37,7 @@ class ArenaPlayer extends AudioWorkletProcessor {
         this.targetFill = Math.floor((opts.targetMs || 120) / 1000 * sampleRate);
         this.maxFill = Math.floor((opts.maxMs || 400) / 1000 * sampleRate);
         this.priming = true;
+        this.refill = 0;
         this.underruns = 0;
 
         this.port.onmessage = (e) => {
@@ -75,7 +76,8 @@ class ArenaPlayer extends AudioWorkletProcessor {
         }
         this.writeIdx = (this.writeIdx + n) % this.size;
         this.available += n;
-        if (this.priming && this.available >= this.targetFill) this.priming = false;
+        const need = this.refill || this.targetFill;
+        if (this.priming && this.available >= need) { this.priming = false; this.refill = 0; }
     }
 
     process(_inputs, outputs) {
@@ -86,7 +88,15 @@ class ArenaPlayer extends AudioWorkletProcessor {
         // whatever stale samples happen to be in the ring.
         if (this.priming || this.available < n) {
             for (let c = 0; c < out.length; c++) out[c].fill(0);
-            if (!this.priming) { this.underruns++; this.priming = true; }
+            if (!this.priming) {
+                this.underruns++;
+                this.priming = true;
+                // Re-prime to a SMALLER cushion than the initial one. Demanding
+                // the full target after every underrun turns a brief shortfall
+                // into a long silence, which is what made bursty input sound
+                // like it was cutting in and out rather than just glitching.
+                this.refill = Math.max(1024, Math.floor(this.targetFill / 3));
+            }
             return true;
         }
 
