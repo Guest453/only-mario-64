@@ -1,0 +1,42 @@
+# Desktop arena — the LIVE stack.
+#
+# Binds the same loopback port the wasm build used, so the existing nginx (:8002)
+# and the named cloudflare tunnel keep working untouched. Swapping builds is
+# stopping one and starting the other, nothing else.
+
+services:
+  arena-desktop:
+    image: arena-desktop:latest
+    build:
+      context: ../..
+      dockerfile: arena/desktop/Dockerfile
+    container_name: arena-desktop
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8090:8090"
+    volumes:
+      # Your ROMs. Read-only: the session has a full keyboard, and nothing it
+      # can do should be able to modify or delete them.
+      - ${ROMS_DIR:-/home/exedev/mario-arena/roms}:/roms:ro
+      # Saves and RetroArch state. THIS is the stateful volume now.
+      - arena-desktop-data:/data
+    environment:
+      ARENA_HOST_TOKEN: "${ARENA_HOST_TOKEN:?set ARENA_HOST_TOKEN in .env}"
+      DISCORD_CLIENT_ID: "${DISCORD_CLIENT_ID:-}"
+      DISCORD_CLIENT_SECRET: "${DISCORD_CLIENT_SECRET:-}"
+      ARENA_ADMIN_ID: "${ARENA_ADMIN_ID:-1246945967102623755}"
+      # Desktop resolution, NOT the wasm build's 480x270 — a full X session at
+      # that size is unreadable.
+      ARENA_W: "854"
+      ARENA_H: "480"
+      ARENA_FPS: "30"
+      ARENA_BITRATE: "2000000"
+      ARENA_FULL_KEYBOARD: "1"
+      # Deliberately absent: ARENA_ALLOW_GUEST. Discord auth is required.
+    # 2 shared vCPUs with a Minecraft server alongside: leave headroom.
+    cpus: 1.7
+    mem_limit: 2g
+    shm_size: 256m
+
+volumes:
+  arena-desktop-data:

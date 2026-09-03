@@ -285,7 +285,7 @@ function serveStatic(req, res) {
         if (ext === '.html' || ext === '.js') {
             data = Buffer.from(
                 data.toString('utf8').replace(
-                    /(\.\/)(client\.js|client\.css|discord-activity\.js)(?!\?)/g,
+                    /(\.\/)(client\.js|client\.css|discord-activity\.js|audio-worklet\.js)(?!\?)/g,
                     (_m, dot, file) => `${dot}${file}?v=${BUILD}`),
                 'utf8');
         }

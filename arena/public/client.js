@@ -13,6 +13,14 @@ import { initDiscordActivity } from './discord-activity.js';
 
 const KIND = { VCONF: 1, VKEY: 2, VDELTA: 3, ACONF: 4, ACHUNK: 5 };
 
+// Versioned like every other asset — Cloudflare rewrites our cache headers, so
+// an unversioned worklet would sit stale for hours after a deploy.
+const AUDIO_WORKLET_URL = (() => {
+    const m = document.querySelector('script[type=module]');
+    const v = m && m.src.includes('?v=') ? m.src.split('?v=')[1] : '';
+    return './audio-worklet.js' + (v ? '?v=' + v : '');
+})();
+
 const $ = (id) => document.getElementById(id);
 const canvas = $('screen');
 const ctx = canvas.getContext('2d');
@@ -137,11 +145,7 @@ function decodeVideo(kind, timestamp, payload) {
 // ── Audio ────────────────────────────────────────────────────────────────────
 let audioCtx = null;
 let audioDecoder = null;
-let playHead = 0;
-const JITTER_S = 0.10;
-// Never let scheduled audio run further ahead than this; past it we are
-// accumulating latency instead of playing live.
-const MAX_AUDIO_LEAD_S = 0.45;
+let audioNode = null;      // AudioWorkletNode running the ring buffer
 
 async function configureAudio(config) {
     if (!config || !config.codec) return;
@@ -155,31 +159,19 @@ async function configureAudio(config) {
 
     audioDecoder = new AudioDecoder({
         output: (audioData) => {
-            if (!audioUnlocked || !audioCtx) { audioData.close(); return; }
+            // Hand raw samples to the ring buffer. No per-packet scheduling:
+            // that is what made playback chop at every 20ms boundary.
+            if (!audioNode) { audioData.close(); return; }
             try {
-                const channels = audioData.numberOfChannels;
-                const frames = audioData.numberOfFrames;
-                const buf = audioCtx.createBuffer(channels, frames, audioData.sampleRate);
-                for (let c = 0; c < channels; c++) {
-                    const tmp = new Float32Array(frames);
+                const chans = [];
+                for (let c = 0; c < audioData.numberOfChannels; c++) {
+                    const tmp = new Float32Array(audioData.numberOfFrames);
                     audioData.copyTo(tmp, { planeIndex: c, format: 'f32-planar' });
-                    buf.copyToChannel(tmp, c);
+                    chans.push(tmp);
                 }
-                const src = audioCtx.createBufferSource();
-                src.buffer = buf;
-                src.connect(audioCtx.destination);
-                const now = audioCtx.currentTime;
-                if (playHead < now + 0.01) playHead = now + JITTER_S;  // re-anchor after a stall
-                // Anti-overbuffer: audio scheduled too far ahead means we are
-                // drifting behind live and the lag only ever grows. Drop this
-                // packet and re-anchor rather than queue more of the past.
-                if (playHead - now > MAX_AUDIO_LEAD_S) {
-                    playHead = now + JITTER_S;
-                    audioData.close();
-                    return;
-                }
-                src.start(playHead);
-                playHead += buf.duration;
+                // Transfer the backing buffers rather than copying them again.
+                audioNode.port.postMessage({ type: 'samples', channels: chans },
+                    chans.map((c) => c.buffer));
             } catch { /* a dropped audio packet is not worth a stack trace */ }
             audioData.close();
         },
@@ -193,15 +185,30 @@ function decodeAudio(timestamp, payload) {
     try { audioDecoder.decode(new EncodedAudioChunk({ type: 'key', timestamp, data: payload })); } catch {}
 }
 
-function unlockAudio() {
-    if (audioUnlocked) return;
+let audioStarting = false;
+async function unlockAudio() {
+    if (audioUnlocked || audioStarting) return;
+    audioStarting = true;
     try {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        audioCtx.resume();
+        // Match the stream's rate exactly. Letting the context run at 44.1kHz
+        // while Opus decodes at 48kHz makes the browser resample every packet,
+        // which is both wasteful and another source of boundary artefacts.
+        const Ctor = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new Ctor({ sampleRate: 48000, latencyHint: 'interactive' });
+        await audioCtx.audioWorklet.addModule(AUDIO_WORKLET_URL);
+        audioNode = new AudioWorkletNode(audioCtx, 'arena-player', {
+            numberOfInputs: 0,
+            outputChannelCount: [2],
+            processorOptions: { channels: 2, targetMs: 120, maxMs: 400, ringSeconds: 2 },
+        });
+        audioNode.connect(audioCtx.destination);
+        await audioCtx.resume();
         audioUnlocked = true;
-        playHead = 0;
         $('btn-sound').textContent = '🔊';
-    } catch (err) { console.warn('[arena] audio unlock failed', err); }
+    } catch (err) {
+        console.warn('[arena] audio unlock failed', err);
+        audioStarting = false;
+    }
 }
 
 // ── Input ────────────────────────────────────────────────────────────────────
