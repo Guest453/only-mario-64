@@ -32,6 +32,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         pulseaudio-utils \
         nodejs \
         npm \
+        sudo \
         curl \
         unzip \
         ca-certificates \
@@ -39,6 +40,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         mesa-utils \
         libgl1-mesa-dri \
         tini \
+    && apt-get clean
+
+# Chromium, for the SM64 wasm build ONLY.
+#
+# A browser is the single biggest escape hatch in a locked image, so it is not
+# here as a browser: it is launched with --kiosk --app pointing at a loopback
+# page, with no address bar, no tabs and no way back. Its shortcuts (Ctrl+T/N/
+# W/L, F11, F12...) are additionally blocked at the input injector, because
+# defence at one layer is not defence.
+RUN apt-get update && apt-get install -y --no-install-recommends chromium \
     && apt-get clean
 
 # ── RetroArch + libretro cores ──────────────────────────────────────────────
@@ -76,14 +87,42 @@ RUN mkdir -p /usr/lib/libretro && cd /tmp \
 #    account risks a ban, so use a throwaway with nothing you would miss.
 #  - Full keyboard access means anyone can reach Steam's own settings. Attach no
 #    payment method.
-ARG WITH_STEAM=0
-RUN if [ "$WITH_STEAM" = "1" ]; then       dpkg --add-architecture i386 && apt-get update &&       echo steam steam/question select "I AGREE" | debconf-set-selections &&       echo steam steam/license note '' | debconf-set-selections &&       apt-get install -y --no-install-recommends         software-properties-common ca-certificates &&       apt-get install -y --no-install-recommends steam-installer libgl1:i386 libc6:i386 ||         echo "WARN: steam install failed; rebuild with WITH_STEAM=0 or fix the repo" &&       apt-get clean ;     else echo "skipping steam (WITH_STEAM=0)" ; fi
+# Desktop mode needs exactly the parts the game modes exclude: a panel with a
+# menu, a file manager, a terminal, a desktop to right-click. Only reachable
+# once the crowd VOTES desktop mode in.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        xfce4-panel xfdesktop4 xfce4-appfinder xfce4-terminal thunar \
+        xfce4-settings xdg-utils x11-apps \
+    && apt-get clean
+
+ARG WITH_STEAM=1
+RUN if [ "$WITH_STEAM" = "1" ]; then \
+      # Enable contrib/non-free by EDITING the existing deb822 source, not by
+      # adding a legacy .list for the same repo. Doing the latter gives two
+      # entries for bookworm with different Signed-By values, and apt then
+      # refuses to read ANY sources at all:
+      #   E: Conflicting values set for option Signed-By ... != 
+      #   E: The list of sources could not be read.
+      # which silently broke every apt call in this step.
+      sed -i 's/^Components:.*/Components: main contrib non-free non-free-firmware/' \
+        /etc/apt/sources.list.d/debian.sources ; \
+      dpkg --add-architecture i386 ; apt-get update ; \
+      echo steam steam/question select "I AGREE" | debconf-set-selections ; \
+      echo steam steam/license note '' | debconf-set-selections ; \
+      (apt-get install -y --no-install-recommends steam-installer \
+        || apt-get install -y --no-install-recommends steam \
+        || echo "WARN: steam not installable here - desktop mode works, minus Steam") ; \
+      apt-get clean ; \
+    else echo "skipping steam" ; fi
 
 WORKDIR /app
 COPY arena/package.json /app/arena/package.json
 RUN cd /app/arena && npm install --omit=dev --no-audit --no-fund
 
 COPY arena/ /app/arena/
+# The SM64 wasm. Served on loopback to the container's own Chromium; viewers
+# never download it.
+COPY sm64.js sm64.wasm /app/
 
 # Unprivileged. Anyone driving the keyboard is driving it as this user, so it
 # owns nothing but its own session.
@@ -105,6 +144,28 @@ RUN useradd -m -u 1000 -s /bin/false arena \
     # after the switch to non-root, which is why pulse silently never came up.
     && (dbus-uuidgen > /etc/machine-id 2>/dev/null || cat /proc/sys/kernel/random/uuid | tr -d '-' > /etc/machine-id) \
     && chmod 644 /etc/machine-id
+
+# ── Privilege split ─────────────────────────────────────────────────────────
+#
+# Desktop mode hands anonymous people a real desktop with a terminal. If that
+# ran as the same user as the capture agent, anyone could pkill the stream.
+#
+# So it runs as `guest`, a second unprivileged user with NO sudo rights at all.
+# guest cannot signal arena's processes, cannot read arena's files, and cannot
+# escalate. The ONE thing arena may do across the boundary is launch the desktop
+# script as guest — a single NOPASSWD sudoers rule, nothing else.
+#
+# Deliberately NOT done: giving guest a sudo password. A password (base64-encoded
+# or otherwise) is strictly weaker than no sudo entitlement, and base64 is an
+# encoding, not a secret. Admin access is `docker exec -u root`, which the crowd
+# has no path to.
+RUN useradd -m -u 1001 -s /bin/bash guest \
+    && mkdir -p /data/guest \
+    && chown -R guest:guest /data/guest /home/guest \
+    && echo 'arena ALL=(guest) NOPASSWD: /app/arena/desktop/start-desktop.sh' \
+        > /etc/sudoers.d/arena-desktop \
+    && chmod 440 /etc/sudoers.d/arena-desktop \
+    && visudo -c >/dev/null
 
 USER arena
 ENV HOME=/data/home XDG_RUNTIME_DIR=/data/home/.run

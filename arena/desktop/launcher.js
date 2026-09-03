@@ -71,10 +71,18 @@ function launch(id, cb) {
                '-L', path.join(CORE_DIR, `${game.core}_libretro.so`),
                path.join(ROM_DIR, game.rom),
                '-f'];
-        const bin = game.exec || 'retroarch';
-        console.log('[launcher] launching', game.id, '->', bin, args.join(' '));
+        let bin = game.exec || 'retroarch';
+        let spawnArgs = args;
+        // A registry entry may ask to run as another user. Desktop mode does,
+        // so the crowd's terminal cannot reach the capture agent's processes.
+        // The sudoers rule permits exactly this one command, nothing else.
+        if (game.user) {
+            spawnArgs = ['-u', game.user, '--', bin, ...args];
+            bin = 'sudo';
+        }
+        console.log('[launcher] launching', game.id, '->', bin, spawnArgs.join(' '));
 
-        child = spawn(bin, args, { stdio: ['ignore', 'ignore', 'pipe'] });
+        child = spawn(bin, spawnArgs, { stdio: ['ignore', 'ignore', 'pipe'] });
         currentId = game.id;
 
         child.stderr.on('data', (d) => {

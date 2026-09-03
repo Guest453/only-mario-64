@@ -7,6 +7,32 @@
   ],
   "games": [
     {
+      "id": "sm64",
+      "name": "Super Mario 64",
+      "system": "N64 (wasm)",
+      "exec": "chromium",
+      "execArgs": [
+        "--kiosk",
+        "--app=http://127.0.0.1:8094/sm64.html",
+        "--user-data-dir=/data/chromium",
+        "--no-first-run",
+        "--no-default-browser-check",
+        "--no-sandbox",
+        "--disable-dev-shm-usage",
+        "--use-gl=angle",
+        "--use-angle=swiftshader",
+        "--enable-unsafe-swiftshader",
+        "--autoplay-policy=no-user-gesture-required",
+        "--disable-background-timer-throttling",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding",
+        "--overscroll-history-navigation=0",
+        "--window-size=854,480",
+        "--window-position=0,0"
+      ],
+      "layout": "sm64"
+    },
+    {
       "id": "smb",
       "name": "Super Mario Bros.",
       "system": "NES",
@@ -37,6 +63,16 @@
       "core": "mgba",
       "rom": "Pokemon - Emerald Version (USA, Europe).gba",
       "layout": "gba"
+    },
+    {
+      "id": "desktop",
+      "name": "XFCE Desktop (with Steam)",
+      "system": "Desktop \u2014 PUBLIC SCREEN",
+      "exec": "/app/arena/desktop/start-desktop.sh",
+      "execArgs": [],
+      "layout": "desktop",
+      "warn": "Everything on this screen is broadcast to everyone in the activity. Anyone typing a real password here is typing it in public. Make a throwaway account.",
+      "user": "guest"
     }
   ],
   "_layouts_comment": [
@@ -172,6 +208,58 @@
         {
           "code": "Enter",
           "label": "START"
+        }
+      ]
+    },
+    "sm64": {
+      "dpad": [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight"
+      ],
+      "buttons": [
+        {
+          "code": "KeyX",
+          "label": "A"
+        },
+        {
+          "code": "KeyC",
+          "label": "B"
+        },
+        {
+          "code": "Space",
+          "label": "Z"
+        },
+        {
+          "code": "Enter",
+          "label": "START"
+        }
+      ]
+    },
+    "desktop": {
+      "dpad": [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight"
+      ],
+      "buttons": [
+        {
+          "code": "Enter",
+          "label": "ENTER"
+        },
+        {
+          "code": "Tab",
+          "label": "TAB"
+        },
+        {
+          "code": "Escape",
+          "label": "ESC"
+        },
+        {
+          "code": "Backspace",
+          "label": "BKSP"
         }
       ]
     }

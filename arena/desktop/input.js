@@ -53,6 +53,12 @@ function isDangerous(held, code) {
     if (alt && code === 'Escape') return true;
     if (ctrl && alt && code === 'Delete') return true;
     if (ctrl && alt && code === 'Backspace') return true;  // zap the X server
+
+    // Chromium is in the image for the SM64 wasm build. Kiosk/app mode already
+    // hides the chrome, but these would still open tabs, windows, downloads or
+    // devtools — i.e. turn the one allowed program back into a browser.
+    if (ctrl && ['KeyT', 'KeyN', 'KeyW', 'KeyL', 'KeyH', 'KeyJ', 'KeyO', 'KeyP'].includes(code)) return true;
+    if (code === 'F11' || code === 'F12') return true;   // fullscreen toggle / devtools
     return false;
 }
 

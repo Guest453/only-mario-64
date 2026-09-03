@@ -53,8 +53,33 @@ for i in $(seq 1 40); do
 done
 
 if [ "$PULSE_OK" = "1" ]; then
-  pactl load-module module-null-sink sink_name=arena sink_properties=device.description=arena >/dev/null 2>&1 || true
+  # Unload suspend-on-idle BEFORE creating the sink.
+  #
+  # This is the whole reason audio kept cutting out. PulseAudio suspends a sink
+  # that has nothing playing, and a SUSPENDED sink's monitor stops producing
+  # samples — so ffmpeg's capture goes dead every time the game is quiet, then
+  # resumes, which lands as audio chopping in and out. The wasm build never had
+  # this because its audio came from a WebCodecs encoder inside a page, not from
+  # a Pulse monitor.
+  #
+  # The vnc-activity stack on this same box already had to learn this. I did not
+  # carry it across.
+  pactl unload-module module-suspend-on-idle >/dev/null 2>&1     && echo "[desktop] unloaded module-suspend-on-idle (keeps the monitor streaming)"     || echo "[desktop] note: module-suspend-on-idle was not loaded"
+
+  # Pin the sink to 48kHz s16le. It defaults to 44100, which meant the game fed
+  # it 48k, pulse resampled to 44.1k, and ffmpeg resampled back to 48k for Opus
+  # — two conversions for no reason. Matching the whole chain removes both.
+  pactl load-module module-null-sink sink_name=arena rate=48000 channels=2 format=s16le \
+      sink_properties=device.description=arena >/dev/null 2>&1 || true
   pactl set-default-sink arena >/dev/null 2>&1 || true
+
+  # NO module-loopback here.
+  #
+  # An earlier version loaded `module-loopback source=arena.monitor sink=arena`
+  # to "hold the sink open". That feeds a sink's own monitor back INTO itself: a
+  # feedback loop that re-mixes every sample every 1ms. It is what turned the
+  # audio into spam and cut-offs. Unloading suspend-on-idle above already keeps
+  # the monitor streaming, so nothing needs to hold the sink open.
   if pactl list short sources 2>/dev/null | grep -q "arena.monitor"; then
     echo "[desktop] audio ready: arena.monitor"
   else
@@ -77,6 +102,17 @@ xfwm4 --daemon --compositor=off >/dev/null 2>&1 || true
 # Runtime half of the lockdown. The build-time half is that these programs do
 # not exist in the image at all.
 xfconf-query -c xfce4-keyboard-shortcuts -p /xfwm4/custom -rR >/dev/null 2>&1 || true
+
+# Desktop mode runs as `guest`, which needs to reach this X server and this
+# PulseAudio. Scoped to that one local user — not `xhost +`, which would be
+# every user in the container.
+xhost +si:localuser:guest >/dev/null 2>&1 && echo "[desktop] X access granted to guest" || true
+pactl load-module module-native-protocol-unix socket=/tmp/pulse-arena.socket auth-anonymous=1 >/dev/null 2>&1 \
+  && chmod 666 /tmp/pulse-arena.socket 2>/dev/null \
+  && echo "[desktop] audio socket shared with guest" || true
+
+echo "[desktop] serving the sm64 wasm page on loopback"
+node /app/arena/desktop/serve-game.js &
 
 echo "[desktop] starting relay"
 # Same relay as the wasm build, with the key allowlist widened to a full
