@@ -18,11 +18,9 @@ const canvas = $('screen');
 const ctx = canvas.getContext('2d');
 
 let ws = null;
-let mode = 'anarchy';
 let hostUp = false;
 let audioUnlocked = false;
 let discord = null;
-let myVote = null;   // 'yes' | 'no' | null, for the current vote only
 
 // ── Identity rendering ───────────────────────────────────────────────────────
 // The server only ever sends a Discord id + avatar HASH, never a URL, so a
@@ -250,8 +248,8 @@ window.addEventListener('keyup', (e) => {
     e.preventDefault();
     pressKey(code, false);
 });
-// Losing focus mid-press would leave a key stuck down forever, and in anarchy
-// one stuck key pins Mario against a wall for everybody.
+// Losing focus mid-press would leave a key stuck down forever, and one stuck
+// key pins Mario against a wall for everybody.
 window.addEventListener('blur', () => {
     if (myKeys.size) { myKeys.clear(); sendInput(); paintMyKeys(); }
 });
@@ -292,39 +290,6 @@ function togglePanel(name) {
     setPanel(name, document.body.dataset[name] !== 'on');
 }
 
-// ── Vote UI ──────────────────────────────────────────────────────────────────
-let voteEndsAt = 0;
-
-function showVote(v) {
-    if (!v.open) {
-        $('vote').classList.add('hidden');
-        myVote = null;
-        if (typeof v.passed === 'boolean') {
-            addSystem(v.passed
-                ? `vote passed — ${String(v.mode).toUpperCase()} mode`
-                : `vote failed — staying in ${mode.toUpperCase()}`);
-        }
-        return;
-    }
-    $('vote').classList.remove('hidden');
-    $('vote-title').textContent = `switch to ${String(v.mode).toUpperCase()}?`;
-    $('vote-by').textContent = v.by || 'someone';
-    $('vote-yes-n').textContent = v.yes.length;
-    $('vote-no-n').textContent = v.no.length;
-    $('vote-needed').textContent = v.needed;
-    renderFaces($('vote-yes-faces'), v.yes, 20);
-    renderFaces($('vote-no-faces'), v.no, 20);
-    voteEndsAt = v.endsAt || 0;
-    $('vote-yes').classList.toggle('cast', myVote === 'yes');
-    $('vote-no').classList.toggle('cast', myVote === 'no');
-}
-
-setInterval(() => {
-    if ($('vote').classList.contains('hidden') || !voteEndsAt) return;
-    const left = Math.max(0, Math.ceil((voteEndsAt - Date.now()) / 1000));
-    $('vote-timer').textContent = left + 's';
-}, 250);
-
 // ── Chat / status ────────────────────────────────────────────────────────────
 function setStatus(text) {
     $('status').textContent = text || '';
@@ -359,12 +324,6 @@ function addChat(user, text) {
 function trimChat(box) {
     while (box.children.length > 80) box.removeChild(box.firstChild);
     box.scrollTop = box.scrollHeight;
-}
-
-function setMode(next) {
-    mode = next;
-    $('modepill').textContent = String(next).toUpperCase();
-    $('modepill').style.background = next === 'democracy' ? 'rgba(77,163,255,.28)' : 'rgba(255,216,61,.24)';
 }
 
 // ── Connection ───────────────────────────────────────────────────────────────
@@ -409,7 +368,6 @@ function connect() {
         switch (msg.t) {
             case 'welcome':
                 hostUp = msg.host;
-                setMode(msg.mode);
                 if (msg.video) configureVideo(msg.video);
                 if (msg.audio) configureAudio(msg.audio);
                 if (!hostUp) setStatus('the game is booting…');
@@ -426,8 +384,6 @@ function connect() {
                 renderFaces($('roster-faces'), msg.users || [], 18, 5);
                 break;
             case 'held': paintHeld(msg.keys || []); break;
-            case 'vote': showVote(msg); break;
-            case 'mode': setMode(msg.mode); break;
             case 'notice': addSystem(msg.text); break;
             case 'chat':
                 // The wire format calls the speaker `from`; avatarEl/addChat want
@@ -467,22 +423,6 @@ function connect() {
         setPanel(name, saved === 'on');
         $('btn-' + name).addEventListener('click', () => togglePanel(name));
     }
-
-    // Calling a vote proposes the OTHER mode — there are only two.
-    $('btn-vote').addEventListener('click', () => {
-        if (!ws || ws.readyState !== 1) return;
-        ws.send(JSON.stringify({ t: 'modevote', mode: mode === 'anarchy' ? 'democracy' : 'anarchy' }));
-    });
-    $('vote-yes').addEventListener('click', () => {
-        myVote = 'yes';
-        ws && ws.send(JSON.stringify({ t: 'votecast', yes: true }));
-        $('vote-yes').classList.add('cast'); $('vote-no').classList.remove('cast');
-    });
-    $('vote-no').addEventListener('click', () => {
-        myVote = 'no';
-        ws && ws.send(JSON.stringify({ t: 'votecast', yes: false }));
-        $('vote-no').classList.add('cast'); $('vote-yes').classList.remove('cast');
-    });
 
     const chatInput = $('chatinput');
     chatInput.addEventListener('keydown', (e) => {

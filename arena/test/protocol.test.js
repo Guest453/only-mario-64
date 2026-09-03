@@ -2,11 +2,9 @@
 //
 // Each run spawns its OWN relay on its own port and kills it afterwards.
 // That is not ceremony: the arena is deliberately ONE global session that keeps
-// its mode, its open vote and its vote cooldown for the life of the process, so
-// consecutive runs against a shared relay contaminate each other. The first
-// version of this file reused a long-lived server and scored 16/16, then 10/16,
-// then 8/16 on identical code — run 1 left mode=democracy and a cooldown that
-// made run 2's vote silently never open.
+// state for the life of the process, so consecutive runs against a shared relay
+// contaminate each other. An earlier version reused a long-lived server and
+// scored 16/16, then 10/16, then 8/16 on identical code.
 //
 //   node arena/test/protocol.test.js
 
@@ -34,14 +32,12 @@ function portOpen(port) {
 
 function viewer(name, discordId) {
     const ws = new WebSocket(URL + '/ws');
-    ws.held = null; ws.welcomed = false; ws.mode = null; ws.vote = null;
+    ws.held = null; ws.welcomed = false;
     ws.on('message', (d, bin) => {
         if (bin) return;
         const m = JSON.parse(d.toString());
-        if (m.t === 'welcome') { ws.welcomed = true; ws.mode = m.mode; }
+        if (m.t === 'welcome') ws.welcomed = true;
         if (m.t === 'held') ws.held = m.keys;
-        if (m.t === 'mode') ws.mode = m.mode;
-        if (m.t === 'vote') ws.vote = m;
         if (m.t === 'chat') ws.lastChat = m;
     });
     return new Promise((res) => ws.on('open', () => {
@@ -52,10 +48,10 @@ function viewer(name, discordId) {
 
 (async () => {
     const server = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
-        // ARENA_ALLOW_GUEST lets the suite exercise the merge/vote protocol
+        // ARENA_ALLOW_GUEST lets the suite exercise the merge protocol
         // without standing up a fake Discord. The gate itself is covered by its
         // own server below, started WITHOUT this flag.
-        env: { ...process.env, ARENA_PORT: String(PORT), ARENA_HOST_TOKEN: TOKEN, ARENA_BIND: '127.0.0.1', ARENA_ALLOW_GUEST: '1' },
+        env: { ...process.env, ARENA_PORT: String(PORT), ARENA_HOST_TOKEN: TOKEN, ARENA_BIND: '127.0.0.1', ARENA_ALLOW_GUEST: '1', ARENA_ENTER_COOLDOWN_MS: '1000' },
         stdio: 'ignore',
     });
     const stop = () => { try { server.kill('SIGTERM'); } catch {} };
@@ -84,16 +80,14 @@ function viewer(name, discordId) {
         const b = await viewer('bob', '222222222222222222');
         await wait(200);
         ok('viewers receive welcome', a.welcomed && b.welcomed);
-        ok('a fresh arena starts in anarchy', a.mode === 'anarchy', String(a.mode));
-
-        // ── anarchy = union ────────────────────────────────────────────────
+        // ── the merge is a union: any press by anyone counts ───────────────
         a.send(JSON.stringify({ t: 'input', keys: ['ArrowUp'] }));
         await wait(250);
-        ok('anarchy: one viewer pressing moves Mario', (a.held || []).includes('ArrowUp'), JSON.stringify(a.held));
+        ok('one viewer pressing moves Mario', (a.held || []).includes('ArrowUp'), JSON.stringify(a.held));
 
         b.send(JSON.stringify({ t: 'input', keys: ['KeyX'] }));
         await wait(250);
-        ok('anarchy: two viewers UNION into one controller',
+        ok('two viewers UNION into one controller',
             (a.held || []).slice().sort().join(',') === 'ArrowUp,KeyX', JSON.stringify(a.held));
 
         // ── the key allowlist ──────────────────────────────────────────────
@@ -128,33 +122,33 @@ function viewer(name, discordId) {
             a.lastChat && a.lastChat.admin !== true && a.lastChat.from !== 'TotallyTheAdmin',
             JSON.stringify(a.lastChat));
 
-        // ── the mode vote ──────────────────────────────────────────────────
-        a.send(JSON.stringify({ t: 'modevote', mode: 'democracy' }));
-        await wait(250);
-        ok('proposing a mode change opens a vote', a.vote && a.vote.open === true);
-        ok('the proposer counts as a yes', a.vote && a.vote.yes.length === 1);
-        ok('a 2-person room needs BOTH votes', a.vote && a.vote.needed === 2, a.vote && String(a.vote.needed));
-        ok('one vote alone does not flip the mode', a.mode !== 'democracy', String(a.mode));
-        ok('the vote names the voter from the session',
-            a.vote && a.vote.yes[0] && a.vote.yes[0].name === 'Guest',
-            JSON.stringify(a.vote && a.vote.yes[0]));
+        // ── Start-spam throttle ────────────────────────────────────────────
+        // Under a union merge one person mashing Start strobes the pause menu
+        // for everyone at 30Hz, so the limit is on the MERGED controller, not
+        // per viewer — a client that ignores its own cooldown must still lose.
+        host.inputs.length = 0;
+        a.send(JSON.stringify({ t: 'input', keys: ['Enter'] }));
+        await wait(200);
+        const firstStart = host.inputs.some((k) => k.includes('Enter'));
+        ok('the first Start press gets through', firstStart, JSON.stringify(host.inputs));
 
-        b.send(JSON.stringify({ t: 'votecast', yes: true }));
-        await wait(300);
-        ok('a passing vote flips the mode', a.mode === 'democracy', String(a.mode));
+        a.send(JSON.stringify({ t: 'input', keys: [] }));
+        await wait(120);
+        host.inputs.length = 0;
+        a.send(JSON.stringify({ t: 'input', keys: ['Enter'] }));   // re-press immediately
+        await wait(200);
+        ok('an immediate re-press is swallowed',
+            !host.inputs.some((k) => k.includes('Enter')), JSON.stringify(host.inputs));
 
-        // ── democracy = strict majority, tallied per unique voter ──────────
-        a.send(JSON.stringify({ t: 'input', keys: ['ArrowLeft'] }));
-        b.send(JSON.stringify({ t: 'input', keys: ['ArrowLeft'] }));
-        await wait(900);
-        ok('democracy: a unanimous vote passes', (a.held || []).includes('ArrowLeft'), JSON.stringify(a.held));
-
-        a.send(JSON.stringify({ t: 'input', keys: ['ArrowLeft'] }));
-        b.send(JSON.stringify({ t: 'input', keys: ['ArrowRight'] }));
-        await wait(900);
-        const split = a.held || [];
-        ok('democracy: a 1-1 split passes NEITHER direction',
-            !(split.includes('ArrowLeft') && split.includes('ArrowRight')), JSON.stringify(split));
+        a.send(JSON.stringify({ t: 'input', keys: [] }));
+        await wait(1200);  // longer than the 1000ms test cooldown
+        host.inputs.length = 0;
+        a.send(JSON.stringify({ t: 'input', keys: ['Enter'] }));
+        await wait(200);
+        ok('Start works again after the cooldown',
+            host.inputs.some((k) => k.includes('Enter')), JSON.stringify(host.inputs));
+        a.send(JSON.stringify({ t: 'input', keys: [] }));
+        await wait(150);
 
         // ── robustness ─────────────────────────────────────────────────────
         a.send(JSON.stringify({ t: 'chat', text: 'x'.repeat(50000) }));

@@ -13,8 +13,8 @@ code and no per-guild instance: one game, forever.
 ```
 
 - **`arena/server.js`** — the relay. One global session: merges every viewer's
-  held buttons into a single controller, fans video/audio out, runs mode votes,
-  does the Discord OAuth token exchange.
+  held buttons into a single controller, fans video/audio out, does the Discord
+  OAuth token exchange.
 - **`arena/host/`** — the one browser in the world that runs the game. Boots
   `sm64.wasm`, encodes the canvas with WebCodecs, and replays the merged
   controller as synthetic `KeyboardEvent`s.
@@ -35,16 +35,15 @@ the host page hands over already-encoded H.264 straight out of WebCodecs and the
 viewer decodes it with a real `VideoDecoder`. No X server, no framebuffer
 diffing, no websockify.
 
-## Control modes
+## The controller
 
-| Mode | Rule |
-| --- | --- |
-| **ANARCHY** (default) | Any button held by anyone is held. Chaos, but one person alone can still play. |
-| **DEMOCRACY** | Every 400 ms, a button needs a strict majority (`floor(n/2)+1`) of the people actually pressing something. |
+Any button held by anyone is held. That is the whole rule: chaotic, instant, and
+one person alone can still move Mario when nobody else is on.
 
-Switching modes opens a **vote** everyone sees and answers — it is not a click by
-whoever got there first. It passes early on a majority of all connected viewers,
-or at the 20 s deadline on simple yes > no.
+An earlier build also had a DEMOCRACY mode with per-window majority voting and a
+UI to switch between the two. It was removed — the merge *is* the game, and a
+mode toggle only added a state machine, a vote overlay and a way for the room to
+turn the fun off.
 
 ## The save file
 
@@ -117,9 +116,9 @@ obvious way to hard reload.
 node arena/test/protocol.test.js
 ```
 
-Covers host auth, the input allowlist, anarchy union, democracy majority, the
-vote state machine, and identity. Each run spawns its **own** relay on its own
-port — the arena is deliberately one global session that keeps mode and vote
-cooldown for the life of the process, so a shared relay makes consecutive runs
-contaminate each other (this suite once scored 16/16, then 10/16, then 8/16 on
-identical code).
+Covers host auth, the input allowlist, the union merge, the auth gate, the
+video-stall watchdog, and identity spoofing. Each run spawns its **own** relay on
+its own port — the arena is deliberately one global session that keeps state for
+the life of the process, so a shared relay makes consecutive runs contaminate
+each other (this suite once scored 16/16, then 10/16, then 8/16 on identical
+code).

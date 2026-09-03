@@ -35,11 +35,9 @@
     <span class="pill" id="rosterpill" title="who is playing">
       <span id="roster-faces"></span><b id="count">0</b>
     </span>
-    <span class="pill mode" id="modepill">ANARCHY</span>
 
     <span class="spacer"></span>
 
-    <button class="icon" id="btn-vote"  title="Call a vote to change the mode">⚖️ vote</button>
     <button class="icon" id="btn-sound" title="Enable sound">🔇</button>
     <!-- Independently hideable, and both hidden by default. A d-pad and a chat
          column suffocate a Discord activity panel, and the keyboard works
@@ -49,31 +47,7 @@
     <button class="icon" id="btn-chat" title="Show/hide chat">💬 chat</button>
   </div>
 
-  <!-- ── Vote overlay ──────────────────────────────────────────────────────
-       Appears for EVERYONE the moment someone calls a mode change. -->
-  <div id="vote" class="hidden">
-    <div class="vote-card">
-      <div class="vote-head">
-        <span id="vote-title">switch to DEMOCRACY?</span>
-        <span id="vote-timer" class="vote-timer">20s</span>
-      </div>
-      <div class="vote-by">called by <b id="vote-by">someone</b></div>
-      <div class="vote-tally">
-        <div class="tally yes">
-          <div class="tally-head">✅ <b id="vote-yes-n">0</b> / <span id="vote-needed">0</span> needed</div>
-          <div class="faces" id="vote-yes-faces"></div>
-        </div>
-        <div class="tally no">
-          <div class="tally-head">❌ <b id="vote-no-n">0</b></div>
-          <div class="faces" id="vote-no-faces"></div>
-        </div>
-      </div>
-      <div class="vote-actions">
-        <button id="vote-yes" class="yes">Vote YES</button>
-        <button id="vote-no"  class="no">Vote NO</button>
-      </div>
-    </div>
-  </div>
+
 </div>
 
 <!-- The controller. `data-key` values are the only seven codes the server
