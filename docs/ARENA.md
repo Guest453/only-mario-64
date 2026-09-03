@@ -45,6 +45,54 @@ UI to switch between the two. It was removed — the merge *is* the game, and a
 mode toggle only added a state machine, a vote overlay and a way for the room to
 turn the fun off.
 
+## Two builds
+
+| | `arena/Dockerfile` (wasm) | `arena/desktop/Dockerfile` |
+| --- | --- | --- |
+| Runs | one SM64 wasm in headless Chromium | a real X session: RetroArch, anything native |
+| Input | 7 keys, synthetic `KeyboardEvent`s | 97 keys, real X events via xdotool |
+| Capture | in-page WebCodecs encoder | `ffmpeg x11grab` → H.264 Annex-B |
+
+Both emit **byte-identical framed chunks**, so the relay, the auth gate, the
+union merge, the watchdog and every viewer's decoder are shared. Swapping the
+game engine never reaches the client.
+
+### Lockdown (desktop build)
+
+Lockdown is mostly a *build* property: no browser, no terminal, no file manager,
+no app finder, no panel menu. What is not in the image cannot be launched by
+someone hammering the keyboard. On top of that:
+
+- runs as the unprivileged `arena` user, not root
+- `Alt+F4`, `Alt+Tab`, `Ctrl+Alt+Backspace` and Super are dropped at the injector
+- RetroArch runs with `--config /etc/arena-retroarch.cfg`, kiosk mode on and its
+  menu/exit/fullscreen hotkeys set to `nul`
+
+That last one matters more than it sounds. Testing showed `F1` opening
+RetroArch's Quick Menu with **Close Content** one keypress away — the emulator
+was its own escape hatch, entirely inside an otherwise locked image.
+
+### Choosing a game
+
+There is deliberately **no on-screen launcher**. Nothing in the image could draw
+one, and a menu on the display is a menu to escape through. The picker lives in
+the web client: one vote each, and a game switches on a strict majority of
+everyone connected. Stopping is a vote like any other, and it is the only
+sanctioned way out of a running game.
+
+Games are declared in `arena/desktop/games.json`; adding one is a ROM file plus
+an entry, never code. Only entries whose ROM **and** core actually exist are
+advertised, so a missing file never shows up as a broken vote.
+
+### Steam
+
+Off by default (`--build-arg WITH_STEAM=1` to include it). It cannot be
+automated: Steam needs an interactive login, and no account is created and no
+credentials are typed for you. Before enabling it, two facts worth having:
+account sharing breaks Steam's subscriber agreement, so a crowd-driven account
+risks a ban; and a full keyboard reaches Steam's own settings, so attach no
+payment method and keep nothing in the library you would miss.
+
 ## The save file
 
 The game's save lives in emscripten **IDBFS**, which is IndexedDB inside the

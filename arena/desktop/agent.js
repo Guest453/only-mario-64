@@ -230,6 +230,18 @@ module.exports = { AnnexBSplitter, OggOpusReader };
 
 // ── Relay link ───────────────────────────────────────────────────────────────
 const { applyInput, releaseAll } = require('./input.js');
+const launcher = require('./launcher.js');
+
+function reportGames() {
+    if (!wsReady) return;
+    // Only games whose ROM and core actually exist. Advertising one that cannot
+    // launch would let it collect votes and then fail, which reads as "the vote
+    // is broken" rather than "that ROM isn't uploaded".
+    const list = launcher.availableGames().map((g) => ({
+        id: g.id, name: g.name, system: g.system, layout: g.layout,
+    }));
+    ws.send(JSON.stringify({ t: 'games', list, current: launcher.current() }));
+}
 
 function connect() {
     ws = new WebSocket(RELAY + (TOKEN ? `?token=${encodeURIComponent(TOKEN)}` : ''));
@@ -240,10 +252,26 @@ function connect() {
         // viewer's VideoDecoder takes that when description is absent.
         ws.send(JSON.stringify({ t: 'vconfig', config: { codec: 'avc1.42001f', codedWidth: W, codedHeight: H } }));
         ws.send(JSON.stringify({ t: 'aconfig', config: { codec: 'opus', sampleRate: 48000, numberOfChannels: 2 } }));
+        reportGames();
     });
     ws.on('message', (data) => {
         let msg; try { msg = JSON.parse(data.toString()); } catch { return; }
         if (msg.t === 'input') applyInput(Array.isArray(msg.keys) ? msg.keys : []);
+        else if (msg.t === 'launch') {
+            // Release everything first: a key still held from the previous game
+            // would arrive in the new one as a stuck input nobody can clear.
+            releaseAll();
+            launcher.launch(msg.id, (err) => {
+                if (err) log('launch failed:', err.message);
+                if (wsReady) ws.send(JSON.stringify({ t: 'current', id: launcher.current() }));
+            });
+        }
+        else if (msg.t === 'stop') {
+            releaseAll();
+            launcher.stop(() => {
+                if (wsReady) ws.send(JSON.stringify({ t: 'current', id: null }));
+            });
+        }
         else if (msg.t === 'reload') { log('relay asked for a reload'); process.exit(1); }
         // 'keyframe' is a no-op: x264 is already on a fixed 2s GOP, and forcing
         // one out of a running ffmpeg would mean restarting the encoder.
@@ -257,6 +285,7 @@ function connect() {
 }
 
 if (require.main === module) {
+    launcher.idleScreen();
     connect();
     startVideo();
     startAudio();

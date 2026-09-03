@@ -1,6 +1,6 @@
 {
   "_comment": [
-    "Game registry. Adding a game is a file plus an entry here — never code.",
+    "Game registry. Adding a game is a file plus an entry here \u2014 never code.",
     "ROMs live on a mounted volume and are NOT part of any image.",
     "'core' names a libretro core in /usr/lib/libretro; 'exec' runs a binary",
     "directly (used later for Steam)."
@@ -32,7 +32,7 @@
     },
     {
       "id": "emerald",
-      "name": "Pokémon Emerald",
+      "name": "Pok\u00e9mon Emerald",
       "system": "GBA",
       "core": "mgba",
       "rom": "Pokemon - Emerald Version (USA, Europe).gba",
@@ -48,46 +48,142 @@
   ],
   "layouts": {
     "nes": {
-      "dpad": ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"],
+      "dpad": [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight"
+      ],
       "buttons": [
-        { "code": "KeyX", "label": "B" },
-        { "code": "KeyZ", "label": "A" },
-        { "code": "ShiftRight", "label": "SELECT" },
-        { "code": "Enter", "label": "START" }
+        {
+          "code": "KeyX",
+          "label": "B"
+        },
+        {
+          "code": "KeyZ",
+          "label": "A"
+        },
+        {
+          "code": "ShiftRight",
+          "label": "SELECT"
+        },
+        {
+          "code": "Enter",
+          "label": "START"
+        }
       ]
     },
     "snes": {
-      "dpad": ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"],
+      "dpad": [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight"
+      ],
       "buttons": [
-        { "code": "KeyX", "label": "B" },
-        { "code": "KeyZ", "label": "A" },
-        { "code": "KeyS", "label": "Y" },
-        { "code": "KeyA", "label": "X" },
-        { "code": "KeyQ", "label": "L" },
-        { "code": "KeyW", "label": "R" },
-        { "code": "ShiftRight", "label": "SELECT" },
-        { "code": "Enter", "label": "START" }
+        {
+          "code": "KeyX",
+          "label": "B"
+        },
+        {
+          "code": "KeyZ",
+          "label": "A"
+        },
+        {
+          "code": "KeyS",
+          "label": "Y"
+        },
+        {
+          "code": "KeyA",
+          "label": "X"
+        },
+        {
+          "code": "KeyQ",
+          "label": "L"
+        },
+        {
+          "code": "KeyW",
+          "label": "R"
+        },
+        {
+          "code": "ShiftRight",
+          "label": "SELECT"
+        },
+        {
+          "code": "Enter",
+          "label": "START"
+        }
       ]
     },
     "genesis": {
-      "dpad": ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"],
+      "dpad": [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight"
+      ],
       "buttons": [
-        { "code": "KeyA", "label": "A" },
-        { "code": "KeyS", "label": "B" },
-        { "code": "KeyD", "label": "C" },
-        { "code": "Enter", "label": "START" }
+        {
+          "code": "KeyA",
+          "label": "A"
+        },
+        {
+          "code": "KeyS",
+          "label": "B"
+        },
+        {
+          "code": "KeyD",
+          "label": "C"
+        },
+        {
+          "code": "Enter",
+          "label": "START"
+        }
       ]
     },
     "gba": {
-      "dpad": ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"],
+      "dpad": [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight"
+      ],
       "buttons": [
-        { "code": "KeyX", "label": "B" },
-        { "code": "KeyZ", "label": "A" },
-        { "code": "KeyQ", "label": "L" },
-        { "code": "KeyW", "label": "R" },
-        { "code": "ShiftRight", "label": "SELECT" },
-        { "code": "Enter", "label": "START" }
+        {
+          "code": "KeyX",
+          "label": "B"
+        },
+        {
+          "code": "KeyZ",
+          "label": "A"
+        },
+        {
+          "code": "KeyQ",
+          "label": "L"
+        },
+        {
+          "code": "KeyW",
+          "label": "R"
+        },
+        {
+          "code": "ShiftRight",
+          "label": "SELECT"
+        },
+        {
+          "code": "Enter",
+          "label": "START"
+        }
       ]
     }
-  }
+  },
+  "_steam_comment": [
+    "Steam entries use 'exec' instead of core/rom, e.g.:",
+    "  { \"id\": \"celeste\", \"name\": \"Celeste\", \"system\": \"Steam\",",
+    "    \"exec\": \"steam\", \"execArgs\": [\"-applaunch\", \"504230\"], \"layout\": \"nes\" }",
+    "Requires: image built with --build-arg WITH_STEAM=1, and a ONE-TIME manual",
+    "login performed by you (no account is created and no credentials are typed",
+    "by the agent). Use a throwaway account with no payment method: account",
+    "sharing breaks Steam's subscriber agreement, and a full keyboard reaches",
+    "Steam's own settings."
+  ]
 }

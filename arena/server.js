@@ -72,6 +72,76 @@ const { SM64_KEYS, FULL_KEYS } = require('./keys.js');
 const FULL_KEYBOARD = process.env.ARENA_FULL_KEYBOARD === '1';
 const VALID_KEYS = new Set(FULL_KEYBOARD ? FULL_KEYS : SM64_KEYS);
 
+// ── Which game is running, and what the crowd wants instead ──────────────────
+//
+// The picker lives here rather than on the X display: the desktop image has
+// nothing installed that could draw a menu, and putting one on screen would
+// hand the crowd a menu to escape through.
+//
+// One vote each. A game switches when it reaches a strict majority of everyone
+// connected — the same floor(n/2)+1 rule the rest of the codebase uses, so
+// "majority" means one thing everywhere.
+let currentGame = null;          // id of the running game, or null when idle
+let gameList = [];               // [{id,name,system,layout}] reported by the agent
+const gameVotes = new Map();     // viewerId -> gameId | '__stop__'
+let switchCooldownUntil = 0;
+const SWITCH_COOLDOWN_MS = Number(process.env.ARENA_SWITCH_COOLDOWN_MS || 10000);
+const STOP = '__stop__';
+
+function gameVotesNeeded() {
+    return Math.floor(viewers.size / 2) + 1;
+}
+
+function tallyGameVotes() {
+    const counts = new Map();
+    for (const [viewerId, choice] of gameVotes) {
+        if (!viewers.has(viewerId)) { gameVotes.delete(viewerId); continue; }
+        counts.set(choice, (counts.get(choice) || 0) + 1);
+    }
+    return counts;
+}
+
+function gameStateSnapshot() {
+    const counts = tallyGameVotes();
+    return {
+        t: 'gamestate',
+        current: currentGame,
+        games: gameList,
+        needed: gameVotesNeeded(),
+        votes: Object.fromEntries(counts),
+        cooldown: Math.max(0, switchCooldownUntil - Date.now()),
+    };
+}
+
+function castGameVote(v, choice) {
+    if (choice !== STOP && !gameList.some((g) => g.id === choice)) return;
+    if (choice === currentGame) return;          // already playing it
+    gameVotes.set(v.id, choice);
+    checkGameSwitch();
+    broadcastJson(gameStateSnapshot());
+}
+
+function checkGameSwitch() {
+    if (Date.now() < switchCooldownUntil) return;
+    const need = gameVotesNeeded();
+    for (const [choice, count] of tallyGameVotes()) {
+        if (count < need) continue;
+        switchCooldownUntil = Date.now() + SWITCH_COOLDOWN_MS;
+        gameVotes.clear();
+        if (choice === STOP) {
+            currentGame = null;
+            sendHost({ t: 'stop' });
+            broadcastJson({ t: 'notice', text: 'vote passed — game stopped' });
+        } else {
+            currentGame = choice;
+            sendHost({ t: 'launch', id: choice });
+            const name = (gameList.find((g) => g.id === choice) || {}).name || choice;
+            broadcastJson({ t: 'notice', text: `vote passed — launching ${name}` });
+        }
+        return;
+    }
+}
+
 // ── Sessions: server-VERIFIED Discord identity ───────────────────────────────
 //
 // Identity used to be whatever the client claimed in its hello frame. That was
@@ -401,7 +471,16 @@ function attachHost(ws) {
             return;
         }
         let msg; try { msg = JSON.parse(data.toString('utf8')); } catch { return; }
-        if (msg.t === 'vconfig') { videoConfig = msg.config || null; broadcastJson({ t: 'vconfig', config: videoConfig }); }
+        if (msg.t === 'games') {
+            gameList = Array.isArray(msg.list) ? msg.list : [];
+            if (typeof msg.current !== 'undefined') currentGame = msg.current;
+            broadcastJson(gameStateSnapshot());
+        }
+        else if (msg.t === 'current') {
+            currentGame = msg.id || null;
+            broadcastJson(gameStateSnapshot());
+        }
+        else if (msg.t === 'vconfig') { videoConfig = msg.config || null; broadcastJson({ t: 'vconfig', config: videoConfig }); }
         else if (msg.t === 'aconfig') { audioConfig = msg.config || null; broadcastJson({ t: 'aconfig', config: audioConfig }); }
         else if (msg.t === 'gamestate') broadcastJson({ t: 'gamestate', state: msg.state });
         else if (msg.t === 'log') console.log('[host]', String(msg.text || '').slice(0, 300));
@@ -454,6 +533,7 @@ function attachViewer(ws, session) {
         video: videoConfig,
         audio: audioConfig,
     });
+    send(v, gameStateSnapshot());
     // Prime the decoder: config first, then the most recent keyframe we have,
     // then ask the host for a fresh one so the picture snaps in fast.
     if (lastKeyframe) { try { ws.send(lastKeyframe); } catch {} }
@@ -468,6 +548,10 @@ function attachViewer(ws, session) {
 
     ws.on('close', () => {
         viewers.delete(v.id);
+        // A leaver's vote must stop counting, or a switch can never reach a
+        // majority of a room that has since emptied out.
+        gameVotes.delete(v.id);
+        broadcastJson(gameStateSnapshot());
         broadcastRoster();
     });
     ws.on('error', () => {});
@@ -503,6 +587,11 @@ function handleViewerMsg(v, msg) {
                 t: 'chat', from: v.name, admin: v.admin, text,
                 discordId: v.discordId, avatar: v.avatar,
             });
+            break;
+        }
+        case 'gamevote': {
+            const choice = typeof msg.game === 'string' ? msg.game.slice(0, 40) : null;
+            if (choice) castGameVote(v, choice);
             break;
         }
         case 'needkey': {

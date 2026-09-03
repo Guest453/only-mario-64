@@ -64,6 +64,21 @@ RUN mkdir -p /usr/lib/libretro && cd /tmp \
        done \
     && ls -la /usr/lib/libretro/ || true
 
+# ── Steam (opt-in: --build-arg WITH_STEAM=1) ────────────────────────────────
+#
+# Off by default because it costs ~1GB and i386 multiarch for a feature that
+# cannot work unattended anyway: Steam needs an interactive login, and I will
+# not create accounts or type credentials. Setup is a one-time manual step you
+# do yourself — see docs/ARENA.md.
+#
+# Two things to know before turning this on:
+#  - Steam's subscriber agreement prohibits account sharing. A crowd-driven
+#    account risks a ban, so use a throwaway with nothing you would miss.
+#  - Full keyboard access means anyone can reach Steam's own settings. Attach no
+#    payment method.
+ARG WITH_STEAM=0
+RUN if [ "$WITH_STEAM" = "1" ]; then       dpkg --add-architecture i386 && apt-get update &&       echo steam steam/question select "I AGREE" | debconf-set-selections &&       echo steam steam/license note '' | debconf-set-selections &&       apt-get install -y --no-install-recommends         software-properties-common ca-certificates &&       apt-get install -y --no-install-recommends steam-installer libgl1:i386 libc6:i386 ||         echo "WARN: steam install failed; rebuild with WITH_STEAM=0 or fix the repo" &&       apt-get clean ;     else echo "skipping steam (WITH_STEAM=0)" ; fi
+
 WORKDIR /app
 COPY arena/package.json /app/arena/package.json
 RUN cd /app/arena && npm install --omit=dev --no-audit --no-fund
@@ -72,9 +87,20 @@ COPY arena/ /app/arena/
 
 # Unprivileged. Anyone driving the keyboard is driving it as this user, so it
 # owns nothing but its own session.
-RUN useradd -m -s /usr/sbin/nologin arena \
-    && mkdir -p /roms /data/retroarch /data/saves \
-    && chown -R arena:arena /data /roms
+# Locked-down RetroArch config, owned by root and passed with --config so the
+# session cannot rewrite it.
+COPY arena/desktop/retroarch.cfg /etc/arena-retroarch.cfg
+
+# Everything runs as this user. The first cut of this image ran the whole
+# session as root, which meant anyone driving the keyboard was driving it as
+# root — a bad trade for zero benefit.
+RUN useradd -m -u 1000 -s /bin/false arena \
+    && mkdir -p /roms /data/retroarch /data/saves /data/system /data/pulse /data/home \
+    && chown -R arena:arena /data /roms /home/arena \
+    && chmod 644 /etc/arena-retroarch.cfg
+
+USER arena
+ENV HOME=/data/home XDG_RUNTIME_DIR=/data/home/.run
 
 ENV DISPLAY=:99 \
     ARENA_W=854 \

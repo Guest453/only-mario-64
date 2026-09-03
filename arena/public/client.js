@@ -290,6 +290,71 @@ function togglePanel(name) {
     setPanel(name, document.body.dataset[name] !== 'on');
 }
 
+// ── Game picker ──────────────────────────────────────────────────────────────
+// One vote each; a game switches on a strict majority of everyone connected.
+// The list only contains games the agent reported as actually launchable, so a
+// missing ROM never shows up as a broken vote.
+let gameState = { current: null, games: [], votes: {}, needed: 0, cooldown: 0 };
+let myGameVote = null;
+
+function renderGames() {
+    const list = $('games-list');
+    list.textContent = '';
+    $('games-needed').textContent = gameState.needed;
+    $('games-total').textContent = $('count').textContent || '0';
+
+    const rows = gameState.games.map((g) => ({
+        id: g.id,
+        name: g.name,
+        sub: g.system,
+        current: g.id === gameState.current,
+    }));
+    // Stopping is a vote like any other — it is the only sanctioned way out of a
+    // running game, since the desktop itself gives the crowd no exit.
+    rows.push({ id: '__stop__', name: 'Stop the game', sub: 'back to idle', stop: true });
+
+    for (const r of rows) {
+        const row = document.createElement('div');
+        row.className = 'game-row'
+            + (r.current ? ' current' : '')
+            + (r.stop ? ' stop' : '')
+            + (myGameVote === r.id ? ' voted' : '');
+
+        const label = document.createElement('div');
+        const name = document.createElement('div');
+        name.className = 'g-name';
+        name.textContent = r.name + (r.current ? '  ▶ now playing' : '');
+        const sub = document.createElement('div');
+        sub.className = 'g-sys';
+        sub.textContent = r.sub;
+        label.appendChild(name); label.appendChild(sub);
+
+        const spacer = document.createElement('div');
+        spacer.className = 'g-spacer';
+        const votes = document.createElement('div');
+        votes.className = 'g-votes';
+        votes.textContent = `${gameState.votes[r.id] || 0} / ${gameState.needed}`;
+
+        row.appendChild(label); row.appendChild(spacer); row.appendChild(votes);
+        if (!r.current) {
+            row.addEventListener('click', () => {
+                myGameVote = r.id;
+                if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'gamevote', game: r.id }));
+                renderGames();
+            });
+        }
+        list.appendChild(row);
+    }
+
+    const cool = $('games-cooldown');
+    if (gameState.cooldown > 0) {
+        cool.textContent = `just switched — voting reopens in ${Math.ceil(gameState.cooldown / 1000)}s`;
+        cool.classList.remove('hidden');
+    } else {
+        cool.classList.add('hidden');
+    }
+}
+
 // ── Chat / status ────────────────────────────────────────────────────────────
 function setStatus(text) {
     $('status').textContent = text || '';
@@ -384,6 +449,15 @@ function connect() {
                 renderFaces($('roster-faces'), msg.users || [], 18, 5);
                 break;
             case 'held': paintHeld(msg.keys || []); break;
+            case 'gamestate':
+                gameState = {
+                    current: msg.current, games: msg.games || [],
+                    votes: msg.votes || {}, needed: msg.needed || 0,
+                    cooldown: msg.cooldown || 0,
+                };
+                if (msg.current !== undefined) myGameVote = null;
+                renderGames();
+                break;
             case 'notice': addSystem(msg.text); break;
             case 'chat':
                 // The wire format calls the speaker `from`; avatarEl/addChat want
@@ -423,6 +497,12 @@ function connect() {
         setPanel(name, saved === 'on');
         $('btn-' + name).addEventListener('click', () => togglePanel(name));
     }
+
+    $('btn-games').addEventListener('click', () => {
+        $('games').classList.toggle('hidden');
+        renderGames();
+    });
+    $('games-close').addEventListener('click', () => $('games').classList.add('hidden'));
 
     const chatInput = $('chatinput');
     chatInput.addEventListener('keydown', (e) => {

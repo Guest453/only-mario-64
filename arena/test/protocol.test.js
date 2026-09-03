@@ -39,6 +39,7 @@ function viewer(name, discordId) {
         if (m.t === 'welcome') ws.welcomed = true;
         if (m.t === 'held') ws.held = m.keys;
         if (m.t === 'chat') ws.lastChat = m;
+        if (m.t === 'gamestate') ws.gameState = m;
     });
     return new Promise((res) => ws.on('open', () => {
         ws.send(JSON.stringify({ t: 'hello', name, discordId }));
@@ -51,7 +52,7 @@ function viewer(name, discordId) {
         // ARENA_ALLOW_GUEST lets the suite exercise the merge protocol
         // without standing up a fake Discord. The gate itself is covered by its
         // own server below, started WITHOUT this flag.
-        env: { ...process.env, ARENA_PORT: String(PORT), ARENA_HOST_TOKEN: TOKEN, ARENA_BIND: '127.0.0.1', ARENA_ALLOW_GUEST: '1', ARENA_ENTER_COOLDOWN_MS: '1000' },
+        env: { ...process.env, ARENA_PORT: String(PORT), ARENA_HOST_TOKEN: TOKEN, ARENA_BIND: '127.0.0.1', ARENA_ALLOW_GUEST: '1', ARENA_ENTER_COOLDOWN_MS: '1000', ARENA_SWITCH_COOLDOWN_MS: '0' },
         stdio: 'ignore',
     });
     const stop = () => { try { server.kill('SIGTERM'); } catch {} };
@@ -72,6 +73,8 @@ function viewer(name, discordId) {
         host.on('message', (d) => {
             const m = JSON.parse(d.toString());
             if (m.t === 'input') host.inputs.push(m.keys.slice().sort().join(','));
+            if (m.t === 'launch') host.launched = m.id;
+            if (m.t === 'stop') host.stopped = true;
         });
         ok('host socket accepts the correct token',
             await new Promise((r) => { host.on('open', () => r('open')); host.on('error', () => r('err')); }) === 'open');
@@ -121,6 +124,36 @@ function viewer(name, discordId) {
         ok('a client cannot claim the admin id to get admin',
             a.lastChat && a.lastChat.admin !== true && a.lastChat.from !== 'TotallyTheAdmin',
             JSON.stringify(a.lastChat));
+
+        // ── voting to switch game ──────────────────────────────────────────
+        host.send(JSON.stringify({
+            t: 'games',
+            list: [{ id: 'sonic3k', name: 'Sonic 3 & Knuckles', system: 'Genesis' },
+                   { id: 'smb', name: 'Super Mario Bros.', system: 'NES' }],
+            current: null,
+        }));
+        await wait(250);
+        ok('viewers are told which games exist', a.gameState && a.gameState.games.length === 2,
+            JSON.stringify(a.gameState && a.gameState.games));
+        ok('a 2-person room needs BOTH votes to switch', a.gameState && a.gameState.needed === 2,
+            a.gameState && String(a.gameState.needed));
+
+        a.send(JSON.stringify({ t: 'gamevote', game: 'sonic3k' }));
+        await wait(250);
+        ok('one vote alone does not switch the game', !host.launched, String(host.launched));
+        ok('the vote is counted and shown', a.gameState && a.gameState.votes.sonic3k === 1,
+            JSON.stringify(a.gameState && a.gameState.votes));
+
+        b.send(JSON.stringify({ t: 'gamevote', game: 'sonic3k' }));
+        await wait(300);
+        ok('a majority launches the game', host.launched === 'sonic3k', String(host.launched));
+
+        // A game nobody advertised must not be launchable by asking nicely.
+        host.launched = null;
+        a.send(JSON.stringify({ t: 'gamevote', game: 'doom-eternal' }));
+        b.send(JSON.stringify({ t: 'gamevote', game: 'doom-eternal' }));
+        await wait(300);
+        ok('votes for an unavailable game are ignored', !host.launched, String(host.launched));
 
         // ── Start-spam throttle ────────────────────────────────────────────
         // Under a union merge one person mashing Start strobes the pause menu

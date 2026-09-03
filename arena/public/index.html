@@ -15,6 +15,21 @@
   <!-- No Discord auth, no game. The shell still loads (it has to, in order to
        run the SDK and authorise at all), but without a server-minted session
        the socket refuses us and there is nothing behind this panel. -->
+  <!-- ── Game picker ───────────────────────────────────────────────────────
+       One vote each. A game switches when it reaches a strict majority of
+       everyone connected — the same rule the rest of the app uses. -->
+  <div id="games" class="hidden">
+    <div class="games-card">
+      <div class="games-head">
+        <span>vote to switch game</span>
+        <button id="games-close" class="games-close">✕</button>
+      </div>
+      <div class="games-sub">needs <b id="games-needed">0</b> of <b id="games-total">0</b> playing</div>
+      <div id="games-list"></div>
+      <div id="games-cooldown" class="games-cool hidden"></div>
+    </div>
+  </div>
+
   <div id="gate" class="hidden">
     <div class="gate-card">
       <div class="gate-icon">🍄</div>
@@ -38,6 +53,7 @@
 
     <span class="spacer"></span>
 
+    <button class="icon" id="btn-games" title="Vote to switch game">🕹️ games</button>
     <button class="icon" id="btn-sound" title="Enable sound">🔇</button>
     <!-- Independently hideable, and both hidden by default. A d-pad and a chat
          column suffocate a Discord activity panel, and the keyboard works
