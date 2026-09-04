@@ -1,0 +1,277 @@
+{
+  "_comment": [
+    "Game registry. Adding a game is a file plus an entry here \u2014 never code.",
+    "ROMs live on a mounted volume and are NOT part of any image.",
+    "'core' names a libretro core in /usr/lib/libretro; 'exec' runs a binary",
+    "directly (used later for Steam)."
+  ],
+  "games": [
+    {
+      "id": "sm64",
+      "name": "Super Mario 64",
+      "system": "N64 (wasm)",
+      "exec": "chromium",
+      "execArgs": [
+        "--kiosk",
+        "--app=http://127.0.0.1:8094/sm64.html",
+        "--user-data-dir=/data/chromium",
+        "--no-first-run",
+        "--no-default-browser-check",
+        "--no-sandbox",
+        "--disable-dev-shm-usage",
+        "--use-gl=angle",
+        "--use-angle=swiftshader",
+        "--enable-unsafe-swiftshader",
+        "--autoplay-policy=no-user-gesture-required",
+        "--disable-background-timer-throttling",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding",
+        "--overscroll-history-navigation=0",
+        "--window-size=854,480",
+        "--window-position=0,0"
+      ],
+      "layout": "sm64"
+    },
+    {
+      "id": "smb",
+      "name": "Super Mario Bros.",
+      "system": "NES",
+      "core": "fceumm",
+      "rom": "Super Mario Bros. (World).nes",
+      "layout": "nes"
+    },
+    {
+      "id": "sonic3k",
+      "name": "Sonic 3 & Knuckles",
+      "system": "Genesis",
+      "core": "genesis_plus_gx",
+      "rom": "Sonic & Knuckles + Sonic The Hedgehog 3 (World).md",
+      "layout": "genesis"
+    },
+    {
+      "id": "earthbound",
+      "name": "EarthBound",
+      "system": "SNES",
+      "core": "snes9x",
+      "rom": "EarthBound (USA).sfc",
+      "layout": "snes"
+    },
+    {
+      "id": "emerald",
+      "name": "Pok\u00e9mon Emerald",
+      "system": "GBA",
+      "core": "mgba",
+      "rom": "Pokemon - Emerald Version (USA, Europe).gba",
+      "layout": "gba"
+    },
+    {
+      "id": "desktop",
+      "name": "XFCE Desktop (with Steam)",
+      "system": "Desktop \u2014 PUBLIC SCREEN",
+      "exec": "/app/arena/desktop/start-desktop.sh",
+      "execArgs": [],
+      "layout": "desktop",
+      "warn": "Everything on this screen is broadcast to everyone in the activity. Anyone typing a real password here is typing it in public. Make a throwaway account.",
+      "user": "guest"
+    }
+  ],
+  "_layouts_comment": [
+    "On-screen button layouts for touch/mobile viewers. Keyboard users get the",
+    "whole keyboard regardless; these are just the buttons worth drawing.",
+    "Codes are browser KeyboardEvent.code values, validated against arena/keys.js.",
+    "RetroArch's own defaults: arrows = d-pad, x/z = B/A, s/a = Y/X, q/w = L/R,",
+    "Enter = Start, Shift = Select."
+  ],
+  "layouts": {
+    "nes": {
+      "dpad": [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight"
+      ],
+      "buttons": [
+        {
+          "code": "KeyX",
+          "label": "B"
+        },
+        {
+          "code": "KeyZ",
+          "label": "A"
+        },
+        {
+          "code": "ShiftRight",
+          "label": "SELECT"
+        },
+        {
+          "code": "Enter",
+          "label": "START"
+        }
+      ]
+    },
+    "snes": {
+      "dpad": [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight"
+      ],
+      "buttons": [
+        {
+          "code": "KeyX",
+          "label": "B"
+        },
+        {
+          "code": "KeyZ",
+          "label": "A"
+        },
+        {
+          "code": "KeyS",
+          "label": "Y"
+        },
+        {
+          "code": "KeyA",
+          "label": "X"
+        },
+        {
+          "code": "KeyQ",
+          "label": "L"
+        },
+        {
+          "code": "KeyW",
+          "label": "R"
+        },
+        {
+          "code": "ShiftRight",
+          "label": "SELECT"
+        },
+        {
+          "code": "Enter",
+          "label": "START"
+        }
+      ]
+    },
+    "genesis": {
+      "dpad": [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight"
+      ],
+      "buttons": [
+        {
+          "code": "KeyA",
+          "label": "A"
+        },
+        {
+          "code": "KeyS",
+          "label": "B"
+        },
+        {
+          "code": "KeyD",
+          "label": "C"
+        },
+        {
+          "code": "Enter",
+          "label": "START"
+        }
+      ]
+    },
+    "gba": {
+      "dpad": [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight"
+      ],
+      "buttons": [
+        {
+          "code": "KeyX",
+          "label": "B"
+        },
+        {
+          "code": "KeyZ",
+          "label": "A"
+        },
+        {
+          "code": "KeyQ",
+          "label": "L"
+        },
+        {
+          "code": "KeyW",
+          "label": "R"
+        },
+        {
+          "code": "ShiftRight",
+          "label": "SELECT"
+        },
+        {
+          "code": "Enter",
+          "label": "START"
+        }
+      ]
+    },
+    "sm64": {
+      "dpad": [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight"
+      ],
+      "buttons": [
+        {
+          "code": "KeyX",
+          "label": "A"
+        },
+        {
+          "code": "KeyC",
+          "label": "B"
+        },
+        {
+          "code": "Space",
+          "label": "Z"
+        },
+        {
+          "code": "Enter",
+          "label": "START"
+        }
+      ]
+    },
+    "desktop": {
+      "dpad": [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight"
+      ],
+      "buttons": [
+        {
+          "code": "Enter",
+          "label": "ENTER"
+        },
+        {
+          "code": "Tab",
+          "label": "TAB"
+        },
+        {
+          "code": "Escape",
+          "label": "ESC"
+        },
+        {
+          "code": "Backspace",
+          "label": "BKSP"
+        }
+      ]
+    }
+  },
+  "_steam_comment": [
+    "Steam entries use 'exec' instead of core/rom, e.g.:",
+    "  { \"id\": \"celeste\", \"name\": \"Celeste\", \"system\": \"Steam\",",
+    "    \"exec\": \"steam\", \"execArgs\": [\"-applaunch\", \"504230\"], \"layout\": \"nes\" }",
+    "Requires: image built with --build-arg WITH_STEAM=1, and a ONE-TIME manual",
+    "login performed by you (no account is created and no credentials are typed",
+    "by the agent). Use a throwaway account with no payment method: account",
+    "sharing breaks Steam's subscriber agreement, and a full keyboard reaches",
+    "Steam's own settings."
+  ]
+}

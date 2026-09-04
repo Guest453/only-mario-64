@@ -49,17 +49,98 @@ const CHAT_MIN_GAP_MS  = 900;      // per-viewer chat rate limit
 const CHAT_MAX_LEN     = 300;
 const INPUT_STALE_MS   = 2500;     // a viewer's held keys expire if they go quiet
 const TICK_HZ          = 30;       // controller merge rate (SM64 runs at 30fps)
-const DEMOCRACY_WINDOW = 400;      // ms per democracy tally window
 
-// The only keys that exist. Anything else a client sends is dropped on the floor
-// — this is the whole allowlist for "what can a stranger do to our Mario".
-const VALID_KEYS = new Set([
-    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', // analog stick
-    'KeyX',   // A — jump
-    'KeyC',   // B — dive / punch / grab
-    'Space',  // Z — crouch / ground pound
-    'Enter',  // Start
+// Keys that are disruptive when mashed rather than held. Under a union merge a
+// single person spamming Start pauses/unpauses the game for everyone at 30Hz,
+// and no amount of per-viewer politeness fixes that — the limit has to be
+// GLOBAL, on the merged controller, or one client just ignores it.
+// Cooldowns are env-overridable so the suite can prove the behaviour in
+// milliseconds instead of sitting through a real 1.2s per assertion.
+const RATE_LIMITED = new Map([
+    ['Enter', Number(process.env.ARENA_ENTER_COOLDOWN_MS || 1200)],   // Start / pause
+    ['Escape', Number(process.env.ARENA_ESCAPE_COOLDOWN_MS || 2000)], // menus / quit
 ]);
+
+// The only keys that exist. Anything else a client sends is dropped on the floor.
+//
+// The wasm build needs seven; the desktop build runs arbitrary emulators and
+// needs the whole keyboard, so ARENA_FULL_KEYBOARD widens it. Both lists come
+// from arena/keys.js so the relay and the input injector can never disagree
+// about what is legal — when they drifted apart the symptom was "some buttons
+// just don't work", with nothing in any log.
+const { SM64_KEYS, FULL_KEYS } = require('./keys.js');
+const FULL_KEYBOARD = process.env.ARENA_FULL_KEYBOARD === '1';
+const VALID_KEYS = new Set(FULL_KEYBOARD ? FULL_KEYS : SM64_KEYS);
+
+// ── Which game is running, and what the crowd wants instead ──────────────────
+//
+// The picker lives here rather than on the X display: the desktop image has
+// nothing installed that could draw a menu, and putting one on screen would
+// hand the crowd a menu to escape through.
+//
+// One vote each. A game switches when it reaches a strict majority of everyone
+// connected — the same floor(n/2)+1 rule the rest of the codebase uses, so
+// "majority" means one thing everywhere.
+let currentGame = null;          // id of the running game, or null when idle
+let gameList = [];               // [{id,name,system,layout}] reported by the agent
+const gameVotes = new Map();     // viewerId -> gameId | '__stop__'
+let switchCooldownUntil = 0;
+const SWITCH_COOLDOWN_MS = Number(process.env.ARENA_SWITCH_COOLDOWN_MS || 10000);
+const STOP = '__stop__';
+
+function gameVotesNeeded() {
+    return Math.floor(viewers.size / 2) + 1;
+}
+
+function tallyGameVotes() {
+    const counts = new Map();
+    for (const [viewerId, choice] of gameVotes) {
+        if (!viewers.has(viewerId)) { gameVotes.delete(viewerId); continue; }
+        counts.set(choice, (counts.get(choice) || 0) + 1);
+    }
+    return counts;
+}
+
+function gameStateSnapshot() {
+    const counts = tallyGameVotes();
+    return {
+        t: 'gamestate',
+        current: currentGame,
+        games: gameList,
+        needed: gameVotesNeeded(),
+        votes: Object.fromEntries(counts),
+        cooldown: Math.max(0, switchCooldownUntil - Date.now()),
+    };
+}
+
+function castGameVote(v, choice) {
+    if (choice !== STOP && !gameList.some((g) => g.id === choice)) return;
+    if (choice === currentGame) return;          // already playing it
+    gameVotes.set(v.id, choice);
+    checkGameSwitch();
+    broadcastJson(gameStateSnapshot());
+}
+
+function checkGameSwitch() {
+    if (Date.now() < switchCooldownUntil) return;
+    const need = gameVotesNeeded();
+    for (const [choice, count] of tallyGameVotes()) {
+        if (count < need) continue;
+        switchCooldownUntil = Date.now() + SWITCH_COOLDOWN_MS;
+        gameVotes.clear();
+        if (choice === STOP) {
+            currentGame = null;
+            sendHost({ t: 'stop' });
+            broadcastJson({ t: 'notice', text: 'vote passed — game stopped' });
+        } else {
+            currentGame = choice;
+            sendHost({ t: 'launch', id: choice });
+            const name = (gameList.find((g) => g.id === choice) || {}).name || choice;
+            broadcastJson({ t: 'notice', text: `vote passed — launching ${name}` });
+        }
+        return;
+    }
+}
 
 // ── Sessions: server-VERIFIED Discord identity ───────────────────────────────
 //
@@ -107,10 +188,7 @@ const viewers = new Map();   // id -> viewer
 let hostSock = null;         // the headless Chromium running the game
 let hostAlive = false;
 
-let mode = 'anarchy';        // 'anarchy' | 'democracy'
 let lastSentKeys = '';       // serialized merged controller, to skip no-op sends
-let democracyBucket = new Map();
-let democracyUntil = 0;
 
 // Cached so a viewer who joins mid-session can start decoding immediately
 // instead of staring at a black canvas until the next keyframe.
@@ -207,7 +285,7 @@ function serveStatic(req, res) {
         if (ext === '.html' || ext === '.js') {
             data = Buffer.from(
                 data.toString('utf8').replace(
-                    /(\.\/)(client\.js|client\.css|discord-activity\.js)(?!\?)/g,
+                    /(\.\/)(client\.js|client\.css|discord-activity\.js|audio-worklet\.js)(?!\?)/g,
                     (_m, dot, file) => `${dot}${file}?v=${BUILD}`),
                 'utf8');
         }
@@ -323,7 +401,7 @@ const server = http.createServer((req, res) => {
     if (url === '/api/token' || url === '/.proxy/api/token') return handleToken(req, res);
     if (url === '/api/health') {
         res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({
-            ok: true, host: hostAlive, viewers: viewers.size, mode,
+            ok: true, host: hostAlive, viewers: viewers.size,
             fps: stats.frames / Math.max(1, (Date.now() - stats.since) / 1000),
         }));
         return;
@@ -393,7 +471,16 @@ function attachHost(ws) {
             return;
         }
         let msg; try { msg = JSON.parse(data.toString('utf8')); } catch { return; }
-        if (msg.t === 'vconfig') { videoConfig = msg.config || null; broadcastJson({ t: 'vconfig', config: videoConfig }); }
+        if (msg.t === 'games') {
+            gameList = Array.isArray(msg.list) ? msg.list : [];
+            if (typeof msg.current !== 'undefined') currentGame = msg.current;
+            broadcastJson(gameStateSnapshot());
+        }
+        else if (msg.t === 'current') {
+            currentGame = msg.id || null;
+            broadcastJson(gameStateSnapshot());
+        }
+        else if (msg.t === 'vconfig') { videoConfig = msg.config || null; broadcastJson({ t: 'vconfig', config: videoConfig }); }
         else if (msg.t === 'aconfig') { audioConfig = msg.config || null; broadcastJson({ t: 'aconfig', config: audioConfig }); }
         else if (msg.t === 'gamestate') broadcastJson({ t: 'gamestate', state: msg.state });
         else if (msg.t === 'log') console.log('[host]', String(msg.text || '').slice(0, 300));
@@ -441,12 +528,12 @@ function attachViewer(ws, session) {
     send(v, {
         t: 'welcome',
         you: { id: v.id },
-        mode,
         viewers: viewers.size,
         host: hostAlive,
         video: videoConfig,
         audio: audioConfig,
     });
+    send(v, gameStateSnapshot());
     // Prime the decoder: config first, then the most recent keyframe we have,
     // then ask the host for a fresh one so the picture snaps in fast.
     if (lastKeyframe) { try { ws.send(lastKeyframe); } catch {} }
@@ -461,16 +548,10 @@ function attachViewer(ws, session) {
 
     ws.on('close', () => {
         viewers.delete(v.id);
-        // A viewer who leaves mid-vote must stop counting, both as a ballot and
-        // as part of the electorate — otherwise a vote can never reach a
+        // A leaver's vote must stop counting, or a switch can never reach a
         // majority of a room that has since emptied out.
-        if (vote) {
-            vote.yes.delete(v.id);
-            vote.no.delete(v.id);
-            broadcastJson(voteSnapshot());
-            tallyVote();
-        }
-        democracyVoters.delete(v.id);
+        gameVotes.delete(v.id);
+        broadcastJson(gameStateSnapshot());
         broadcastRoster();
     });
     ws.on('error', () => {});
@@ -489,7 +570,9 @@ function handleViewerMsg(v, msg) {
         case 'input': {
             if (!Array.isArray(msg.keys)) return;
             const next = new Set();
-            for (const k of msg.keys.slice(0, 8)) if (VALID_KEYS.has(k)) next.add(k);
+            // A d-pad tops out around 4; a keyboard with modifiers held plus
+            // several game keys legitimately runs higher.
+            for (const k of msg.keys.slice(0, 16)) if (VALID_KEYS.has(k)) next.add(k);
             v.keys = next;
             v.keysAt = Date.now();
             break;
@@ -506,21 +589,17 @@ function handleViewerMsg(v, msg) {
             });
             break;
         }
+        case 'gamevote': {
+            const choice = typeof msg.game === 'string' ? msg.game.slice(0, 40) : null;
+            if (choice) castGameVote(v, choice);
+            break;
+        }
         case 'needkey': {
             // The viewer's decoder just finished configuring. Configuration is
             // async, so the keyframe we pushed at join time probably arrived
             // before there was anything to decode it. Send a fresh one now
             // instead of leaving them black until the periodic one.
             requestKeyframe();
-            break;
-        }
-        case 'modevote': {
-            const want = msg.mode === 'democracy' ? 'democracy' : 'anarchy';
-            openVote(v, want);
-            break;
-        }
-        case 'votecast': {
-            castVote(v, msg.yes === true);
             break;
         }
         default: break;
@@ -558,146 +637,37 @@ function broadcastRoster() {
     broadcastJson({ t: 'roster', count: users.length, users: users.slice(0, 60) });
 }
 
-// ── Mode votes ───────────────────────────────────────────────────────────────
-// Flipping the whole world between ANARCHY and DEMOCRACY used to be a single
-// click by a single person, which is obviously abusable when the room is public
-// and global. Now it opens a vote that everyone sees and can answer.
-let vote = null;   // { mode, byName, byId, yes:Set<viewerId>, no:Set<viewerId>, endsAt }
-const VOTE_MS = 20000;
-const VOTE_COOLDOWN_MS = 15000;
-let voteCooldownUntil = 0;
-
-function voteSnapshot() {
-    if (!vote) return { t: 'vote', open: false };
-    const naming = (ids) => [...ids]
-        .map((id) => viewers.get(id))
-        .filter(Boolean)
-        .map((v) => ({ id: v.id, name: v.name, discordId: v.discordId, avatar: v.avatar }));
-    return {
-        t: 'vote',
-        open: true,
-        mode: vote.mode,
-        by: vote.byName,
-        yes: naming(vote.yes),
-        no: naming(vote.no),
-        needed: votesNeeded(),
-        endsAt: vote.endsAt,
-    };
-}
-
-// Strict majority of everyone currently connected — floor(n/2)+1, the same rule
-// the democracy key-tally uses, so "majority" means one thing in this codebase.
-// ceil(n/2) would make a 2-person room pass on ONE vote (50% is not a majority).
-// In a big room this early-pass bar is high on purpose; the deadline path below
-// falls back to simply "more yes than no".
-function votesNeeded() {
-    return Math.floor(viewers.size / 2) + 1;
-}
-
-function openVote(v, want) {
-    const now = Date.now();
-    if (vote) {                       // already one running — treat as a yes
-        if (vote.mode === want) castVote(v, true);
-        return;
-    }
-    if (want === mode) return;        // nothing to change
-    if (now < voteCooldownUntil) {
-        send(v, { t: 'notice', text: 'a vote just finished — give it a few seconds' });
-        return;
-    }
-    vote = {
-        mode: want,
-        byName: v.name,
-        byId: v.id,
-        yes: new Set([v.id]),         // proposing IS voting yes
-        no: new Set(),
-        endsAt: now + VOTE_MS,
-    };
-    broadcastJson(voteSnapshot());
-    tallyVote();
-}
-
-function castVote(v, yes) {
-    if (!vote) return;
-    vote.yes.delete(v.id);
-    vote.no.delete(v.id);
-    (yes ? vote.yes : vote.no).add(v.id);
-    broadcastJson(voteSnapshot());
-    tallyVote();
-}
-
-function tallyVote() {
-    if (!vote) return;
-    const need = votesNeeded();
-    const expired = Date.now() >= vote.endsAt;
-    // Pass early the moment a majority says yes; otherwise let the clock decide.
-    const passed = vote.yes.size >= need || (expired && vote.yes.size > vote.no.size);
-    if (!passed && !expired) return;
-
-    const decidedMode = vote.mode;
-    const by = vote.byName;
-    vote = null;
-    voteCooldownUntil = Date.now() + VOTE_COOLDOWN_MS;
-    broadcastJson({ t: 'vote', open: false, passed, mode: decidedMode, by });
-
-    if (passed) {
-        mode = decidedMode;
-        democracyBucket = new Map();
-        lastDemocracyResult = new Set();
-        broadcastJson({ t: 'mode', mode, by });
-    }
-}
-
-// Close out a vote whose clock ran down even if nobody cast anything new, and
-// keep the countdown honest for late joiners.
-setInterval(() => { if (vote) tallyVote(); }, 1000);
-
 // ── The controller merge — the actual "everyone controls Mario" ──────────────
-function mergeAnarchy(active) {
-    // Any held key from anybody is held. Chaotic, responsive, and the only mode
-    // where a single person can still make Mario move when nobody else is on.
+function mergeInputs(active) {
+    // Any held key from anybody is held. That is the whole game: chaotic,
+    // instant, and one person alone can still move Mario when nobody else is on.
     const out = new Set();
     for (const v of active) for (const k of v.keys) out.add(k);
     return out;
 }
 
-// Tally by UNIQUE VOTER, not by tick.
-//
-// The first cut counted every tick a key was held and divided by the window
-// length, which made "how long did you hold it" matter as much as "how many of
-// you held it" — and with a threshold of ceil(voters/2) a 1-1 split passed BOTH
-// directions at once, so democracy behaved exactly like anarchy. Mario would
-// get ArrowLeft and ArrowRight simultaneously.
-//
-// Now: each viewer contributes at most one vote per key per window, and a key
-// needs a strict majority (floor(n/2)+1) of the people actually voting.
-function mergeDemocracy(active) {
-    const now = Date.now();
-    for (const v of active) {
-        for (const k of v.keys) {
-            if (!democracyBucket.has(k)) democracyBucket.set(k, new Set());
-            democracyBucket.get(k).add(v.id);
-        }
-        if (v.keys.size > 0) democracyVoters.add(v.id);
-    }
-    if (now < democracyUntil) return lastDemocracyResult;
-    democracyUntil = now + DEMOCRACY_WINDOW;
 
-    const voters = democracyVoters.size;
-    const out = new Set();
-    if (voters > 0) {
-        const threshold = Math.floor(voters / 2) + 1;   // strict majority
-        for (const [k, who] of democracyBucket) {
-            if (who.size >= threshold) out.add(k);
-        }
+// Rising-edge throttle on the MERGED controller.
+//
+// A press is only honoured if the key has been released for long enough. Holding
+// Start is still fine — it stays down as long as somebody holds it — but
+// releasing and re-pressing it faster than the cooldown does nothing. That is
+// the difference between "pause the game" and "strobe the pause menu".
+const lastPressAt = new Map();
+const wasHeld = new Set();
+
+function throttleSpammyKeys(held) {
+    const now = Date.now();
+    for (const [key, cooldownMs] of RATE_LIMITED) {
+        if (!held.has(key)) { wasHeld.delete(key); continue; }
+        if (wasHeld.has(key)) continue;              // already down: let it stay down
+        const last = lastPressAt.get(key) || 0;
+        if (now - last < cooldownMs) { held.delete(key); continue; }   // too soon
+        lastPressAt.set(key, now);
+        wasHeld.add(key);
     }
-    democracyBucket = new Map();
-    democracyVoters = new Set();
-    lastDemocracyResult = out;
-    return out;
+    return held;
 }
-let lastDemocracyResult = new Set();
-let democracyVoters = new Set();
 
 setInterval(() => {
     const now = Date.now();
@@ -708,12 +678,12 @@ setInterval(() => {
         if (now - v.keysAt > INPUT_STALE_MS) v.keys = new Set();
         active.push(v);
     }
-    const held = mode === 'democracy' ? mergeDemocracy(active) : mergeAnarchy(active);
+    const held = throttleSpammyKeys(mergeInputs(active));
     const serialized = [...held].sort().join(',');
     if (serialized !== lastSentKeys) {
         lastSentKeys = serialized;
         sendHost({ t: 'input', keys: [...held] });
-        // Let everyone see what the hive mind actually did with their vote.
+        // Let everyone see what the hive mind actually did with their press.
         broadcastJson({ t: 'held', keys: [...held] });
     }
 }, Math.round(1000 / TICK_HZ));
@@ -744,7 +714,7 @@ setInterval(() => {
     const secs = (Date.now() - stats.since) / 1000;
     if (secs > 30) {
         console.log(`[arena] ${viewers.size} viewers | ${(stats.frames / secs).toFixed(1)} fps | ` +
-                    `${(stats.bytes / secs / 1024).toFixed(0)} KiB/s | host=${hostAlive} | mode=${mode}`);
+                    `${(stats.bytes / secs / 1024).toFixed(0)} KiB/s | host=${hostAlive}`);
         stats = { frames: 0, bytes: 0, since: Date.now() };
     }
 }, 30000);

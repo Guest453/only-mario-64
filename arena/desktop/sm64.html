@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Super Mario 64</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  /* The X screen IS the viewport here, so the canvas simply fills it. */
+  #canvas { display: block; width: 100vw; height: 100vh; background: #000; image-rendering: pixelated; }
+</style>
+</head>
+<body>
+  <canvas id="canvas" tabindex="0"></canvas>
+<script>
+  // Minimal SM64 host for the DESKTOP build.
+  //
+  // Deliberately NOT arena/host/host.html: that page also encodes the canvas
+  // with WebCodecs and connects to the relay as the host. In this build the
+  // agent already captures X and owns the relay link, so a second host would
+  // fight it for the socket. This page only renders the game — pixels reach
+  // viewers through x11grab like every other game, and audio through Pulse.
+  window.Module = window.Module || {};
+  Module.canvas = document.getElementById('canvas');
+  Module.locateFile = (p) => (p.endsWith('.wasm') ? './sm64.wasm' : p);
+  Module.preRun = Module.preRun || [];
+  Module.postRun = Module.postRun || [];
+  Module.print = (t) => console.log(t);
+  Module.printErr = (t) => console.warn(t);
+  Module.setStatus = () => {};
+
+  // Persistent save, same IDBFS mount the wasm build used. Chromium's profile
+  // lives on the /data volume, so stars survive restarts.
+  Module.preRun.push(function () {
+    try {
+      if (Module.FS && Module.IDBFS) {
+        try { Module.FS.mkdir('/save'); } catch {}
+        Module.FS.mount(Module.IDBFS, {}, '/save');
+      }
+    } catch (err) { console.error('save mount failed:', err); }
+  });
+
+  Module.onRuntimeInitialized = function () {
+    try {
+      if (Module.FS && Module.IDBFS) {
+        Module.FS.syncfs(true, (e) => { if (e) console.warn('save load error:', e); });
+        window.saveNow = function () {
+          try { if (typeof Module.writeSave === 'function') Module.writeSave(); } catch {}
+          Module.FS.syncfs(false, () => {});
+        };
+        setInterval(() => window.saveNow(), 5000);
+      }
+    } catch (err) { console.error('save init failed:', err); }
+    // The game only takes keyboard input while the canvas has focus, and
+    // xdotool types into whatever is focused.
+    try { document.getElementById('canvas').focus(); } catch {}
+  };
+  window.addEventListener('click', () => { try { document.getElementById('canvas').focus(); } catch {} });
+</script>
+<script src="./sm64.js"></script>
+</body>
+</html>

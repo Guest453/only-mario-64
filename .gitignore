@@ -3,3 +3,13 @@ tas/**/*.m64
 # arena secrets — never commit (public repo)
 arena/.env
 arena/node_modules
+
+# ROMs are yours and live on a mounted volume — never in the repo
+roms/
+arena/desktop/roms/
+*.z64
+*.n64
+*.sfc
+*.smc
+*.nes
+*.gba

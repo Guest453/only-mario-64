@@ -13,16 +13,22 @@ import { initDiscordActivity } from './discord-activity.js';
 
 const KIND = { VCONF: 1, VKEY: 2, VDELTA: 3, ACONF: 4, ACHUNK: 5 };
 
+// Versioned like every other asset — Cloudflare rewrites our cache headers, so
+// an unversioned worklet would sit stale for hours after a deploy.
+const AUDIO_WORKLET_URL = (() => {
+    const m = document.querySelector('script[type=module]');
+    const v = m && m.src.includes('?v=') ? m.src.split('?v=')[1] : '';
+    return './audio-worklet.js' + (v ? '?v=' + v : '');
+})();
+
 const $ = (id) => document.getElementById(id);
 const canvas = $('screen');
 const ctx = canvas.getContext('2d');
 
 let ws = null;
-let mode = 'anarchy';
 let hostUp = false;
 let audioUnlocked = false;
 let discord = null;
-let myVote = null;   // 'yes' | 'no' | null, for the current vote only
 
 // ── Identity rendering ───────────────────────────────────────────────────────
 // The server only ever sends a Discord id + avatar HASH, never a URL, so a
@@ -139,11 +145,7 @@ function decodeVideo(kind, timestamp, payload) {
 // ── Audio ────────────────────────────────────────────────────────────────────
 let audioCtx = null;
 let audioDecoder = null;
-let playHead = 0;
-const JITTER_S = 0.10;
-// Never let scheduled audio run further ahead than this; past it we are
-// accumulating latency instead of playing live.
-const MAX_AUDIO_LEAD_S = 0.45;
+let audioNode = null;      // AudioWorkletNode running the ring buffer
 
 async function configureAudio(config) {
     if (!config || !config.codec) return;
@@ -157,31 +159,19 @@ async function configureAudio(config) {
 
     audioDecoder = new AudioDecoder({
         output: (audioData) => {
-            if (!audioUnlocked || !audioCtx) { audioData.close(); return; }
+            // Hand raw samples to the ring buffer. No per-packet scheduling:
+            // that is what made playback chop at every 20ms boundary.
+            if (!audioNode) { audioData.close(); return; }
             try {
-                const channels = audioData.numberOfChannels;
-                const frames = audioData.numberOfFrames;
-                const buf = audioCtx.createBuffer(channels, frames, audioData.sampleRate);
-                for (let c = 0; c < channels; c++) {
-                    const tmp = new Float32Array(frames);
+                const chans = [];
+                for (let c = 0; c < audioData.numberOfChannels; c++) {
+                    const tmp = new Float32Array(audioData.numberOfFrames);
                     audioData.copyTo(tmp, { planeIndex: c, format: 'f32-planar' });
-                    buf.copyToChannel(tmp, c);
+                    chans.push(tmp);
                 }
-                const src = audioCtx.createBufferSource();
-                src.buffer = buf;
-                src.connect(audioCtx.destination);
-                const now = audioCtx.currentTime;
-                if (playHead < now + 0.01) playHead = now + JITTER_S;  // re-anchor after a stall
-                // Anti-overbuffer: audio scheduled too far ahead means we are
-                // drifting behind live and the lag only ever grows. Drop this
-                // packet and re-anchor rather than queue more of the past.
-                if (playHead - now > MAX_AUDIO_LEAD_S) {
-                    playHead = now + JITTER_S;
-                    audioData.close();
-                    return;
-                }
-                src.start(playHead);
-                playHead += buf.duration;
+                // Transfer the backing buffers rather than copying them again.
+                audioNode.port.postMessage({ type: 'samples', channels: chans },
+                    chans.map((c) => c.buffer));
             } catch { /* a dropped audio packet is not worth a stack trace */ }
             audioData.close();
         },
@@ -195,15 +185,30 @@ function decodeAudio(timestamp, payload) {
     try { audioDecoder.decode(new EncodedAudioChunk({ type: 'key', timestamp, data: payload })); } catch {}
 }
 
-function unlockAudio() {
-    if (audioUnlocked) return;
+let audioStarting = false;
+async function unlockAudio() {
+    if (audioUnlocked || audioStarting) return;
+    audioStarting = true;
     try {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        audioCtx.resume();
+        // Match the stream's rate exactly. Letting the context run at 44.1kHz
+        // while Opus decodes at 48kHz makes the browser resample every packet,
+        // which is both wasteful and another source of boundary artefacts.
+        const Ctor = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new Ctor({ sampleRate: 48000, latencyHint: 'interactive' });
+        await audioCtx.audioWorklet.addModule(AUDIO_WORKLET_URL);
+        audioNode = new AudioWorkletNode(audioCtx, 'arena-player', {
+            numberOfInputs: 0,
+            outputChannelCount: [2],
+            processorOptions: { channels: 2, targetMs: 120, maxMs: 400, ringSeconds: 2 },
+        });
+        audioNode.connect(audioCtx.destination);
+        await audioCtx.resume();
         audioUnlocked = true;
-        playHead = 0;
         $('btn-sound').textContent = '🔊';
-    } catch (err) { console.warn('[arena] audio unlock failed', err); }
+    } catch (err) {
+        console.warn('[arena] audio unlock failed', err);
+        audioStarting = false;
+    }
 }
 
 // ── Input ────────────────────────────────────────────────────────────────────
@@ -250,8 +255,8 @@ window.addEventListener('keyup', (e) => {
     e.preventDefault();
     pressKey(code, false);
 });
-// Losing focus mid-press would leave a key stuck down forever, and in anarchy
-// one stuck key pins Mario against a wall for everybody.
+// Losing focus mid-press would leave a key stuck down forever, and one stuck
+// key pins Mario against a wall for everybody.
 window.addEventListener('blur', () => {
     if (myKeys.size) { myKeys.clear(); sendInput(); paintMyKeys(); }
 });
@@ -292,38 +297,70 @@ function togglePanel(name) {
     setPanel(name, document.body.dataset[name] !== 'on');
 }
 
-// ── Vote UI ──────────────────────────────────────────────────────────────────
-let voteEndsAt = 0;
+// ── Game picker ──────────────────────────────────────────────────────────────
+// One vote each; a game switches on a strict majority of everyone connected.
+// The list only contains games the agent reported as actually launchable, so a
+// missing ROM never shows up as a broken vote.
+let gameState = { current: null, games: [], votes: {}, needed: 0, cooldown: 0 };
+let myGameVote = null;
 
-function showVote(v) {
-    if (!v.open) {
-        $('vote').classList.add('hidden');
-        myVote = null;
-        if (typeof v.passed === 'boolean') {
-            addSystem(v.passed
-                ? `vote passed — ${String(v.mode).toUpperCase()} mode`
-                : `vote failed — staying in ${mode.toUpperCase()}`);
+function renderGames() {
+    const list = $('games-list');
+    list.textContent = '';
+    $('games-needed').textContent = gameState.needed;
+    $('games-total').textContent = $('count').textContent || '0';
+
+    const rows = gameState.games.map((g) => ({
+        id: g.id,
+        name: g.name,
+        sub: g.system,
+        current: g.id === gameState.current,
+    }));
+    // Stopping is a vote like any other — it is the only sanctioned way out of a
+    // running game, since the desktop itself gives the crowd no exit.
+    rows.push({ id: '__stop__', name: 'Stop the game', sub: 'back to idle', stop: true });
+
+    for (const r of rows) {
+        const row = document.createElement('div');
+        row.className = 'game-row'
+            + (r.current ? ' current' : '')
+            + (r.stop ? ' stop' : '')
+            + (myGameVote === r.id ? ' voted' : '');
+
+        const label = document.createElement('div');
+        const name = document.createElement('div');
+        name.className = 'g-name';
+        name.textContent = r.name + (r.current ? '  ▶ now playing' : '');
+        const sub = document.createElement('div');
+        sub.className = 'g-sys';
+        sub.textContent = r.sub;
+        label.appendChild(name); label.appendChild(sub);
+
+        const spacer = document.createElement('div');
+        spacer.className = 'g-spacer';
+        const votes = document.createElement('div');
+        votes.className = 'g-votes';
+        votes.textContent = `${gameState.votes[r.id] || 0} / ${gameState.needed}`;
+
+        row.appendChild(label); row.appendChild(spacer); row.appendChild(votes);
+        if (!r.current) {
+            row.addEventListener('click', () => {
+                myGameVote = r.id;
+                if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'gamevote', game: r.id }));
+                renderGames();
+            });
         }
-        return;
+        list.appendChild(row);
     }
-    $('vote').classList.remove('hidden');
-    $('vote-title').textContent = `switch to ${String(v.mode).toUpperCase()}?`;
-    $('vote-by').textContent = v.by || 'someone';
-    $('vote-yes-n').textContent = v.yes.length;
-    $('vote-no-n').textContent = v.no.length;
-    $('vote-needed').textContent = v.needed;
-    renderFaces($('vote-yes-faces'), v.yes, 20);
-    renderFaces($('vote-no-faces'), v.no, 20);
-    voteEndsAt = v.endsAt || 0;
-    $('vote-yes').classList.toggle('cast', myVote === 'yes');
-    $('vote-no').classList.toggle('cast', myVote === 'no');
-}
 
-setInterval(() => {
-    if ($('vote').classList.contains('hidden') || !voteEndsAt) return;
-    const left = Math.max(0, Math.ceil((voteEndsAt - Date.now()) / 1000));
-    $('vote-timer').textContent = left + 's';
-}, 250);
+    const cool = $('games-cooldown');
+    if (gameState.cooldown > 0) {
+        cool.textContent = `just switched — voting reopens in ${Math.ceil(gameState.cooldown / 1000)}s`;
+        cool.classList.remove('hidden');
+    } else {
+        cool.classList.add('hidden');
+    }
+}
 
 // ── Chat / status ────────────────────────────────────────────────────────────
 function setStatus(text) {
@@ -359,12 +396,6 @@ function addChat(user, text) {
 function trimChat(box) {
     while (box.children.length > 80) box.removeChild(box.firstChild);
     box.scrollTop = box.scrollHeight;
-}
-
-function setMode(next) {
-    mode = next;
-    $('modepill').textContent = String(next).toUpperCase();
-    $('modepill').style.background = next === 'democracy' ? 'rgba(77,163,255,.28)' : 'rgba(255,216,61,.24)';
 }
 
 // ── Connection ───────────────────────────────────────────────────────────────
@@ -409,7 +440,6 @@ function connect() {
         switch (msg.t) {
             case 'welcome':
                 hostUp = msg.host;
-                setMode(msg.mode);
                 if (msg.video) configureVideo(msg.video);
                 if (msg.audio) configureAudio(msg.audio);
                 if (!hostUp) setStatus('the game is booting…');
@@ -426,8 +456,15 @@ function connect() {
                 renderFaces($('roster-faces'), msg.users || [], 18, 5);
                 break;
             case 'held': paintHeld(msg.keys || []); break;
-            case 'vote': showVote(msg); break;
-            case 'mode': setMode(msg.mode); break;
+            case 'gamestate':
+                gameState = {
+                    current: msg.current, games: msg.games || [],
+                    votes: msg.votes || {}, needed: msg.needed || 0,
+                    cooldown: msg.cooldown || 0,
+                };
+                if (msg.current !== undefined) myGameVote = null;
+                renderGames();
+                break;
             case 'notice': addSystem(msg.text); break;
             case 'chat':
                 // The wire format calls the speaker `from`; avatarEl/addChat want
@@ -468,21 +505,11 @@ function connect() {
         $('btn-' + name).addEventListener('click', () => togglePanel(name));
     }
 
-    // Calling a vote proposes the OTHER mode — there are only two.
-    $('btn-vote').addEventListener('click', () => {
-        if (!ws || ws.readyState !== 1) return;
-        ws.send(JSON.stringify({ t: 'modevote', mode: mode === 'anarchy' ? 'democracy' : 'anarchy' }));
+    $('btn-games').addEventListener('click', () => {
+        $('games').classList.toggle('hidden');
+        renderGames();
     });
-    $('vote-yes').addEventListener('click', () => {
-        myVote = 'yes';
-        ws && ws.send(JSON.stringify({ t: 'votecast', yes: true }));
-        $('vote-yes').classList.add('cast'); $('vote-no').classList.remove('cast');
-    });
-    $('vote-no').addEventListener('click', () => {
-        myVote = 'no';
-        ws && ws.send(JSON.stringify({ t: 'votecast', yes: false }));
-        $('vote-no').classList.add('cast'); $('vote-yes').classList.remove('cast');
-    });
+    $('games-close').addEventListener('click', () => $('games').classList.add('hidden'));
 
     const chatInput = $('chatinput');
     chatInput.addEventListener('keydown', (e) => {
