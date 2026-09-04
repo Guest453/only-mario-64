@@ -12,6 +12,57 @@
 <body>
   <canvas id="canvas" tabindex="0"></canvas>
 <script>
+  // ── Render small, display big ──────────────────────────────────────────
+  //
+  // SDL sizes the canvas to the X screen (854x480 here), and SwiftShader draws
+  // every one of those pixels on a CPU with no GPU. Measured on the live box:
+  // one chromium renderer at 137% CPU out of a 170% container budget, which
+  // left nothing for the x264 encoder and made the stream lag.
+  //
+  // Same fix the standalone wasm build uses: clamp the drawing buffer, then
+  // scale the GL viewport by the SAME ratio. Clamping alone is not enough —
+  // the game sets its viewport from SDL's window size, so the buffer shrinks
+  // while the projection does not and you see the top-left corner of the frame.
+  // CSS then stretches the small buffer back over the whole screen.
+  const RENDER_W = 480;
+  let sdlW = 0, renderH = 270;
+
+  for (const prop of ['width', 'height']) {
+    const desc = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, prop);
+    Object.defineProperty(HTMLCanvasElement.prototype, prop, {
+      configurable: true,
+      get() { return desc.get.call(this); },
+      set(v) {
+        if (this.id !== 'canvas') return desc.set.call(this, v);
+        if (prop === 'width') {
+          if (v > 1) sdlW = v;
+          return desc.set.call(this, RENDER_W);
+        }
+        // Derive height from SDL's aspect so nothing is stretched.
+        if (v > 1 && sdlW > 1) renderH = Math.round(RENDER_W * (v / sdlW));
+        return desc.set.call(this, renderH);
+      },
+    });
+  }
+
+  function scaleGl(proto) {
+    if (!proto) return;
+    for (const fn of ['viewport', 'scissor']) {
+      const orig = proto[fn];
+      if (!orig) continue;
+      proto[fn] = function (x, y, w, h) {
+        if (sdlW > 1 && this.canvas && this.canvas.id === 'canvas') {
+          const k = this.drawingBufferWidth / sdlW;
+          return orig.call(this, Math.round(x * k), Math.round(y * k),
+                                 Math.round(w * k), Math.round(h * k));
+        }
+        return orig.call(this, x, y, w, h);
+      };
+    }
+  }
+  scaleGl(window.WebGLRenderingContext && WebGLRenderingContext.prototype);
+  scaleGl(window.WebGL2RenderingContext && WebGL2RenderingContext.prototype);
+
   // Minimal SM64 host for the DESKTOP build.
   //
   // Deliberately NOT arena/host/host.html: that page also encodes the canvas

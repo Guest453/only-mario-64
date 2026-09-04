@@ -93,6 +93,7 @@ RUN mkdir -p /usr/lib/libretro && cd /tmp \
 RUN apt-get update && apt-get install -y --no-install-recommends \
         xfce4-panel xfdesktop4 xfce4-appfinder xfce4-terminal thunar \
         xfce4-settings xdg-utils x11-apps \
+        dbus-x11 \
     && apt-get clean
 
 ARG WITH_STEAM=1
@@ -162,7 +163,9 @@ RUN useradd -m -u 1000 -s /bin/false arena \
 RUN useradd -m -u 1001 -s /bin/bash guest \
     && mkdir -p /data/guest \
     && chown -R guest:guest /data/guest /home/guest \
-    && echo 'arena ALL=(guest) NOPASSWD: /app/arena/desktop/start-desktop.sh' \
+    && printf '%s\n%s\n' \
+        'arena ALL=(guest) NOPASSWD: /app/arena/desktop/start-desktop.sh' \
+        'arena ALL=(root) NOPASSWD: /app/arena/desktop/stop-guest.sh' \
         > /etc/sudoers.d/arena-desktop \
     && chmod 440 /etc/sudoers.d/arena-desktop \
     && visudo -c >/dev/null

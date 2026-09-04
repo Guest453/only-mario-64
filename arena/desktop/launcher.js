@@ -46,18 +46,44 @@ function idleScreen() {
     execFile('xsetroot', ['-solid', '#0b0d14'], () => {});
 }
 
+// Kill an entire process group, not just the leader.
+function killGroup(pid, signal) {
+    try { process.kill(-pid, signal); } catch {
+        try { process.kill(pid, signal); } catch {}   // group already gone
+    }
+}
+
+// Reap anything a previous session left behind, including processes this
+// launcher never started (a hand-run test, or a survivor of an unclean stop).
+// Without this, switching games stacked sessions on top of each other and the
+// box simply ran out of CPU: an orphaned desktop plus SM64 saturated all of it.
+function sweepOrphans(cb) {
+    const { execFile } = require('child_process');
+    execFile('pkill', ['-9', '-x', 'retroarch'], () => {
+        execFile('pkill', ['-9', '-f', '/usr/lib/chromium/chromium'], () => {
+            // guest's processes are unreachable from arena by design; the one
+            // sanctioned exception is this root helper.
+            execFile('sudo', ['-n', '/app/arena/desktop/stop-guest.sh'], () => {
+                if (cb) cb();
+            });
+        });
+    });
+}
+
 function stop(cb) {
     const proc = child;
     child = null;
     currentId = null;
-    if (!proc) { idleScreen(); if (cb) cb(); return; }
+    const finishUp = () => { sweepOrphans(() => { idleScreen(); if (cb) cb(); }); };
+
+    if (!proc) { finishUp(); return; }
     let done = false;
-    const finish = () => { if (done) return; done = true; idleScreen(); if (cb) cb(); };
+    const finish = () => { if (done) return; done = true; finishUp(); };
     proc.once('exit', finish);
-    try { proc.kill('SIGTERM'); } catch {}
-    // RetroArch occasionally ignores SIGTERM while it is saving; do not let a
-    // stuck process block the next vote forever.
-    setTimeout(() => { try { proc.kill('SIGKILL'); } catch {} finish(); }, 4000);
+    try { killGroup(proc.pid, 'SIGTERM'); } catch {}
+    // RetroArch occasionally ignores SIGTERM while it is saving; never let a
+    // stuck process block the next vote.
+    setTimeout(() => { killGroup(proc.pid, 'SIGKILL'); finish(); }, 4000);
 }
 
 function launch(id, cb) {
@@ -82,7 +108,12 @@ function launch(id, cb) {
         }
         console.log('[launcher] launching', game.id, '->', bin, spawnArgs.join(' '));
 
-        child = spawn(bin, spawnArgs, { stdio: ['ignore', 'ignore', 'pipe'] });
+        // detached => the child leads its OWN process group, so stop() can kill
+        // the whole tree. Without this, killing "the child" left every
+        // descendant alive: chromium forks zygote/renderer processes, and the
+        // desktop entry's child is `sudo`, whose real work happens two levels
+        // down in dbus-run-session -> panel/xfdesktop.
+        child = spawn(bin, spawnArgs, { stdio: ['ignore', 'ignore', 'pipe'], detached: true });
         currentId = game.id;
 
         child.stderr.on('data', (d) => {

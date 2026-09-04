@@ -188,7 +188,8 @@ const viewers = new Map();   // id -> viewer
 let hostSock = null;         // the headless Chromium running the game
 let hostAlive = false;
 
-let lastSentKeys = '';       // serialized merged controller, to skip no-op sends
+let lastSentKeys = '';
+let lastMouseAt = 0;       // serialized merged controller, to skip no-op sends
 
 // Cached so a viewer who joins mid-session can start decoding immediately
 // instead of staring at a black canvas until the next keyframe.
@@ -592,6 +593,21 @@ function handleViewerMsg(v, msg) {
         case 'gamevote': {
             const choice = typeof msg.game === 'string' ? msg.game.slice(0, 40) : null;
             if (choice) castGameVote(v, choice);
+            break;
+        }
+        case 'mouse': {
+            // Last mover wins. A union merge makes no sense for a pointer —
+            // averaging positions would just park it in the middle of the
+            // screen whenever two people move at once.
+            const now = Date.now();
+            if (now - lastMouseAt < 33) return;      // ~30Hz is plenty
+            lastMouseAt = now;
+            const x = typeof msg.x === 'number' ? Math.max(0, Math.min(1, msg.x)) : undefined;
+            const y = typeof msg.y === 'number' ? Math.max(0, Math.min(1, msg.y)) : undefined;
+            const buttons = Array.isArray(msg.buttons)
+                ? msg.buttons.filter((b) => b === 1 || b === 2 || b === 3).slice(0, 3) : [];
+            const wheel = msg.wheel === 'up' || msg.wheel === 'down' ? msg.wheel : undefined;
+            sendHost({ t: 'mouse', x, y, buttons, wheel });
             break;
         }
         case 'needkey': {

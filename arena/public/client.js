@@ -263,6 +263,56 @@ window.addEventListener('blur', () => {
 // The server expires held keys after ~2.5s of silence; keep them alive.
 setInterval(() => { if (myKeys.size > 0) sendInput(); }, 500);
 
+// ── Pointer ──────────────────────────────────────────────────────────────────
+// Desktop mode needs a mouse, and so do emulator menus. Coordinates are sent
+// NORMALISED so the server never has to know how big the client's canvas is.
+//
+// The canvas is object-fit: contain, so the video is letterboxed inside the
+// element — the pointer has to be mapped through those bars or every click
+// lands offset.
+const mouseButtons = new Set();
+
+function videoCoords(ev) {
+    const r = canvas.getBoundingClientRect();
+    if (!r.width || !r.height || !canvas.width || !canvas.height) return null;
+    const scale = Math.min(r.width / canvas.width, r.height / canvas.height);
+    const vw = canvas.width * scale, vh = canvas.height * scale;
+    const ox = r.left + (r.width - vw) / 2, oy = r.top + (r.height - vh) / 2;
+    const x = (ev.clientX - ox) / vw, y = (ev.clientY - oy) / vh;
+    if (x < 0 || x > 1 || y < 0 || y > 1) return null;   // in the letterbox
+    return { x, y };
+}
+
+function sendMouse(extra) {
+    if (!ws || ws.readyState !== 1) return;
+    ws.send(JSON.stringify({ t: 'mouse', buttons: [...mouseButtons], ...extra }));
+}
+
+canvas.addEventListener('pointermove', (e) => {
+    const c = videoCoords(e);
+    if (c) sendMouse(c);
+});
+canvas.addEventListener('pointerdown', (e) => {
+    unlockAudio();
+    const c = videoCoords(e);
+    if (!c) return;
+    e.preventDefault();
+    mouseButtons.add(e.button === 1 ? 2 : e.button === 2 ? 3 : 1);
+    sendMouse(c);
+});
+canvas.addEventListener('pointerup', (e) => {
+    mouseButtons.delete(e.button === 1 ? 2 : e.button === 2 ? 3 : 1);
+    sendMouse(videoCoords(e) || {});
+});
+canvas.addEventListener('pointerleave', () => {
+    if (mouseButtons.size) { mouseButtons.clear(); sendMouse({}); }
+});
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());   // right-click is the game's
+canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    sendMouse({ wheel: e.deltaY < 0 ? 'up' : 'down' });
+}, { passive: false });
+
 function bindButton(el) {
     const code = el.dataset.key;
     const down = (e) => { e.preventDefault(); unlockAudio(); pressKey(code, true); el.classList.add('down'); };

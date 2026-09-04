@@ -91,11 +91,42 @@ function applyInput(codes) {
     xdo(args);
 }
 
+// ── Pointer ─────────────────────────────────────────────────────────────────
+// Desktop mode is unusable without a mouse, and emulator menus want one too.
+// Coordinates arrive NORMALISED (0..1) so the client never needs to know the
+// stream resolution, and a resolution change cannot desync the pointer.
+const heldButtons = new Set();
+let screenW = Number(process.env.ARENA_W || 854);
+let screenH = Number(process.env.ARENA_H || 480);
+
+function applyMouse(m) {
+    const args = [];
+    if (typeof m.x === 'number' && typeof m.y === 'number') {
+        const x = Math.max(0, Math.min(screenW - 1, Math.round(m.x * screenW)));
+        const y = Math.max(0, Math.min(screenH - 1, Math.round(m.y * screenH)));
+        args.push('mousemove', String(x), String(y));
+    }
+    // Only buttons 1-3. No scroll-as-button spam, no exotic buttons.
+    const want = new Set((Array.isArray(m.buttons) ? m.buttons : [])
+        .filter((b) => b === 1 || b === 2 || b === 3));
+    for (const b of [...heldButtons]) {
+        if (!want.has(b)) { args.push('mouseup', String(b)); heldButtons.delete(b); }
+    }
+    for (const b of want) {
+        if (!heldButtons.has(b)) { args.push('mousedown', String(b)); heldButtons.add(b); }
+    }
+    if (m.wheel === 'up') args.push('click', '4');
+    else if (m.wheel === 'down') args.push('click', '5');
+    xdo(args);
+}
+
 function releaseAll() {
+    for (const b of heldButtons) xdo(['mouseup', String(b)]);
+    heldButtons.clear();
     const args = [];
     for (const c of held) args.push('keyup', KEYSYM[c]);
     held.clear();
     xdo(args);
 }
 
-module.exports = { applyInput, releaseAll, KEYSYM, BLOCKED, isDangerous };
+module.exports = { applyInput, applyMouse, releaseAll, KEYSYM, BLOCKED, isDangerous };

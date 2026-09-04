@@ -133,6 +133,23 @@ pactl load-module module-native-protocol-unix socket=/tmp/pulse-arena.socket aut
   && chmod 666 /tmp/pulse-arena.socket 2>/dev/null \
   && echo "[desktop] audio socket shared with guest" || true
 
+# Clear Chromium's stale profile lock, same story as pulse's pid file above.
+#
+# /data/chromium is a persistent volume, and Chromium writes SingletonLock there
+# naming the host and pid that own the profile. After a restart the new container
+# has a new hostname, so Chromium sees a lock owned by "another computer",
+# refuses to start, and SM64 silently never launches:
+#   "The profile appears to be in use by another Chromium process (208)
+#    on another computer (9f69149da8bd)"
+# This is the THIRD time this exact pattern has bitten this project — persistent
+# volume, ephemeral lock. Moved aside, never deleted.
+for lock in SingletonLock SingletonSocket SingletonCookie; do
+  if [ -e "/data/chromium/$lock" ] || [ -L "/data/chromium/$lock" ]; then
+    mv -f "/data/chromium/$lock" "/data/chromium/.stale-$lock" 2>/dev/null \
+      && echo "[desktop] moved stale chromium $lock aside"
+  fi
+done
+
 echo "[desktop] serving the sm64 wasm page on loopback"
 node /app/arena/desktop/serve-game.js &
 

@@ -241,7 +241,7 @@ function startAudio() {
 module.exports = { AnnexBSplitter, OggOpusReader };
 
 // ── Relay link ───────────────────────────────────────────────────────────────
-const { applyInput, releaseAll } = require('./input.js');
+const { applyInput, applyMouse, releaseAll } = require('./input.js');
 const launcher = require('./launcher.js');
 
 function reportGames() {
@@ -269,6 +269,7 @@ function connect() {
     ws.on('message', (data) => {
         let msg; try { msg = JSON.parse(data.toString()); } catch { return; }
         if (msg.t === 'input') applyInput(Array.isArray(msg.keys) ? msg.keys : []);
+        else if (msg.t === 'mouse') applyMouse(msg);
         else if (msg.t === 'launch') {
             // Release everything first: a key still held from the previous game
             // would arrive in the new one as a stuck input nobody can clear.
