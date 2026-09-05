@@ -68,6 +68,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         retroarch libretro-core-info \
     && apt-get clean
 
+# ── Mesa from trixie-backports ──────────────────────────────────────────────
+#
+# Trixie ships Mesa 25.0.7, which does NOT advertise GL_EXT_sRGB. Lime/OpenFL
+# (FNF's engine) uses sRGB framebuffers on its GLES path, and when that
+# extension is missing the framebuffer silently fails to come up: the game loop
+# runs, audio plays, and the window stays black. Every other app here is fine
+# because RetroArch, Chromium and glxgears never ask for it.
+#
+# Found by diffing glxinfo between this container (311 extensions) and a machine
+# where FNF renders correctly under the SAME software renderer (318). Of the six
+# missing extensions, GL_EXT_sRGB is the only one a 2D game would ever touch.
+#
+# Backports rather than sid: 26.1.2 is built against trixie, so it upgrades Mesa
+# without dragging in a newer glibc.
+RUN echo 'deb http://deb.debian.org/debian trixie-backports main' \
+        > /etc/apt/sources.list.d/backports.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends -t trixie-backports \
+        libgl1-mesa-dri libglx-mesa0 libegl-mesa0 libgbm1 mesa-utils \
+    && apt-get clean \
+    && echo "mesa now: $(glxinfo --version 2>/dev/null | head -1 || true)"
+
 ARG LIBRETRO=https://buildbot.libretro.com/nightly/linux/x86_64/latest
 RUN mkdir -p /usr/lib/libretro && cd /tmp \
     && for core in \
