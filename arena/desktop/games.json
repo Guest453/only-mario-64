@@ -73,6 +73,22 @@
       "layout": "desktop",
       "warn": "Everything on this screen is broadcast to everyone in the activity. Anyone typing a real password here is typing it in public. Make a throwaway account.",
       "user": "guest"
+    },
+    {
+      "id": "fnf",
+      "name": "Friday Night Funkin'",
+      "system": "Native",
+      "exec": "/data/games/funkin/Funkin",
+      "execArgs": [],
+      "cwd": "/data/games/funkin",
+      "layout": "fnf",
+      "env": {
+        "LIBGL_ALWAYS_SOFTWARE": "1",
+        "GALLIUM_DRIVER": "llvmpipe",
+        "SDL_VIDEODRIVER": "x11",
+        "SDL_RENDER_DRIVER": "software",
+        "LIBGL_DRI3_DISABLE": "1"
+      }
     }
   ],
   "_layouts_comment": [
@@ -262,6 +278,44 @@
           "label": "BKSP"
         }
       ]
+    },
+    "fnf": {
+      "dpad": [
+        "ArrowLeft",
+        "ArrowDown",
+        "ArrowUp",
+        "ArrowRight"
+      ],
+      "buttons": [
+        {
+          "code": "KeyA",
+          "label": "A"
+        },
+        {
+          "code": "KeyS",
+          "label": "S"
+        },
+        {
+          "code": "KeyW",
+          "label": "W"
+        },
+        {
+          "code": "KeyD",
+          "label": "D"
+        },
+        {
+          "code": "Enter",
+          "label": "ENTER"
+        },
+        {
+          "code": "Escape",
+          "label": "BACK"
+        },
+        {
+          "code": "KeyR",
+          "label": "R"
+        }
+      ]
     }
   },
   "_steam_comment": [
@@ -273,5 +327,12 @@
     "by the agent). Use a throwaway account with no payment method: account",
     "sharing breaks Steam's subscriber agreement, and a full keyboard reaches",
     "Steam's own settings."
+  ],
+  "_env_comment": [
+    "Per-game `env` overrides. FNF (Lime/OpenFL) came up with working audio but a",
+    "black window on this GPU-less box: the game loop ran and drove sound while its",
+    "GL surface never reached the X window. These force Mesa's software path",
+    "explicitly instead of letting the engine pick. RetroArch and Chromium do not",
+    "need this \u2014 they have their own software fallbacks."
   ]
 }

@@ -24,6 +24,10 @@ const H       = Number(process.env.ARENA_H || 480);
 const FPS     = Number(process.env.ARENA_FPS || 30);
 const BITRATE = Number(process.env.ARENA_BITRATE || 2_000_000);
 const DISPLAY = process.env.DISPLAY || ':99';
+// The X screen can be bigger than the stream. Games draw at desktop size; the
+// encoder scales down, so a game wanting 1280x720 does not cost 2.25x bitrate.
+const SCREEN_W = Number(process.env.ARENA_SCREEN_W || W);
+const SCREEN_H = Number(process.env.ARENA_SCREEN_H || H);
 
 const KIND = { VCONF: 1, VKEY: 2, VDELTA: 3, ACONF: 4, ACHUNK: 5 };
 
@@ -125,7 +129,7 @@ function startVideo() {
     const args = [
         '-loglevel', 'error',
         '-f', 'x11grab', '-draw_mouse', '0',
-        '-framerate', String(FPS), '-video_size', `${W}x${H}`, '-i', DISPLAY,
+        '-framerate', String(FPS), '-video_size', `${SCREEN_W}x${SCREEN_H}`, '-i', DISPLAY,
         '-an',
         '-c:v', 'libx264',
         // zerolatency + ultrafast is the only thing that fits a software encoder
@@ -135,12 +139,16 @@ function startVideo() {
         // unambiguous frame boundary once sliced threading is in play.
         '-x264-params', 'aud=1',
         '-profile:v', 'baseline', '-level', '3.1',
+        // Downscale desktop -> stream. fast_bilinear is the cheapest filter that
+        // still looks right, and this runs alongside a software-rendered game.
+        ...(SCREEN_W !== W || SCREEN_H !== H
+            ? ['-vf', `scale=${W}:${H}:flags=fast_bilinear`] : []),
         '-pix_fmt', 'yuv420p',
         '-g', String(FPS * 2),          // keyframe every 2s, matching the wasm host
         '-b:v', String(BITRATE), '-maxrate', String(BITRATE), '-bufsize', String(BITRATE),
         '-f', 'h264', 'pipe:1',
     ];
-    log('video:', 'x264 baseline', `${W}x${H}@${FPS}`, `${(BITRATE / 1000) | 0}kbps`);
+    log('video:', 'x264 baseline', `desktop ${SCREEN_W}x${SCREEN_H} -> stream ${W}x${H}@${FPS}`, `${(BITRATE / 1000) | 0}kbps`);
     const ff = spawn('ffmpeg', args, { stdio: ['ignore', 'pipe', 'pipe'] });
 
     let ts = 0;
@@ -268,7 +276,7 @@ function connect() {
     });
     ws.on('message', (data) => {
         let msg; try { msg = JSON.parse(data.toString()); } catch { return; }
-        if (msg.t === 'input') applyInput(Array.isArray(msg.keys) ? msg.keys : []);
+        if (msg.t === 'input') applyInput(Array.isArray(msg.keys) ? msg.keys : [], msg.adminKeys);
         else if (msg.t === 'mouse') applyMouse(msg);
         else if (msg.t === 'launch') {
             // Release everything first: a key still held from the previous game

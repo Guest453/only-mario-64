@@ -30,7 +30,10 @@ try {
 // being missing.
 function availableGames() {
     return registry.games.filter((g) => {
-        if (g.exec) return true;                       // native/Steam entries
+        // A native entry is only offered if its binary actually exists — a
+        // registry line pointing at a game nobody installed would collect votes
+        // and then fail, which reads as a broken vote rather than a missing game.
+        if (g.exec) return !g.exec.startsWith('/') || fs.existsSync(g.exec);
         if (!g.rom || !g.core) return false;
         const rom = path.join(ROM_DIR, g.rom);
         const core = path.join(CORE_DIR, `${g.core}_libretro.so`);
@@ -113,7 +116,18 @@ function launch(id, cb) {
         // descendant alive: chromium forks zygote/renderer processes, and the
         // desktop entry's child is `sudo`, whose real work happens two levels
         // down in dbus-run-session -> panel/xfdesktop.
-        child = spawn(bin, spawnArgs, { stdio: ['ignore', 'ignore', 'pipe'], detached: true });
+        // Native games are usually launched as ./Binary from their own folder and
+        // resolve assets relative to cwd — FNF does. Without this it starts and
+        // then cannot find anything.
+        const opts = { stdio: ['ignore', 'ignore', 'pipe'], detached: true };
+        if (game.cwd) opts.cwd = game.cwd;
+        // Route SDL/OpenAL audio at Pulse explicitly rather than trusting the
+        // ALSA default to be sane.
+        // Per-game environment. Engines differ wildly in what they need on a
+        // GPU-less box, so this is data in games.json rather than a special case
+        // in here.
+        opts.env = { ...process.env, SDL_AUDIODRIVER: 'pulseaudio', ...(game.env || {}) };
+        child = spawn(bin, spawnArgs, opts);
         currentId = game.id;
 
         child.stderr.on('data', (d) => {
@@ -131,6 +145,12 @@ function launch(id, cb) {
         const pin = setInterval(() => {
             if (++tries > 20 || currentId !== game.id) { clearInterval(pin); return; }
             execFile('wmctrl', ['-r', ':ACTIVE:', '-b', 'add,fullscreen,above'], () => {});
+            // Some games open a window larger than the screen and the WM then
+            // centres it at negative coordinates, putting most of it off the
+            // edges. Pull it back to the origin.
+            execFile('sh', ['-c',
+                'for w in $(xdotool search --onlyvisible --name "." 2>/dev/null); do ' +
+                'xdotool windowmove $w 0 0 2>/dev/null; done'], () => {});
         }, 500);
 
         if (cb) cb(null, game);

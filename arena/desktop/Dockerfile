@@ -11,7 +11,13 @@
 # finder, no panel menu. What is not in the image cannot be launched by someone
 # hammering the keyboard.
 
-FROM debian:bookworm-slim
+# Debian 13 (trixie), NOT bookworm.
+#
+# Native games are built against modern toolchains: FNF needs GLIBC_2.38,
+# GLIBCXX_3.4.32 and CXXABI_1.3.15, and bookworm ships glibc 2.36. That is not
+# something a package can fix — glibc is the floor of the image, so the base
+# has to move. Trixie ships glibc 2.41 and every package this image needs.
+FROM debian:trixie-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -39,6 +45,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         fonts-liberation \
         mesa-utils \
         libgl1-mesa-dri \
+        libvlc5 \
+        libvlccore9 \
+        vlc-plugin-base \
         tini \
     && apt-get clean
 
@@ -131,6 +140,15 @@ COPY sm64.js sm64.wasm /app/
 # session cannot rewrite it.
 COPY arena/desktop/retroarch.cfg /etc/arena-retroarch.cfg
 
+# Route ALSA's default device to PulseAudio.
+#
+# Something in the base image left /etc/asound.conf as `pcm.!default {type null}`
+# — a black hole. Anything using ALSA (SDL/OpenAL games like FNF) wrote its audio
+# to nowhere: the pulse sink read -91dB, digital silence, while the game looked
+# perfectly healthy and even held an open pulse stream.
+RUN printf 'pcm.!default { type pulse }\nctl.!default { type pulse }\n' > /etc/asound.conf \
+    && chmod 644 /etc/asound.conf
+
 # Everything runs as this user. The first cut of this image ran the whole
 # session as root, which meant anyone driving the keyboard was driving it as
 # root — a bad trade for zero benefit.
@@ -176,6 +194,8 @@ ENV HOME=/data/home XDG_RUNTIME_DIR=/data/home/.run
 ENV DISPLAY=:99 \
     ARENA_W=854 \
     ARENA_H=480 \
+    ARENA_SCREEN_W=1280 \
+    ARENA_SCREEN_H=720 \
     ARENA_FPS=30 \
     ARENA_BITRATE=2000000 \
     ROM_DIR=/roms

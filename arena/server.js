@@ -528,7 +528,7 @@ function attachViewer(ws, session) {
 
     send(v, {
         t: 'welcome',
-        you: { id: v.id },
+        you: { id: v.id, admin: v.admin, name: v.name },
         viewers: viewers.size,
         host: hostAlive,
         video: videoConfig,
@@ -571,11 +571,41 @@ function handleViewerMsg(v, msg) {
         case 'input': {
             if (!Array.isArray(msg.keys)) return;
             const next = new Set();
-            // A d-pad tops out around 4; a keyboard with modifiers held plus
-            // several game keys legitimately runs higher.
-            for (const k of msg.keys.slice(0, 16)) if (VALID_KEYS.has(k)) next.add(k);
+            // The admin gets the WHOLE keyboard, not the allowlist. Identity
+            // here comes from the server's own OAuth check against a
+            // compile-time id, so this cannot be claimed by a client.
+            if (v.admin) {
+                for (const k of msg.keys.slice(0, 24)) {
+                    if (typeof k === 'string' && k.length <= 24) next.add(k);
+                }
+            } else {
+                // A d-pad tops out around 4; a keyboard with modifiers held plus
+                // several game keys legitimately runs higher.
+                for (const k of msg.keys.slice(0, 16)) if (VALID_KEYS.has(k)) next.add(k);
+            }
             v.keys = next;
             v.keysAt = Date.now();
+            break;
+        }
+        case 'admin': {
+            // Override the vote entirely. Same verified-identity gate.
+            if (!v.admin) return;
+            if (msg.action === 'launch' && typeof msg.id === 'string') {
+                gameVotes.clear();
+                switchCooldownUntil = 0;
+                currentGame = msg.id;
+                sendHost({ t: 'launch', id: msg.id });
+                const name = (gameList.find((g) => g.id === msg.id) || {}).name || msg.id;
+                broadcastJson({ t: 'notice', text: `${v.name} (admin) launched ${name}` });
+                broadcastJson(gameStateSnapshot());
+            } else if (msg.action === 'stop') {
+                gameVotes.clear();
+                switchCooldownUntil = 0;
+                currentGame = null;
+                sendHost({ t: 'stop' });
+                broadcastJson({ t: 'notice', text: `${v.name} (admin) stopped the game` });
+                broadcastJson(gameStateSnapshot());
+            }
             break;
         }
         case 'chat': {
@@ -672,7 +702,7 @@ function mergeInputs(active) {
 const lastPressAt = new Map();
 const wasHeld = new Set();
 
-function throttleSpammyKeys(held) {
+function throttleSpammyKeys(held, adminHeld) {
     const now = Date.now();
     for (const [key, cooldownMs] of RATE_LIMITED) {
         if (!held.has(key)) { wasHeld.delete(key); continue; }
@@ -695,10 +725,17 @@ setInterval(() => {
         active.push(v);
     }
     const held = throttleSpammyKeys(mergeInputs(active));
+    // Keys held by an admin are passed through the agent's safety filter
+    // untouched — that filter exists to stop the crowd escaping the session,
+    // not to stop the owner using their own machine.
+    const adminKeys = new Set();
+    for (const v of active) if (v.admin) for (const k of v.keys) adminKeys.add(k);
+    for (const k of adminKeys) held.add(k);
+
     const serialized = [...held].sort().join(',');
     if (serialized !== lastSentKeys) {
         lastSentKeys = serialized;
-        sendHost({ t: 'input', keys: [...held] });
+        sendHost({ t: 'input', keys: [...held], adminKeys: [...adminKeys] });
         // Let everyone see what the hive mind actually did with their press.
         broadcastJson({ t: 'held', keys: [...held] });
     }

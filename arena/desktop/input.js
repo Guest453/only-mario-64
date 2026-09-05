@@ -71,10 +71,17 @@ function xdo(args) {
     });
 }
 
-function applyInput(codes) {
+// `adminCodes` are keys the RELAY has already authorised as coming from the
+// owner's verified Discord session. They skip BLOCKED and isDangerous: those
+// rules exist to stop anonymous viewers closing windows and escaping the
+// session, not to stop the owner using their own machine.
+function applyInput(codes, adminCodes) {
+    const admin = new Set(Array.isArray(adminCodes) ? adminCodes : []);
     const desired = new Set();
     for (const c of codes) {
-        if (!KEYSYM[c] || BLOCKED.has(c)) continue;
+        if (!KEYSYM[c]) continue;                      // nothing to press
+        if (admin.has(c)) { desired.add(c); continue; }
+        if (BLOCKED.has(c)) continue;
         if (isDangerous(desired, c) || isDangerous(held, c)) continue;
         desired.add(c);
     }
@@ -96,8 +103,11 @@ function applyInput(codes) {
 // Coordinates arrive NORMALISED (0..1) so the client never needs to know the
 // stream resolution, and a resolution change cannot desync the pointer.
 const heldButtons = new Set();
-let screenW = Number(process.env.ARENA_W || 854);
-let screenH = Number(process.env.ARENA_H || 480);
+// The pointer lives on the X SCREEN, which may be larger than the stream the
+// viewer sees. Normalised coords must scale to the screen or every click lands
+// short of where it was aimed.
+let screenW = Number(process.env.ARENA_SCREEN_W || process.env.ARENA_W || 1280);
+let screenH = Number(process.env.ARENA_SCREEN_H || process.env.ARENA_H || 720);
 
 function applyMouse(m) {
     const args = [];

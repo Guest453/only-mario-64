@@ -29,6 +29,7 @@ let ws = null;
 let hostUp = false;
 let audioUnlocked = false;
 let discord = null;
+let isAdmin = false;
 
 // ── Identity rendering ───────────────────────────────────────────────────────
 // The server only ever sends a Discord id + avatar HASH, never a URL, so a
@@ -243,14 +244,16 @@ function isTyping(e) {
 
 window.addEventListener('keydown', (e) => {
     if (isTyping(e)) return;
-    const code = KEYMAP[e.code];
+    // Admin: send the raw code for ANY key. Everyone else is limited to the
+    // mapped game buttons, which the server re-checks anyway.
+    const code = isAdmin ? (KEYMAP[e.code] || e.code) : KEYMAP[e.code];
     if (!code) return;
     e.preventDefault();
     if (!e.repeat) pressKey(code, true);
 });
 window.addEventListener('keyup', (e) => {
     if (isTyping(e)) return;
-    const code = KEYMAP[e.code];
+    const code = isAdmin ? (KEYMAP[e.code] || e.code) : KEYMAP[e.code];
     if (!code) return;
     e.preventDefault();
     pressKey(code, false);
@@ -393,6 +396,20 @@ function renderGames() {
         votes.textContent = `${gameState.votes[r.id] || 0} / ${gameState.needed}`;
 
         row.appendChild(label); row.appendChild(spacer); row.appendChild(votes);
+        if (isAdmin) {
+            const force = document.createElement('button');
+            force.className = 'g-force';
+            force.textContent = r.stop ? 'FORCE STOP' : 'FORCE';
+            force.title = 'Admin: switch immediately, no vote';
+            force.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                if (!ws || ws.readyState !== 1) return;
+                ws.send(JSON.stringify(r.stop
+                    ? { t: 'admin', action: 'stop' }
+                    : { t: 'admin', action: 'launch', id: r.id }));
+            });
+            row.appendChild(force);
+        }
         if (!r.current) {
             row.addEventListener('click', () => {
                 myGameVote = r.id;
@@ -490,6 +507,11 @@ function connect() {
         switch (msg.t) {
             case 'welcome':
                 hostUp = msg.host;
+                isAdmin = !!(msg.you && msg.you.admin);
+                if (isAdmin) {
+                    document.body.classList.add('is-admin');
+                    addSystem('admin mode: full keyboard, and you can force game switches');
+                }
                 if (msg.video) configureVideo(msg.video);
                 if (msg.audio) configureAudio(msg.audio);
                 if (!hostUp) setStatus('the game is booting…');

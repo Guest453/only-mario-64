@@ -3,14 +3,21 @@
 set -euo pipefail
 
 : "${ARENA_HOST_TOKEN:?ARENA_HOST_TOKEN must be set}"
+# STREAM size (what viewers receive, and what x264 encodes).
 W="${ARENA_W:-854}"
 H="${ARENA_H:-480}"
+# DESKTOP size (what games actually get to draw into). Deliberately larger:
+# FNF opens a 1280x720 window, and on an 854x480 screen the WM shoved it to
+# -213,-120 with most of it off the edges. Games get a normal desktop; the
+# encoder downscales, so the extra pixels cost a scale, not 2.25x the bitrate.
+SW="${ARENA_SCREEN_W:-1280}"
+SH="${ARENA_SCREEN_H:-720}"
 FPS="${ARENA_FPS:-30}"
 DISPLAY_NUM="${DISPLAY:-:99}"
 export DISPLAY="$DISPLAY_NUM"
 
-echo "[desktop] starting X on $DISPLAY at ${W}x${H}"
-Xvfb "$DISPLAY" -screen 0 "${W}x${H}x24" -nolisten tcp -dpi 96 &
+echo "[desktop] starting X on $DISPLAY at ${SW}x${SH} (streaming ${W}x${H})"
+Xvfb "$DISPLAY" -screen 0 "${SW}x${SH}x24" -nolisten tcp -dpi 96 &
 XVFB_PID=$!
 
 # Wait for the server to actually accept connections instead of sleeping blind.
@@ -119,7 +126,26 @@ echo "[desktop] starting window manager"
 # xfwm4 alone: the XFCE window manager without the panel, desktop menu, app
 # finder, terminal or file manager. There is no menu to open because there is no
 # panel installed, and nothing to launch because nothing else is in the image.
-xfwm4 --daemon --compositor=off >/dev/null 2>&1 || true
+# NOT --daemon. Same failure mode as pulseaudio -D: forking to background dies
+# in this container, and the only symptom is a session with NO window manager —
+# windows are unmanaged, stacking is arbitrary, _NET_ACTIVE_WINDOW fails, and
+# games end up hidden behind each other with no way to raise them. Run it as a
+# plain background job and keep it alive.
+xfwm4 --compositor=off >/tmp/xfwm4.log 2>&1 &
+sleep 2
+if pgrep -x xfwm4 >/dev/null 2>&1; then
+  echo "[desktop] window manager running"
+else
+  echo "[desktop] WARNING: xfwm4 failed to start — windows will be unmanaged"
+  tail -3 /tmp/xfwm4.log 2>/dev/null | sed 's/^/[xfwm4] /'
+fi
+
+# Keep it alive: if the WM dies, every later game loses window management and
+# the symptom looks like "the game launched but the screen is black".
+( while true; do
+    sleep 10
+    pgrep -x xfwm4 >/dev/null 2>&1 || xfwm4 --compositor=off >>/tmp/xfwm4.log 2>&1 &
+  done ) &
 
 # Runtime half of the lockdown. The build-time half is that these programs do
 # not exist in the image at all.
