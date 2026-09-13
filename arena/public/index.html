@@ -8,15 +8,13 @@
 </head>
 <body data-pad="off" data-chat="off">
 
-<div id="stage">
+  <div id="stage">
   <canvas id="screen" width="640" height="480"></canvas>
   <div id="status" class="hidden">connecting…</div>
+  <!-- Blocked-input banner: only ever sent to the person it applies to. -->
+  <div id="blocked-banner" class="hidden"></div>
 
-  <!-- No Discord auth, no game. The shell still loads (it has to, in order to
-       run the SDK and authorise at all), but without a server-minted session
-       the socket refuses us and there is nothing behind this panel. -->
-  <!-- ── Game picker ───────────────────────────────────────────────────────
-       One vote each. A game switches when it reaches a strict majority of
+  <!-- Game picker. One vote each; a game switches on a strict majority of
        everyone connected — the same rule the rest of the app uses. -->
   <div id="games" class="hidden">
     <div class="games-card">
@@ -30,18 +28,124 @@
     </div>
   </div>
 
+
+  <!-- MAIN MENU: what everyone plays. Shown on entry instead of dropping a
+       viewer straight onto whatever happens to be streaming. -->
+  <div id="hub" class="hidden">
+    <div class="hub-card">
+      <div class="hub-head">
+        <span>🍄 mario arena</span>
+        <button id="hub-close" class="games-close" type="button" title="just watch">✕</button>
+      </div>
+      <p class="hub-sub">pick what everyone plays — one shared screen, switched by vote</p>
+      <div class="hub-label">containers</div>
+      <div id="hub-containers"></div>
+      <div class="hub-label">games</div>
+      <div id="hub-games"></div>
+      <button id="hub-watch" class="gate-submit" type="button">just watch</button>
+    </div>
+  </div>
+
+  <!-- Joinable containers. Only same-origin paths or public hostnames ever
+       reach this list — the server strips anything address-shaped. -->
+  <div id="containers" class="hidden">
+    <div class="games-card">
+      <div class="games-head">
+        <span>containers you can join</span>
+        <button id="containers-close" class="games-close">✕</button>
+      </div>
+      <div class="games-sub">vote to switch EVERYONE's screen to a container</div>
+      <div id="containers-list"></div>
+    </div>
+  </div>
+
+  <!-- Rules + AI-moderation opt-in. Nothing is accepted until this is signed:
+       no input, no chat, no votes. The server enforces this, not the client. -->
+  <div id="consent" class="hidden">
+    <div class="gate-card">
+      <div class="gate-icon">🛡️</div>
+      <h1>Before you play</h1>
+      <p class="gate-sub">This is ONE shared screen. Everyone sees it, and everyone can act on it at once.</p>
+      <ul class="consent-rules">
+        <li>Anything you type can be seen by everyone watching.</li>
+        <li>An AI moderator reads chat to catch slurs, threats, sexual content, illegal stuff, doxxing and scams.</li>
+        <li>Breaking the rules blocks your inputs, or bans you.</li>
+        <li>Don't share personal info. Don't try to escape the session.</li>
+      </ul>
+      <label class="consent-check">
+        <input type="checkbox" id="consent-ai">
+        <span>I opt in that AI can see anything I type into the containers, for moderation purposes.</span>
+      </label>
+      <button id="consent-go" class="gate-submit" disabled>I agree — let me in</button>
+      <p id="consent-fail" class="gate-fail hidden"></p>
+    </div>
+  </div>
+
+  <!-- Admin panel: live player list, block inputs, ban. Admin-only, and every
+       action is re-checked server-side against the verified identity. -->
+  <div id="admin" class="hidden">
+    <div class="games-card">
+      <div class="games-head">
+        <span>🛡 admin — players</span>
+        <button id="admin-close" class="games-close">✕</button>
+      </div>
+      <div class="games-sub" id="admin-sub">loading…</div>
+      <div id="admin-list"></div>
+      <button id="admin-refresh" class="gate-submit" type="button">refresh</button>
+    </div>
+  </div>
+
+  <!-- No Discord auth AND no arena account = no game. The shell still loads (it
+       has to, in order to run the SDK and authorise at all), but without a
+       server-minted session the socket refuses us and there is nothing behind
+       this panel. Login/register success HIDES this overlay entirely. -->
   <div id="gate" class="hidden">
     <div class="gate-card">
       <div class="gate-icon">🍄</div>
       <h1>Everyone Controls Mario</h1>
-      <p id="gate-msg">Sign in with Discord to play.</p>
-      <p class="gate-sub">This is a Discord Activity — launch it from a voice
-        channel. One Mario, every server, all at once.</p>
+      <p id="gate-msg">Log in to play.</p>
+      <p class="gate-sub" id="gate-sub">Inside Discord? It signs you in
+        automatically. On the web? Log in or make an arena account —
+        no account, no game.</p>
+
+      <div class="gate-tabs" role="tablist" aria-label="log in or register">
+        <button type="button" id="tab-login" class="gate-tab active" role="tab" aria-selected="true">log in</button>
+        <button type="button" id="tab-register" class="gate-tab" role="tab" aria-selected="false">create account</button>
+      </div>
+
+      <form id="gate-form" autocomplete="on" novalidate>
+        <label class="gate-field">
+          <span class="gate-label">username</span>
+          <input id="gate-user" type="text" maxlength="24" spellcheck="false"
+                 autocomplete="username" placeholder="mario_fan" required>
+        </label>
+        <label class="gate-field">
+          <span class="gate-label">password</span>
+          <span class="gate-passwrap">
+            <input id="gate-pass" type="password" maxlength="128"
+                   autocomplete="current-password" placeholder="8+ characters" required>
+            <button type="button" id="gate-eye" class="gate-eye" title="show / hide password">👁</button>
+          </span>
+        </label>
+        <button type="submit" id="gate-submit" class="gate-submit">Log in</button>
+        <p id="gate-hint" class="gate-hint"></p>
+      </form>
+
       <button id="gate-retry" class="hidden">Try again</button>
-      <!-- The actual failure, on screen. A generic "sign-in failed" sent us
-           digging through nginx logs to find out the authorize call had thrown;
-           the next person should just be able to read it. -->
+      <!-- Account errors: styled red, human readable. Discord OAuth failures:
+           the real reason, on screen, so nobody has to dig through logs. -->
+      <p id="gate-fail" class="gate-fail hidden"></p>
       <p id="gate-detail" class="gate-detail hidden"></p>
+    </div>
+  </div>
+
+  <!-- Banned = dead. No stream, no reconnect, no way back in from this screen. -->
+  <div id="dead" class="hidden">
+    <div class="gate-card">
+      <div class="gate-icon">⛔</div>
+      <h1>You are banned</h1>
+      <p class="gate-sub">You can't connect to the arena or any container from here.</p>
+      <p id="dead-reason" class="gate-detail"></p>
     </div>
   </div>
 
@@ -53,23 +157,46 @@
 
     <span class="spacer"></span>
 
+    <button class="icon" id="btn-hub" title="Main menu">☰ menu</button>
     <button class="icon" id="btn-games" title="Vote to switch game">🕹️ games</button>
+    <button class="icon" id="btn-containers" title="Desktops you can join">📦 containers</button>
     <button class="icon" id="btn-sound" title="Enable sound">🔇</button>
+    <!-- Admin-only comfort toggle: WASD acts as the d-pad for just this viewer.
+         Raw keyboard passthrough continues for every other key. -->
+    <button class="icon" id="btn-wasd" title="Bind WASD to the d-pad for you only">⌨️ WASD→arrows</button>
     <!-- Independently hideable, and both hidden by default. A d-pad and a chat
          column suffocate a Discord activity panel, and the keyboard works
-         whether or not the on-screen pad is shown. Labelled, not a cryptic
-         glyph — the previous single ⤢ icon was undiscoverable. -->
+         whether or not the on-screen pad is shown. -->
     <button class="icon" id="btn-pad"  title="Show/hide the on-screen controls">🎮 controls</button>
     <button class="icon" id="btn-chat" title="Show/hide chat">💬 chat</button>
+    <button class="icon hidden" id="btn-admin" title="Admin: players, block, ban">🛡 admin</button>
+    <button class="icon hidden" id="btn-profile" title="Edit your profile">👤 profile</button>
   </div>
 
 
 </div>
 
+<div id="profile-modal" class="hidden" aria-hidden="true">
+  <div class="profile-card">
+    <button id="profile-close" class="profile-close" type="button">✕</button>
+    <h2>edit profile</h2>
+    <p class="profile-note">account profile only — Discord profiles stay managed by Discord.</p>
+    <label class="gate-field"><span class="gate-label">display name</span><input id="profile-name" maxlength="32" autocomplete="nickname"></label>
+    <label class="gate-field"><span class="gate-label">bio</span><textarea id="profile-bio" maxlength="160" rows="3"></textarea></label>
+    <label class="gate-field"><span class="gate-label">profile picture</span><input id="profile-avatar" type="file" accept=".png,.webp,.gif,image/png,image/webp,image/gif"></label>
+    <p class="profile-note">png, webp, or gif · max 2 MB</p>
+    <button id="profile-save" class="gate-submit" type="button">save profile</button>
+    <p id="profile-error" class="gate-fail hidden"></p>
+  </div>
+</div>
+
 <!-- The controller. `data-key` values are the only seven codes the server
      accepts. Classes are painted live:
-       .mine = you are holding it   .live = the hive mind is holding it -->
+       .mine = you are holding it   .live = the hive mind is holding it
+     While a full-keyboard game runs (FNF / XFCE desktop), the pad contents are
+     replaced by #kbraw — a live strip of every key the hive mind is holding. -->
 <div id="pad">
+  <div id="kbraw"></div>
   <div class="dpad">
     <button data-key="ArrowUp"    class="up">▲</button>
     <button data-key="ArrowLeft"  class="left">◀</button>
@@ -77,6 +204,8 @@
     <button data-key="ArrowDown"  class="down">▼</button>
   </div>
   <div class="face">
+    <button data-key="KeyQ" class="btn trig" title="L trigger (Q)">L</button>
+    <button data-key="KeyE" class="btn trig" title="R trigger (E)">R</button>
     <button data-key="Space" class="btn z" title="Z — crouch / ground pound">Z</button>
     <button data-key="KeyC"  class="btn b" title="B — dive / punch / grab">B</button>
     <button data-key="KeyX"  class="btn a" title="A — jump">A</button>
@@ -88,7 +217,7 @@
   <div id="chatlog"></div>
   <input id="chatinput" type="text" maxlength="300" placeholder="say something…" autocomplete="off">
   <div id="legend">
-    WASD/arrows move · <kbd>X</kbd> jump · <kbd>C</kbd> dive · <kbd>Space</kbd> crouch · <kbd>Enter</kbd> start
+    WASD/arrows move · <kbd>X</kbd> jump · <kbd>C</kbd> dive · <kbd>Space</kbd> crouch · <kbd>Q</kbd>/<kbd>E</kbd> triggers · <kbd>Enter</kbd> start
   </div>
 </div>
 

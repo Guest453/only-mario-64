@@ -56,6 +56,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends chromium \
 # Cores come from the libretro buildbot (all open source). ROMs do NOT ship in
 # this image and never will — they are mounted from a volume you populate.
 RUN apt-get update && apt-get install -y --no-install-recommends \
+        tigervnc-viewer \
         retroarch libretro-core-info \
     && apt-get clean
 

@@ -13,3 +13,7 @@ arena/desktop/roms/
 *.smc
 *.nes
 *.gba
+
+node_modules/
+.env
+*.key

@@ -1,6 +1,6 @@
 {
   "_comment": [
-    "Game registry. Adding a game is a file plus an entry here \u2014 never code.",
+    "Game registry. Adding a game is a file plus an entry here — never code.",
     "ROMs live on a mounted volume and are NOT part of any image.",
     "'core' names a libretro core in /usr/lib/libretro; 'exec' runs a binary",
     "directly (used later for Steam)."
@@ -58,16 +58,58 @@
     },
     {
       "id": "emerald",
-      "name": "Pok\u00e9mon Emerald",
+      "name": "Pokémon Emerald",
       "system": "GBA",
       "core": "mgba",
       "rom": "Pokemon - Emerald Version (USA, Europe).gba",
       "layout": "gba"
     },
     {
+      "id": "firered",
+      "name": "Pokémon FireRed",
+      "system": "GBA",
+      "core": "mgba",
+      "rom": "FireRed-v1.0-FRLG.gba",
+      "layout": "gba"
+    },
+    {
+      "id": "fnf",
+      "name": "Friday Night Funkin'",
+      "system": "Psych Engine (native)",
+      "exec": "/data/games/fnf.sh",
+      "execArgs": [],
+      "layout": "rhythm"
+    },
+    {
+      "id": "home-container",
+      "name": "Home Container (Tor)",
+      "system": "Self-hosted desktop",
+      "desc": "Your PC: RetroArch + cores + Chromium, routed through Tor.",
+      "kind": "container",
+      "hidden": true,
+      "exec": "/app/arena/desktop/open-container.sh",
+      "execArgs": [
+        "/data/container-url.txt"
+      ],
+      "layout": "desktop"
+    },
+    {
+      "id": "c4128b1",
+      "name": "c4128b-1 (Celeron)",
+      "system": "Self-hosted · light games",
+      "desc": "Celeron N4020 box — RetroArch, native VNC (no browser relay).",
+      "kind": "container",
+      "hidden": true,
+      "exec": "/app/arena/desktop/open-vnc-container.sh",
+      "execArgs": [
+        "localhost:5901"
+      ],
+      "layout": "desktop"
+    },
+    {
       "id": "desktop",
       "name": "XFCE Desktop (with Steam)",
-      "system": "Desktop \u2014 PUBLIC SCREEN",
+      "system": "Desktop — PUBLIC SCREEN",
       "exec": "/app/arena/desktop/start-desktop.sh",
       "execArgs": [],
       "layout": "desktop",
@@ -138,7 +180,7 @@
           "label": "L"
         },
         {
-          "code": "KeyW",
+          "code": "KeyE",
           "label": "R"
         },
         {
@@ -198,7 +240,7 @@
           "label": "L"
         },
         {
-          "code": "KeyW",
+          "code": "KeyE",
           "label": "R"
         },
         {
@@ -260,6 +302,40 @@
         {
           "code": "Backspace",
           "label": "BKSP"
+        }
+      ]
+    },
+    "rhythm": {
+      "dpad": [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight"
+      ],
+      "buttons": [
+        {
+          "code": "KeyW",
+          "label": "↑ note"
+        },
+        {
+          "code": "KeyA",
+          "label": "← note"
+        },
+        {
+          "code": "KeyS",
+          "label": "↓ note"
+        },
+        {
+          "code": "KeyD",
+          "label": "→ note"
+        },
+        {
+          "code": "Enter",
+          "label": "CONFIRM"
+        },
+        {
+          "code": "Space",
+          "label": "PAUSE"
         }
       ]
     }
