@@ -81,19 +81,6 @@
       "layout": "rhythm"
     },
     {
-      "id": "home-container",
-      "name": "Home Container (Tor)",
-      "system": "Self-hosted desktop",
-      "desc": "Your PC: RetroArch + cores + Chromium, routed through Tor.",
-      "kind": "container",
-      "hidden": true,
-      "exec": "/app/arena/desktop/open-container.sh",
-      "execArgs": [
-        "/data/container-url.txt"
-      ],
-      "layout": "desktop"
-    },
-    {
       "id": "c4128b1",
       "name": "c4128b-1 (Celeron)",
       "system": "Self-hosted · light games",

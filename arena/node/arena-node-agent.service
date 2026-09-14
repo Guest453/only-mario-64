@@ -1,0 +1,5 @@
+[Unit]
+Description=arena node agent — register this box with the arena
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/arena-node-agent.sh

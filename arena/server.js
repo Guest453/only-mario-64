@@ -964,6 +964,7 @@ const JOIN_RE = /^(?:desktop|https?:\/\/[a-z0-9.-]+(?::\d{1,5})?(?:\/[^\s]*)?|\/
 // VOTE for everyone (one shared screen), not a private overlay or a new tab.
 function handleContainers(req, res) {
     if (req.method !== 'GET') { res.writeHead(405).end(); return; }
+    // Local containers: games tagged kind=container (the launcher launches them).
     const list = (gameList || [])
         .filter((g) => g && g.kind === 'container')
         .map((g) => ({
@@ -972,13 +973,149 @@ function handleContainers(req, res) {
             system: String(g.system || '').slice(0, 40),
             desc: String(g.desc || '').slice(0, 160),
             game: String(g.id || '').slice(0, 40),   // vote target = the launcher id
-            // The agent only lists entries it can actually launch, so presence
-            // is the liveness signal we have; `current` shows what's live.
             online: g.id === currentGame ? true : null,
         }))
         .filter((c) => c.id && c.game);
+    // Self-hosted nodes register THEMSELVES; expired ones drop off on their own.
+    // name/desc/games come FROM THE NODE, never hardcoded here.
+    for (const [id, n] of Object.entries(liveNodes())) {
+        list.push({
+            id: 'node:' + id,
+            name: n.name,
+            system: n.system || 'self-hosted',
+            desc: n.desc || '',
+            game: null,
+            vnc: !!(n.vnc && n.vnc.port),
+            online: true,
+        });
+    }
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })
        .end(JSON.stringify({ containers: list }));
+}
+
+// ── Self-hosted nodes: boxes register THEMSELVES, nothing hardcoded ─────────
+// A node (any machine the owner points at the arena) runs a tiny agent that
+// detects its own hardware/games and posts them here every minute. Entries
+// expire if the heartbeat stops, so a dead box vanishes from the list on its
+// own. Name + description come FROM THE NODE, not from this server.
+const NODES_FILE = process.env.ARENA_NODES_FILE || '/data/nodes.json';
+const NODE_SECRET_FILE = process.env.ARENA_NODE_SECRET_FILE || '/data/node-secret';
+const NODE_TTL_MS = Number(process.env.ARENA_NODE_TTL_MS || 5 * 60 * 1000);
+
+function loadNodes() {
+    try { return JSON.parse(fs.readFileSync(NODES_FILE, 'utf8')); } catch { return {}; }
+}
+function saveNodes(nodes) {
+    try {
+        fs.mkdirSync(path.dirname(NODES_FILE), { recursive: true });
+        const tmp = NODES_FILE + '.tmp';
+        fs.writeFileSync(tmp, JSON.stringify(nodes));
+        fs.renameSync(tmp, NODES_FILE);
+    } catch (err) { console.warn('[arena] node save failed:', err.message); }
+}
+function nodeSecret() {
+    try { return fs.readFileSync(NODE_SECRET_FILE, 'utf8').trim(); } catch { return ''; }
+}
+function liveNodes() {
+    const nodes = loadNodes();
+    const now = Date.now();
+    const out = {};
+    for (const [id, n] of Object.entries(nodes)) {
+        if (n.lastSeen && now - n.lastSeen < NODE_TTL_MS) out[id] = n;
+    }
+    return out;
+}
+
+async function handleNodeRegister(req, res) {
+    if (req.method !== 'POST') { res.writeHead(405).end(); return; }
+    let body = {};
+    try { body = JSON.parse(await readBody(req, 16 * 1024)); } catch { res.writeHead(400).end(); return; }
+    const secret = nodeSecret();
+    const ok = secret && typeof body.secret === 'string' && body.secret.length === secret.length &&
+        crypto.timingSafeEqual(Buffer.from(body.secret), Buffer.from(secret));
+    if (!ok) { res.writeHead(403, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: 'forbidden' })); return; }
+    const id = String(body.id || '').replace(/[^a-z0-9_-]/gi, '').slice(0, 40);
+    if (!id) { res.writeHead(400, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: 'bad id' })); return; }
+    const nodes = loadNodes();
+    nodes[id] = {
+        name: cleanSafe(body.name || id, 60) || id,
+        system: cleanSafe(body.system || 'self-hosted', 40),
+        desc: cleanSafe(body.desc || '', 200),
+        games: Array.isArray(body.games) ? body.games.slice(0, 24).map((g) => ({
+            name: cleanSafe(g && g.name || '', 60),
+            system: cleanSafe(g && g.system || '', 40),
+        })).filter((g) => g.name) : [],
+        vnc: (body.vnc && Number(body.vnc.port) > 0 && Number(body.vnc.port) < 65536)
+            ? { host: '127.0.0.1', port: Number(body.vnc.port) }   // relay-side: always loopback
+            : null,
+        lastSeen: Date.now(),
+    };
+    saveNodes(nodes);
+    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true, ttl: NODE_TTL_MS }));
+}
+
+// ── Direct VNC for containers (the "main arena" VNC pipeline, reused) ────────
+// A viewer's own browser runs noVNC against the vnc-backend relay: the relay
+// opens raw RFB to the target its server-minted token names. Same-origin, no
+// address on the wire, no browser-in-browser, no re-encode.
+const VNC_TARGETS_FILE = process.env.ARENA_VNC_TARGETS_FILE || '/data/vnc-targets.json';
+const VNC_SECRET_FILE = process.env.ARENA_VNC_SECRET_FILE || '/data/vnc-secret';
+
+function containerGateway() {
+    // The arena's X display lives INSIDE this container, so the host's services
+    // are reached via the default gateway (parse /proc/net/route).
+    try {
+        const lines = fs.readFileSync('/proc/net/route', 'utf8').split('\n');
+        for (const line of lines) {
+            const f = line.trim().split(/\s+/);
+            if (f.length > 3 && f[1] === '00000000') {
+                const hex = f[2];
+                const ip = [3, 2, 1, 0].map((i) => parseInt(hex.slice(i * 2, i * 2 + 2), 16)).join('.');
+                return ip;
+            }
+        }
+    } catch {}
+    return '';
+}
+
+async function handleVncToken(req, res) {
+    if (req.method !== 'GET') { res.writeHead(405).end(); return; }
+    const q = new URLSearchParams((req.url || '').split('?')[1] || '');
+    const session = getSession(q.get('s') || '');
+    if (!session) { res.writeHead(401).end(); return; }
+    if (isBanned(viewerKeyOf(session))) { res.writeHead(403).end(); return; }
+    let targets = {};
+    try { targets = JSON.parse(fs.readFileSync(VNC_TARGETS_FILE, 'utf8')); } catch {}
+    const gameId = (q.get('game') || '').slice(0, 40);
+    let t = targets[gameId];
+    if (!t && gameId.startsWith('node:')) {
+        const n = liveNodes()[gameId.slice(5)];
+        if (n && n.vnc) t = n.vnc;
+    }
+    if (!t || !t.host || !t.port) { res.writeHead(404, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: 'no VNC target for that container' })); return; }
+    let secret = '';
+    try { secret = fs.readFileSync(VNC_SECRET_FILE, 'utf8').trim(); } catch {}
+    if (!secret) { res.writeHead(500, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: 'vnc relay not configured' })); return; }
+    const gw = containerGateway();
+    if (!gw) { res.writeHead(500, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: 'no route to relay' })); return; }
+    try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 6000);
+        const r = await fetch(`http://${gw}:8002/vncapi/target`, {
+            method: 'POST', signal: ctrl.signal,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ secret, host: String(t.host), port: Number(t.port) }),
+        });
+        clearTimeout(timer);
+        const j = await r.json();
+        if (!r.ok || !j.token) { res.writeHead(502, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: j.error || 'relay refused' })); return; }
+        // Same-origin wrapper: title bar + back link, noVNC in an iframe.
+        const url = `/novnc/arena.html?path=randomws&token=${encodeURIComponent(j.token)}&autoconnect=1&resize=scale&game=${encodeURIComponent(gameId)}`;
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })
+           .end(JSON.stringify({ url }));
+    } catch (err) {
+        res.writeHead(502, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: String((err && err.message) || err).slice(0, 120) }));
+    }
 }
 
 // ── HTTP ─────────────────────────────────────────────────────────────────────
@@ -987,6 +1124,8 @@ const server = http.createServer((req, res) => {
     if (url === '/api/token' || url === '/.proxy/api/token') return handleToken(req, res);
     if (url === '/api/check' || url === '/.proxy/api/check') return handleCheck(req, res);
     if (url === '/api/containers' || url === '/.proxy/api/containers') return handleContainers(req, res);
+    if (url === '/api/vnc-token' || url === '/.proxy/api/vnc-token') return handleVncToken(req, res);
+    if (url === '/api/node/register' || url === '/.proxy/api/node/register') return handleNodeRegister(req, res);
     if (url === '/api/profile' || url === '/.proxy/api/profile') return handleProfile(req, res);
     if (url === '/api/profile-pic' || url === '/.proxy/api/profile-pic') return handleProfilePic(req, res);
     if (url === '/api/register' || url === '/.proxy/api/register') return handleAccount(req, res, true);

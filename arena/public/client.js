@@ -1007,8 +1007,23 @@ function containerRow(c) {
     return row;
 }
 
-function joinContainer(c) {
-    if (!c || !c.game) return;
+async function joinContainer(c) {
+    if (!c) return;
+    // Self-hosted node: the viewer's own browser connects DIRECTLY to the box's
+    // VNC through the relay (same-origin noVNC + server-minted token).
+    if (c.vnc) {
+        $('containers').classList.add('hidden');
+        setStatus('opening a direct VNC session…');
+        try {
+            const sid = mySession();
+            const r = await fetch(`./api/vnc-token?game=${encodeURIComponent(c.id)}&s=${encodeURIComponent(sid || '')}`);
+            const j = await r.json().catch(() => ({}));
+            if (!r.ok || !j.url) { gateFail(j.error || 'could not open the VNC session'); setStatus(''); return; }
+            window.location.href = j.url;   // same-origin → works inside the activity
+        } catch { gateFail('network error'); setStatus(''); }
+        return;
+    }
+    if (!c.game) return;
     $('containers').classList.add('hidden');
     // One shared screen: joining a container is a VOTE, exactly like a game
     // switch, so everyone sees the same thing. (A private overlay/new tab is
@@ -1126,7 +1141,8 @@ function adminRow(p) {
 // same vote a game switch uses, so EVERYONE ends up on the same screen.
 let hubSeen = false;
 function openHub() { renderHub(); $('hub').classList.remove('hidden'); }
-function closeHub() { $('hub').classList.add('hidden'); }
+function closeHub() { $('hub').classList.add('hidden'); hubContainersLoaded = false; }
+let hubContainersLoaded = false;
 function renderHub() {
     const cEl = $('hub-containers'), gEl = $('hub-games');
     if (!cEl || !gEl) return;
@@ -1134,6 +1150,23 @@ function renderHub() {
     const all = gameState.games || [];
     const containers = all.filter((g) => g.kind === 'container');
     const games = all.filter((g) => !g.hidden && g.kind !== 'container');
+    // Registered self-hosted nodes arrive via /api/containers — fetch them once
+    // per hub open so a box that registers itself shows up WITHOUT a restart.
+    if (!hubContainersLoaded) {
+        hubContainersLoaded = true;
+        const holder = document.createElement('div');
+        holder.className = 'hub-empty'; holder.textContent = 'looking for self-hosted boxes…';
+        cEl.appendChild(holder);
+        fetch('./api/containers', { cache: 'no-store' })
+            .then((r) => r.json())
+            .then((d) => {
+                cEl.textContent = '';
+                const nodes = (d.containers || []).filter((x) => x.id.startsWith('node:'));
+                if (!nodes.length) { const n = document.createElement('div'); n.className = 'hub-empty'; n.textContent = 'no self-hosted boxes online'; cEl.appendChild(n); }
+                for (const x of nodes) cEl.appendChild(hubRow({ ...x, kind: 'container' }, true));
+            })
+            .catch(() => { cEl.textContent = ''; });
+    }
     if (!containers.length) {
         const n = document.createElement('div'); n.className = 'hub-empty'; n.textContent = 'no containers online';
         cEl.appendChild(n);
@@ -1158,7 +1191,7 @@ function hubRow(g, isContainer) {
     btn.title = isAdmin ? 'admin: switch everyone now, no vote' : '';
     btn.textContent = isAdmin ? 'FORCE'
         : (gameState.current === g.id ? 'WATCH' : (isContainer ? 'JOIN' : 'PLAY'));
-    btn.addEventListener('click', () => pickFromHub(g));
+    btn.addEventListener('click', () => { if (g.vnc) { joinContainer(g); return; } pickFromHub(g); });
     side.appendChild(votes); side.appendChild(btn);
     row.appendChild(info); row.appendChild(side);
     return row;
